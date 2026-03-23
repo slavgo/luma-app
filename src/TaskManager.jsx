@@ -1363,7 +1363,7 @@ const TaskManager = () => {
 
   const addTask = async () => {
     if (!newTask.task || !newTask.client) return;
-    const taskData = { ...newTask, id: undefined };
+    const taskData = { ...newTask, id: undefined, user_id: user?.id };
     if (supabase) {
       const { data, error } = await supabase.from("tasks").insert([taskData]).select().single();
       if (!error && data) setTasks(prev => [...prev, { ...data, done: false }]);
@@ -1379,7 +1379,7 @@ const TaskManager = () => {
     if (!name || clientsData[name]) return;
     const { name: _, ...rest } = newClientForm;
     if (supabase) {
-      const { data, error } = await supabase.from("clients").insert([{ name, ...rest }]).select().single();
+      const { data, error } = await supabase.from("clients").insert([{ name, ...rest, user_id: user?.id }]).select().single();
       if (!error && data) setClientsData(prev => ({ ...prev, [name]: { ...rest, _id: data.id } }));
     } else {
       setClientsData(prev => ({ ...prev, [name]: rest }));
@@ -1390,7 +1390,7 @@ const TaskManager = () => {
 
   const addCalItem = async (item) => {
     if (supabase) {
-      const { data, error } = await supabase.from("cal_items").insert([{ date: item.date, type: item.type, title: item.title, client: item.client || "", platform: item.platform || "", status: item.status || "" }]).select().single();
+      const { data, error } = await supabase.from("cal_items").insert([{ date: item.date, type: item.type, title: item.title, client: item.client || "", platform: item.platform || "", status: item.status || "", user_id: user?.id }]).select().single();
       if (!error && data) setCalItems(prev => [...prev, data]);
     } else {
       setCalItems(prev => [...prev, item]);

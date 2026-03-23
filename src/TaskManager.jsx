@@ -2026,14 +2026,24 @@ const TaskManager = () => {
     };
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const u = await checkAccess(session?.user ?? null);
-      setUser(u);
-      setAuthLoading(false);
+      try {
+        const u = await checkAccess(session?.user ?? null);
+        setUser(u);
+      } catch (e) {
+        console.error('Auth check error:', e);
+        setUser(null);
+      } finally {
+        setAuthLoading(false);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_e, session) => {
-      const u = await checkAccess(session?.user ?? null);
-      setUser(u);
+      try {
+        const u = await checkAccess(session?.user ?? null);
+        setUser(u);
+      } catch (e) {
+        setUser(null);
+      }
     });
 
     return () => subscription.unsubscribe();

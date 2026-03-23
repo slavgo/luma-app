@@ -532,112 +532,170 @@ const NAV_ITEMS = [
   )},
 ];
 
+// Color accent per nav item
+const NAV_COLORS = {
+  home:     { from: '#6366f1', to: '#8b5cf6', glow: 'rgba(99,102,241,0.4)'  },
+  tasks:    { from: '#06b6d4', to: '#3b82f6', glow: 'rgba(59,130,246,0.4)'  },
+  clients:  { from: '#10b981', to: '#059669', glow: 'rgba(16,185,129,0.4)'  },
+  calendar: { from: '#f59e0b', to: '#ef4444', glow: 'rgba(245,158,11,0.4)'  },
+};
+
 const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin }) => {
   const isAdmin = user?.role === "admin" || user?.provider === "google";
+  const initials = (user?.name || "U").trim().charAt(0).toUpperCase();
+
   return (
     <aside
       dir="rtl"
       style={{
-        width: 220,
-        minWidth: 220,
-        background: '#0f172a',
+        width: 68,
+        minWidth: 68,
+        background: 'linear-gradient(180deg, #0f172a 0%, #1a1040 100%)',
         display: 'flex',
         flexDirection: 'column',
+        alignItems: 'center',
         height: '100vh',
         position: 'sticky',
         top: 0,
         borderLeft: '1px solid rgba(255,255,255,0.06)',
+        paddingBottom: 12,
+        zIndex: 10,
       }}
     >
-      {/* Logo */}
-      <div style={{ padding: '20px 18px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-        <svg viewBox="0 0 130 38" xmlns="http://www.w3.org/2000/svg" style={{ height: 28, width: 'auto' }}>
+      {/* Logo mark */}
+      <div style={{
+        width: '100%', padding: '18px 0 14px',
+        display: 'flex', justifyContent: 'center',
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
+      }}>
+        <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" style={{ width: 32, height: 32 }}>
           <defs>
-            <linearGradient id="sideAGrad" x1="100%" y1="0%" x2="0%" y2="100%">
+            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#22d3ee"/>
-              <stop offset="40%" stopColor="#6366f1"/>
+              <stop offset="50%" stopColor="#6366f1"/>
               <stop offset="100%" stopColor="#a855f7"/>
             </linearGradient>
-            <clipPath id="sideAClip">
-              <text x="98" y="34" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="36">A</text>
-            </clipPath>
           </defs>
-          <text x="0" y="34" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="36" letterSpacing="-1" fill="white">LUM</text>
-          <text x="98" y="34" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="36" letterSpacing="-1" fill="url(#sideAGrad)">A</text>
-          <g clipPath="url(#sideAClip)" opacity="0.35">
-            <line x1="98" y1="34" x2="130" y2="0"  stroke="white" strokeWidth="1.5"/>
-            <line x1="107" y1="34" x2="130" y2="10" stroke="white" strokeWidth="1"/>
-            <line x1="117" y1="34" x2="130" y2="20" stroke="white" strokeWidth="1"/>
-          </g>
+          <rect width="36" height="36" rx="10" fill="url(#logoGrad)" opacity="0.15"/>
+          <text x="5" y="27" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="22" letterSpacing="-1" fill="white">L</text>
+          <text x="17" y="27" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="22" letterSpacing="-1" fill="url(#logoGrad)">A</text>
         </svg>
-        <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 4, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Make Digital Brighter</p>
       </div>
 
-      {/* Nav items */}
-      <nav style={{ flex: 1, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+      {/* Nav icons */}
+      <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '14px 0', width: '100%' }}>
         {NAV_ITEMS.map(item => {
           const active = screen === item.id;
+          const colors = NAV_COLORS[item.id] || NAV_COLORS.home;
           return (
-            <button
-              key={item.id}
-              onClick={() => setScreen(item.id)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: '9px 12px', borderRadius: 8, cursor: 'pointer', border: 'none',
-                textAlign: 'right', width: '100%', transition: 'all 0.15s',
-                background: active ? 'rgba(99,102,241,0.18)' : 'transparent',
-                color: active ? '#a5b4fc' : 'rgba(255,255,255,0.5)',
-                fontWeight: active ? 600 : 400, fontSize: 13,
-              }}
-              onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = active ? 'rgba(99,102,241,0.18)' : 'transparent'; e.currentTarget.style.color = active ? '#a5b4fc' : 'rgba(255,255,255,0.5)'; }}
-            >
-              <span style={{ color: active ? '#6366f1' : 'rgba(255,255,255,0.35)', flexShrink: 0 }}>{item.icon}</span>
-              {item.label}
-              {active && <span style={{ marginRight: 'auto', width: 5, height: 5, borderRadius: '50%', background: '#6366f1', flexShrink: 0 }}></span>}
-            </button>
+            <div key={item.id} style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
+              {/* Active indicator bar on right */}
+              {active && (
+                <span style={{
+                  position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
+                  width: 3, height: 28, borderRadius: '0 3px 3px 0',
+                  background: `linear-gradient(180deg, ${colors.from}, ${colors.to})`,
+                  boxShadow: `0 0 8px ${colors.glow}`,
+                }}/>
+              )}
+              <button
+                onClick={() => setScreen(item.id)}
+                title={item.label}
+                style={{
+                  width: 44, height: 44, borderRadius: 12, cursor: 'pointer', border: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'all 0.18s',
+                  background: active
+                    ? `linear-gradient(135deg, ${colors.from}33, ${colors.to}22)`
+                    : 'transparent',
+                  color: active ? colors.from : 'rgba(255,255,255,0.35)',
+                  boxShadow: active ? `0 0 16px ${colors.glow}` : 'none',
+                  transform: active ? 'scale(1.08)' : 'scale(1)',
+                }}
+                onMouseEnter={e => {
+                  if (!active) {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                    e.currentTarget.style.color = 'rgba(255,255,255,0.75)';
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!active) {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = 'rgba(255,255,255,0.35)';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }
+                }}
+              >
+                <span style={{ width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {item.icon}
+                </span>
+              </button>
+            </div>
           );
         })}
 
         {/* Divider */}
-        <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '8px 4px' }} />
+        <div style={{ width: 28, height: 1, background: 'rgba(255,255,255,0.08)', margin: '6px 0' }} />
 
+        {/* Admin gear */}
         {isAdmin && (
           <button
             onClick={onOpenAdmin}
+            title="ניהול"
             style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '9px 12px', borderRadius: 8, cursor: 'pointer', border: 'none',
-              textAlign: 'right', width: '100%', background: 'transparent',
-              color: 'rgba(255,255,255,0.4)', fontSize: 13, transition: 'all 0.15s',
+              width: 44, height: 44, borderRadius: 12, cursor: 'pointer', border: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'transparent', color: 'rgba(255,255,255,0.25)', transition: 'all 0.18s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.25)'; }}
           >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4" style={{ flexShrink: 0, opacity: 0.5 }}>
+            <svg viewBox="0 0 20 20" fill="currentColor" style={{ width: 18, height: 18 }}>
               <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/>
             </svg>
-            ניהול
           </button>
         )}
       </nav>
 
-      {/* User section */}
-      <div style={{ padding: '12px 10px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.05)' }}>
-          <UserAvatar name={user?.name || "U"} size="sm" />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || "משתמש"}</p>
-            {isAdmin && <span style={{ fontSize: 10, color: '#6366f1', fontWeight: 500 }}>Admin</span>}
+      {/* User avatar + sign out */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+        {/* Avatar with gradient ring */}
+        <div style={{ position: 'relative' }}>
+          <div style={{
+            width: 38, height: 38, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'white', fontWeight: 700, fontSize: 14,
+            boxShadow: '0 0 0 2px rgba(99,102,241,0.3), 0 0 12px rgba(168,85,247,0.25)',
+            cursor: 'default',
+          }} title={user?.name || "משתמש"}>
+            {initials}
           </div>
-          <button
-            onClick={onSignOut}
-            title="יציאה"
-            style={{ color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: 4, fontSize: 14, transition: 'color 0.15s', flexShrink: 0 }}
-            onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
-            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.3)'}
-          >↩</button>
+          {isAdmin && (
+            <span style={{
+              position: 'absolute', bottom: -1, right: -1,
+              width: 12, height: 12, borderRadius: '50%',
+              background: '#6366f1', border: '2px solid #0f172a',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 7, color: 'white', fontWeight: 700,
+            }}>★</span>
+          )}
         </div>
+
+        {/* Sign out */}
+        <button
+          onClick={onSignOut}
+          title="יציאה"
+          style={{
+            width: 32, height: 32, borderRadius: 8, border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'transparent', color: 'rgba(255,255,255,0.2)', transition: 'all 0.15s',
+            fontSize: 15,
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(248,113,113,0.12)'; e.currentTarget.style.color = '#f87171'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.2)'; }}
+        >↩</button>
       </div>
     </aside>
   );
@@ -645,8 +703,8 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin }) => {
 
 // ── Layout wrapper ──────────────────────────────────────────────────────────
 const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, children }) => (
-  <div dir="rtl" style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f8fafc' }}>
-    <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+  <div dir="rtl" style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f1f5f9' }}>
+    <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', background: '#f1f5f9' }}>
       {children}
     </main>
     <Sidebar screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} />

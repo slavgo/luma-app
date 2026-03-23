@@ -701,15 +701,100 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin }) => {
   );
 };
 
+// ── Mobile detection hook ────────────────────────────────────────────────────
+const useMobile = () => {
+  const [mobile, setMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  useEffect(() => {
+    const fn = () => setMobile(window.innerWidth < 768);
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+  return mobile;
+};
+
+// ── Bottom Navigation (mobile) ───────────────────────────────────────────────
+const BottomNav = ({ screen, setScreen, user, onSignOut, onOpenAdmin }) => {
+  const isAdmin = user?.role === "admin" || user?.provider === "google";
+  return (
+    <nav dir="rtl" style={{
+      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
+      background: 'white',
+      borderTop: '1px solid #e2e8f0',
+      display: 'flex', alignItems: 'center',
+      padding: '0 4px',
+      height: 60,
+      paddingBottom: 'env(safe-area-inset-bottom)',
+      boxShadow: '0 -4px 24px rgba(0,0,0,0.07)',
+    }}>
+      {NAV_ITEMS.map(item => {
+        const active = screen === item.id;
+        const colors = NAV_COLORS[item.id] || NAV_COLORS.home;
+        return (
+          <button
+            key={item.id}
+            onClick={() => setScreen(item.id)}
+            style={{
+              flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+              gap: 3, padding: '6px 0', border: 'none', background: 'transparent',
+              cursor: 'pointer', transition: 'all 0.15s',
+              color: active ? colors.from : '#94a3b8',
+            }}
+          >
+            <span style={{ width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</span>
+            <span style={{ fontSize: 10, fontWeight: active ? 700 : 400, letterSpacing: '0.01em' }}>{item.label}</span>
+            {active && <span style={{ width: 18, height: 2.5, borderRadius: 2, background: colors.from, position: 'absolute', bottom: 6 }}/>}
+          </button>
+        );
+      })}
+      {/* Admin + sign-out for mobile */}
+      {isAdmin && (
+        <button
+          onClick={onOpenAdmin}
+          style={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+            gap: 3, padding: '6px 0', border: 'none', background: 'transparent',
+            cursor: 'pointer', color: '#94a3b8',
+          }}
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" style={{ width: 20, height: 20 }}>
+            <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/>
+          </svg>
+          <span style={{ fontSize: 10 }}>ניהול</span>
+        </button>
+      )}
+      <button
+        onClick={onSignOut}
+        style={{
+          flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+          gap: 3, padding: '6px 0', border: 'none', background: 'transparent',
+          cursor: 'pointer', color: '#94a3b8',
+        }}
+      >
+        <span style={{ fontSize: 20, lineHeight: 1 }}>↩</span>
+        <span style={{ fontSize: 10 }}>יציאה</span>
+      </button>
+    </nav>
+  );
+};
+
 // ── Layout wrapper ──────────────────────────────────────────────────────────
-const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, children }) => (
-  <div dir="rtl" style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f1f5f9' }}>
-    <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', background: '#f1f5f9' }}>
-      {children}
-    </main>
-    <Sidebar screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} />
-  </div>
-);
+const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, children }) => {
+  const mobile = useMobile();
+  return (
+    <div dir="rtl" style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f1f5f9' }}>
+      <main style={{
+        flex: 1, overflowY: 'auto', overflowX: 'hidden', background: '#f1f5f9',
+        paddingBottom: mobile ? 64 : 0,
+      }}>
+        {children}
+      </main>
+      {mobile
+        ? <BottomNav screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} />
+        : <Sidebar screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} />
+      }
+    </div>
+  );
+};
 
 // ─── Dashboard / Home Screen ─────────────────────────────────────────────────
 // ─── Local AI Pattern Analysis ─────────────────────────────────────────────
@@ -1473,29 +1558,32 @@ const GoogleIcon = () => (
 );
 
 // ─── Login Screen ─────────────────────────────────────────────────────────────
-const LoginScreen = ({ onLogin }) => {
-  const [mode, setMode] = useState("login"); // "login" | "register"
+const LoginScreen = ({ accessBlocked }) => {
+  const [mode, setMode] = useState("login"); // "login" | "register" | "reset"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(accessBlocked ? "הגישה שלך לא אושרה. פנה למנהל המערכת." : "");
   const [loading, setLoading] = useState(false);
-
   const [success, setSuccess] = useState("");
 
   const handleEmailLogin = async () => {
     if (!email.trim()) { setError("נא להזין אימייל"); return; }
-    if (password.length < 6) { setError("סיסמה חייבת להכיל לפחות 6 תווים"); return; }
+    if (mode !== "reset" && password.length < 6) { setError("סיסמה חייבת להכיל לפחות 6 תווים"); return; }
     setLoading(true); setError(""); setSuccess("");
     try {
       if (mode === "register") {
-        const { error: e } = await supabase.auth.signUp({ email, password });
+        const { error: e } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name } } });
         if (e) throw e;
         setSuccess("נשלח אימייל אימות — בדוק את תיבת הדואר שלך ✉️");
+      } else if (mode === "reset") {
+        const { error: e } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+        if (e) throw e;
+        setSuccess("נשלח מייל לאיפוס סיסמה ✉️ בדוק את תיבת הדואר שלך");
+        setTimeout(() => setMode("login"), 3000);
       } else {
         const { error: e } = await supabase.auth.signInWithPassword({ email, password });
         if (e) throw e;
-        // Auth state listener in TaskManager handles the login
       }
     } catch (e) {
       setError(e.message || "שגיאה לא ידועה");
@@ -1512,6 +1600,8 @@ const LoginScreen = ({ onLogin }) => {
     });
     if (e) { setError(e.message); setLoading(false); }
   };
+
+  const switchMode = (m) => { setMode(m); setError(""); setSuccess(""); };
 
   return (
     <div
@@ -1551,100 +1641,109 @@ const LoginScreen = ({ onLogin }) => {
         {/* Card */}
         <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-7" style={{ boxShadow: '0 8px 40px rgba(99,102,241,0.10), 0 1px 3px rgba(0,0,0,0.06)' }}>
 
-          {/* Mode toggle */}
-          <div className="flex bg-slate-50 rounded-2xl p-1 mb-6 border border-slate-100">
-            <button
-              onClick={() => { setMode("login"); setError(""); }}
-              className={`flex-1 py-2 text-sm font-semibold rounded-xl transition-all ${mode === "login" ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600"}`}
-            >כניסה</button>
-            <button
-              onClick={() => { setMode("register"); setError(""); }}
-              className={`flex-1 py-2 text-sm font-semibold rounded-xl transition-all ${mode === "register" ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600"}`}
-            >הרשמה</button>
-          </div>
-
-          {/* Google button */}
-          <button
-            onClick={handleGoogle}
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all text-sm font-medium text-slate-700 shadow-sm disabled:opacity-50 mb-4"
-            style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}
-          >
-            <GoogleIcon />
-            {mode === "login" ? "כניסה עם Google" : "הרשמה עם Google"}
-          </button>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex-1 h-px bg-slate-100"></div>
-            <span className="text-xs text-slate-400 font-medium">או</span>
-            <div className="flex-1 h-px bg-slate-100"></div>
-          </div>
-
-          {/* Form */}
-          <div className="flex flex-col gap-3">
-            {mode === "register" && (
-              <div>
-                <label className="text-xs font-semibold text-slate-500 mb-1.5 block">שם מלא</label>
+          {mode === "reset" ? (
+            /* ── Reset password view ── */
+            <>
+              <div className="text-center mb-5">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3"
+                  style={{ background: 'linear-gradient(135deg,#6366f120,#a855f720)' }}>🔑</div>
+                <h2 className="font-bold text-slate-800 text-base">איפוס סיסמה</h2>
+                <p className="text-xs text-slate-400 mt-1">נשלח אליך קישור לאיפוס במייל</p>
+              </div>
+              <div className="flex flex-col gap-3">
                 <input
+                  type="email"
                   className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400 transition-all"
-                  placeholder="Slav Gomelski"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  autoComplete="name"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleEmailLogin()}
+                  autoComplete="email"
                 />
+                {error && <div className="flex items-center gap-2 text-red-500 text-xs bg-red-50 border border-red-100 px-3 py-2 rounded-xl"><span>⚠</span><span>{error}</span></div>}
+                {success && <div className="flex items-center gap-2 text-green-600 text-xs bg-green-50 border border-green-100 px-3 py-2 rounded-xl"><span>✅</span><span>{success}</span></div>}
+                <button onClick={handleEmailLogin} disabled={loading}
+                  className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60"
+                  style={{ background: 'linear-gradient(135deg,#6366f1,#a855f7)', boxShadow: '0 4px 14px rgba(139,92,246,0.35)' }}>
+                  {loading ? "⏳ שולח..." : "שלח קישור לאיפוס"}
+                </button>
+                <button onClick={() => switchMode("login")} className="text-xs text-slate-400 hover:text-slate-600 text-center mt-1">
+                  ← חזרה לכניסה
+                </button>
               </div>
-            )}
-            <div>
-              <label className="text-xs font-semibold text-slate-500 mb-1.5 block">אימייל</label>
-              <input
-                type="email"
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400 transition-all"
-                placeholder="you@gmail.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleEmailLogin()}
-                autoComplete="email"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-500 mb-1.5 block">סיסמה</label>
-              <input
-                type="password"
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400 transition-all"
-                placeholder={mode === "register" ? "לפחות 6 תווים" : "••••••••"}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleEmailLogin()}
-                autoComplete={mode === "register" ? "new-password" : "current-password"}
-              />
-            </div>
+            </>
+          ) : (
+            /* ── Login / Register view ── */
+            <>
+              {/* Mode toggle */}
+              <div className="flex bg-slate-50 rounded-2xl p-1 mb-6 border border-slate-100">
+                <button onClick={() => switchMode("login")}
+                  className={`flex-1 py-2 text-sm font-semibold rounded-xl transition-all ${mode === "login" ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600"}`}
+                >כניסה</button>
+                <button onClick={() => switchMode("register")}
+                  className={`flex-1 py-2 text-sm font-semibold rounded-xl transition-all ${mode === "register" ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600"}`}
+                >הרשמה</button>
+              </div>
 
-            {error && (
-              <div className="flex items-center gap-2 text-red-500 text-xs bg-red-50 border border-red-100 px-3 py-2 rounded-xl">
-                <span>⚠</span><span>{error}</span>
-              </div>
-            )}
-            {success && (
-              <div className="flex items-center gap-2 text-green-600 text-xs bg-green-50 border border-green-100 px-3 py-2 rounded-xl">
-                <span>✅</span><span>{success}</span>
-              </div>
-            )}
+              {/* Google */}
+              <button onClick={handleGoogle} disabled={loading}
+                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all text-sm font-medium text-slate-700 shadow-sm disabled:opacity-50 mb-4"
+                style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                <GoogleIcon />
+                {mode === "login" ? "כניסה עם Google" : "הרשמה עם Google"}
+              </button>
 
-            <button
-              onClick={handleEmailLogin}
-              disabled={loading}
-              className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60 mt-1"
-              style={{ background: loading ? '#94a3b8' : 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', boxShadow: loading ? 'none' : '0 4px 14px rgba(139,92,246,0.35)' }}
-            >
-              {loading ? "⏳ מתחבר..." : mode === "login" ? "כניסה" : "יצירת חשבון"}
-            </button>
-          </div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-1 h-px bg-slate-100"></div>
+                <span className="text-xs text-slate-400 font-medium">או</span>
+                <div className="flex-1 h-px bg-slate-100"></div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {mode === "register" && (
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 mb-1.5 block">שם מלא</label>
+                    <input className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400 transition-all"
+                      placeholder="Slav Gomelski" value={name} onChange={e => setName(e.target.value)} autoComplete="name" />
+                  </div>
+                )}
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 mb-1.5 block">אימייל</label>
+                  <input type="email"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400 transition-all"
+                    placeholder="you@gmail.com" value={email} onChange={e => setEmail(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && handleEmailLogin()} autoComplete="email" />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-slate-500">סיסמה</label>
+                    {mode === "login" && (
+                      <button onClick={() => switchMode("reset")}
+                        className="text-xs text-violet-500 hover:text-violet-700 font-medium transition-colors">
+                        שכחתי סיסמה
+                      </button>
+                    )}
+                  </div>
+                  <input type="password"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400 transition-all"
+                    placeholder={mode === "register" ? "לפחות 6 תווים" : "••••••••"}
+                    value={password} onChange={e => setPassword(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && handleEmailLogin()}
+                    autoComplete={mode === "register" ? "new-password" : "current-password"} />
+                </div>
+                {error && <div className="flex items-center gap-2 text-red-500 text-xs bg-red-50 border border-red-100 px-3 py-2 rounded-xl"><span>⚠</span><span>{error}</span></div>}
+                {success && <div className="flex items-center gap-2 text-green-600 text-xs bg-green-50 border border-green-100 px-3 py-2 rounded-xl"><span>✅</span><span>{success}</span></div>}
+                <button onClick={handleEmailLogin} disabled={loading}
+                  className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60 mt-1"
+                  style={{ background: loading ? '#94a3b8' : 'linear-gradient(135deg,#6366f1,#a855f7)', boxShadow: loading ? 'none' : '0 4px 14px rgba(139,92,246,0.35)' }}>
+                  {loading ? "⏳ מתחבר..." : mode === "login" ? "כניסה" : "יצירת חשבון"}
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
-        <p className="text-center text-xs text-slate-400 mt-5">
-          LUMA © 2026 · Make Digital Brighter
-        </p>
+        <p className="text-center text-xs text-slate-400 mt-5">LUMA © 2026 · Make Digital Brighter</p>
       </div>
     </div>
   );
@@ -1658,35 +1757,67 @@ const ROLE_COLORS = {
 };
 const ROLE_LABELS = { admin: "אדמין", user: "משתמש", blocked: "חסום" };
 
-const MOCK_USERS_INIT = [
-  { id: 1, name: "Slav Gomelski", email: "slav.gomelski@gmail.com", role: "admin", joined: "01/03/2026", lastActive: "היום",      tasks: 5, provider: "google" },
-  { id: 2, name: "Dana Cohen",    email: "dana@luma.co.il",          role: "user",  joined: "10/03/2026", lastActive: "אתמול",    tasks: 3, provider: "email"  },
-  { id: 3, name: "Rotem Levi",    email: "rotem@luma.co.il",         role: "user",  joined: "15/03/2026", lastActive: "לפני 3 ימים", tasks: 1, provider: "email" },
-];
-
 const AdminPanel = ({ currentUser, onClose }) => {
   const [tab, setTab] = useState("users");
-  const [users, setUsers] = useState(MOCK_USERS_INIT);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
   const [inviteRole, setInviteRole] = useState("user");
-  const [inviteSent, setInviteSent] = useState(false);
+  const [inviteMsg, setInviteMsg] = useState("");
   const [inviteLoading, setInviteLoading] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(null);
+  const [resetMsg, setResetMsg] = useState("");
 
-  const changeRole = (id, newRole) =>
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, role: newRole } : u));
+  useEffect(() => { loadUsers(); }, []);
 
-  const removeUser = (id) => { setUsers(prev => prev.filter(u => u.id !== id)); setConfirmRemove(null); };
-
-  const sendInvite = () => {
-    if (!inviteEmail.includes("@")) return;
-    setInviteLoading(true);
-    setTimeout(() => {
-      setUsers(prev => [...prev, { id: Date.now(), name: inviteEmail.split("@")[0], email: inviteEmail, role: inviteRole, joined: TODAY, lastActive: "לא נכנס עדיין", tasks: 0, provider: "invite" }]);
-      setInviteLoading(false); setInviteSent(true); setInviteEmail("");
-      setTimeout(() => setInviteSent(false), 3000);
-    }, 900);
+  const loadUsers = async () => {
+    if (!supabase) { setLoading(false); return; }
+    setLoading(true);
+    const { data, error } = await supabase.from("allowed_users").select("*").order("invited_at");
+    if (data) setUsers(data);
+    setLoading(false);
   };
+
+  const changeRole = async (email, newRole) => {
+    if (!supabase) return;
+    const { error } = await supabase.from("allowed_users").update({ role: newRole }).eq("email", email);
+    if (!error) setUsers(prev => prev.map(u => u.email === email ? { ...u, role: newRole } : u));
+  };
+
+  const removeUser = async (email) => {
+    if (!supabase) return;
+    const { error } = await supabase.from("allowed_users").delete().eq("email", email);
+    if (!error) { setUsers(prev => prev.filter(u => u.email !== email)); setConfirmRemove(null); }
+  };
+
+  const addToAllowlist = async () => {
+    if (!inviteEmail.includes("@") || !supabase) return;
+    setInviteLoading(true);
+    const { data, error } = await supabase.from("allowed_users").insert([{
+      email: inviteEmail.trim().toLowerCase(),
+      role: inviteRole,
+      display_name: inviteName.trim() || inviteEmail.split("@")[0],
+    }]).select().single();
+    if (!error && data) {
+      setUsers(prev => [...prev, data]);
+      setInviteMsg("✓ נוסף לרשימה המורשית. המשתמש יוכל להירשם עם האימייל הזה.");
+      setInviteEmail(""); setInviteName("");
+      setTimeout(() => setInviteMsg(""), 4000);
+    } else {
+      setInviteMsg(error?.message?.includes("duplicate") ? "⚠ האימייל הזה כבר קיים ברשימה" : `⚠ שגיאה: ${error?.message}`);
+    }
+    setInviteLoading(false);
+  };
+
+  const sendPasswordReset = async (email) => {
+    if (!supabase) return;
+    await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+    setResetMsg(email);
+    setTimeout(() => setResetMsg(""), 3500);
+  };
+
+  const formatDate = (iso) => iso ? new Date(iso).toLocaleDateString("he-IL", { day:"2-digit", month:"2-digit", year:"2-digit" }) : "—";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" dir="rtl">
@@ -1700,73 +1831,79 @@ const AdminPanel = ({ currentUser, onClose }) => {
               style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)" }}>⚙</div>
             <div>
               <h2 className="font-bold text-slate-800 text-base leading-tight">ניהול משתמשים</h2>
-              <p className="text-xs text-slate-400">LUMA Admin Panel</p>
+              <p className="text-xs text-slate-400">LUMA Admin Panel · {users.length} משתמשים מורשים</p>
             </div>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors text-lg">✕</button>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 px-6 pt-3 flex-shrink-0">
-          {[{ id:"users", label:`משתמשים (${users.length})` }, { id:"invite", label:"✉ הזמנה חדשה" }].map(t => (
+        <div className="flex gap-1 px-6 pt-3 flex-shrink-0 border-b border-slate-100">
+          {[{ id:"users", label:`👥 משתמשים (${users.length})` }, { id:"invite", label:"➕ הוסף משתמש" }].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`px-4 py-2 text-sm font-semibold rounded-t-xl border-b-2 transition-all ${tab===t.id ? "border-violet-500 text-violet-600" : "border-transparent text-slate-400 hover:text-slate-600"}`}>
               {t.label}
             </button>
           ))}
         </div>
-        <div className="h-px bg-slate-100 flex-shrink-0" />
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-5">
 
-          {/* Users */}
+          {/* Users tab */}
           {tab === "users" && (
-            <div className="flex flex-col gap-3">
-              {users.map(user => (
-                <div key={user.id} className={`flex items-center gap-3 p-4 rounded-2xl border ${user.role==="blocked" ? "bg-red-50/40 border-red-100" : "bg-slate-50 border-slate-100"}`}>
+            <div className="flex flex-col gap-2.5">
+              {loading && <div className="text-center text-slate-400 py-8 text-sm">⏳ טוען משתמשים...</div>}
+              {!loading && users.length === 0 && (
+                <div className="text-center text-slate-400 py-8">
+                  <p className="text-sm">אין משתמשים ברשימה.</p>
+                  <p className="text-xs mt-1">הוסף את עצמך דרך לשונית "הוסף משתמש"</p>
+                </div>
+              )}
+              {users.map(u => (
+                <div key={u.id} className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${u.role==="blocked" ? "bg-red-50/50 border-red-100" : "bg-slate-50 border-slate-100 hover:border-slate-200"}`}>
                   {/* Avatar */}
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                    style={{ background: user.role==="blocked" ? "#94a3b8" : "linear-gradient(135deg,#6366f1,#a855f7)" }}>
-                    {user.name.charAt(0).toUpperCase()}
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                    style={{ background: u.role==="blocked" ? "#94a3b8" : "linear-gradient(135deg,#6366f1,#a855f7)" }}>
+                    {(u.display_name || u.email).charAt(0).toUpperCase()}
                   </div>
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-sm font-semibold ${user.role==="blocked" ? "text-slate-400 line-through" : "text-slate-800"}`}>{user.name}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${ROLE_COLORS[user.role]}`}>{ROLE_LABELS[user.role]}</span>
-                      <span className="text-xs text-slate-400">{user.provider==="google" ? "🔵 Google" : user.provider==="invite" ? "📨 מוזמן" : "📧 Email"}</span>
+                      <span className={`text-sm font-semibold ${u.role==="blocked" ? "text-slate-400 line-through" : "text-slate-800"}`}>{u.display_name || u.email.split("@")[0]}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${ROLE_COLORS[u.role]}`}>{ROLE_LABELS[u.role]}</span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-0.5 truncate">{user.email}</p>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className="text-xs text-slate-400">הצטרף: {user.joined}</span>
-                      <span className="text-xs text-slate-300">·</span>
-                      <span className="text-xs text-slate-400">פעיל: {user.lastActive}</span>
-                      <span className="text-xs text-slate-300">·</span>
-                      <span className="text-xs font-medium text-slate-500">{user.tasks} משימות</span>
+                    <p className="text-xs text-slate-400 mt-0.5 truncate">{u.email}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-slate-300">הוזמן: {formatDate(u.invited_at)}</span>
+                      {u.last_seen && <><span className="text-slate-200">·</span><span className="text-xs text-slate-300">נראה: {formatDate(u.last_seen)}</span></>}
                     </div>
                   </div>
                   {/* Actions */}
-                  {user.email !== currentUser?.email ? (
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {user.role !== "blocked" && (
-                        <select value={user.role} onChange={e => changeRole(user.id, e.target.value)}
-                          className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-600 focus:outline-none focus:border-violet-400 cursor-pointer">
+                  {u.email !== currentUser?.email ? (
+                    <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
+                      {u.role !== "blocked" && (
+                        <select value={u.role} onChange={e => changeRole(u.email, e.target.value)}
+                          className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-600 focus:outline-none cursor-pointer">
                           <option value="admin">אדמין</option>
                           <option value="user">משתמש</option>
                         </select>
                       )}
-                      <button onClick={() => changeRole(user.id, user.role==="blocked" ? "user" : "blocked")}
-                        className={`text-xs px-2.5 py-1.5 rounded-lg font-medium border transition-colors ${user.role==="blocked" ? "bg-green-50 text-green-600 border-green-200 hover:bg-green-100" : "bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100"}`}>
-                        {user.role==="blocked" ? "בטל חסימה" : "חסום"}
+                      <button onClick={() => changeRole(u.email, u.role==="blocked" ? "user" : "blocked")}
+                        className={`text-xs px-2.5 py-1.5 rounded-lg font-medium border transition-colors ${u.role==="blocked" ? "bg-green-50 text-green-600 border-green-200 hover:bg-green-100" : "bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100"}`}>
+                        {u.role==="blocked" ? "בטל חסימה" : "חסום"}
                       </button>
-                      {confirmRemove === user.id ? (
+                      <button onClick={() => sendPasswordReset(u.email)} title="שלח מייל לאיפוס סיסמה"
+                        className={`text-xs px-2.5 py-1.5 rounded-lg font-medium border transition-colors ${resetMsg===u.email ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-blue-50 text-blue-500 border-blue-100 hover:bg-blue-100"}`}>
+                        {resetMsg===u.email ? "✓ נשלח" : "🔑 איפוס"}
+                      </button>
+                      {confirmRemove === u.email ? (
                         <div className="flex gap-1">
-                          <button onClick={() => removeUser(user.id)} className="text-xs px-2.5 py-1.5 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600">מחק ✓</button>
-                          <button onClick={() => setConfirmRemove(null)} className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200">ביטול</button>
+                          <button onClick={() => removeUser(u.email)} className="text-xs px-2.5 py-1.5 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600">מחק ✓</button>
+                          <button onClick={() => setConfirmRemove(null)} className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-500">ביטול</button>
                         </div>
                       ) : (
-                        <button onClick={() => setConfirmRemove(user.id)} className="text-xs px-2.5 py-1.5 rounded-lg bg-red-50 text-red-500 border border-red-200 hover:bg-red-100 font-medium transition-colors">הסר</button>
+                        <button onClick={() => setConfirmRemove(u.email)} className="text-xs px-2.5 py-1.5 rounded-lg bg-red-50 text-red-500 border border-red-100 hover:bg-red-100 font-medium">הסר</button>
                       )}
                     </div>
                   ) : (
@@ -1777,17 +1914,27 @@ const AdminPanel = ({ currentUser, onClose }) => {
             </div>
           )}
 
-          {/* Invite */}
+          {/* Add user tab */}
           {tab === "invite" && (
             <div className="max-w-md flex flex-col gap-4">
-              <p className="text-sm text-slate-500 leading-relaxed">שלח הזמנה במייל. המוזמן יקבל לינק לרישום ישיר למערכת LUMA.</p>
-              <div>
-                <label className="text-xs font-semibold text-slate-500 mb-1.5 block">כתובת אימייל</label>
-                <input type="email"
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400 transition-all"
-                  placeholder="employee@luma.co.il" value={inviteEmail}
-                  onChange={e => setInviteEmail(e.target.value)}
-                  onKeyDown={e => e.key==="Enter" && sendInvite()} />
+              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-sm text-blue-700 leading-relaxed">
+                <p className="font-semibold mb-1">איך זה עובד?</p>
+                <p className="text-xs text-blue-600">הוסף אימייל לרשימה המורשית. המשתמש יוכל להירשם עם האימייל הזה ולהיכנס למערכת. אם תסיר אותו — הגישה שלו תיחסם אוטומטית.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 mb-1.5 block">שם תצוגה</label>
+                  <input className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400"
+                    placeholder="שם מלא" value={inviteName} onChange={e => setInviteName(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 mb-1.5 block">כתובת אימייל *</label>
+                  <input type="email"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400"
+                    placeholder="user@email.com" value={inviteEmail}
+                    onChange={e => setInviteEmail(e.target.value)}
+                    onKeyDown={e => e.key==="Enter" && addToAllowlist()} />
+                </div>
               </div>
               <div>
                 <label className="text-xs font-semibold text-slate-500 mb-1.5 block">תפקיד</label>
@@ -1801,20 +1948,16 @@ const AdminPanel = ({ currentUser, onClose }) => {
                   ))}
                 </div>
               </div>
-              {inviteSent && (
-                <div className="flex items-center gap-2 text-emerald-600 text-sm bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-xl">
-                  <span>✓</span><span>ההזמנה נשלחה! המשתמש נוסף לרשימה.</span>
+              {inviteMsg && (
+                <div className={`flex items-center gap-2 text-sm px-4 py-3 rounded-xl border ${inviteMsg.startsWith("✓") ? "text-emerald-600 bg-emerald-50 border-emerald-200" : "text-orange-600 bg-orange-50 border-orange-200"}`}>
+                  {inviteMsg}
                 </div>
               )}
-              <button onClick={sendInvite} disabled={inviteLoading || !inviteEmail.includes("@")}
+              <button onClick={addToAllowlist} disabled={inviteLoading || !inviteEmail.includes("@")}
                 className="py-2.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
                 style={{ background:"linear-gradient(135deg,#6366f1,#a855f7)", boxShadow:"0 4px 14px rgba(139,92,246,0.3)" }}>
-                {inviteLoading ? "⏳ שולח..." : "✉ שלח הזמנה"}
+                {inviteLoading ? "⏳ מוסיף..." : "➕ הוסף לרשימה המורשית"}
               </button>
-              <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                <p className="text-xs font-semibold text-slate-500 mb-1">💡 בפרודקשן (Supabase)</p>
-                <p className="text-xs text-slate-400 leading-relaxed">ישלח דרך <code className="bg-white px-1 rounded border border-slate-200">supabase.auth.admin.inviteUserByEmail()</code> עם redirect לאפליקציה.</p>
-              </div>
             </div>
           )}
         </div>
@@ -1838,6 +1981,7 @@ const TaskManager = () => {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [dbLoading, setDbLoading] = useState(false);
+  const [accessBlocked, setAccessBlocked] = useState(false);
 
   const [tasks, setTasks] = useState([]);
   const [calItems, setCalItems] = useState(HOLIDAYS);
@@ -1863,16 +2007,35 @@ const TaskManager = () => {
     provider: user.app_metadata?.provider || "email"
   } : null;
 
-  // ── Auth listener ──
+  // ── Auth listener with allowed_users gate ──
   useEffect(() => {
     if (!supabase) { setAuthLoading(false); return; }
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+
+    const checkAccess = async (sessionUser) => {
+      if (!sessionUser) return null;
+      const { data } = await supabase.from("allowed_users").select("role, display_name").eq("email", sessionUser.email).single();
+      if (!data || data.role === "blocked") {
+        await supabase.auth.signOut();
+        setAccessBlocked(true);
+        return null;
+      }
+      // Update last_seen
+      supabase.from("allowed_users").update({ last_seen: new Date().toISOString() }).eq("email", sessionUser.email);
+      setAccessBlocked(false);
+      return sessionUser;
+    };
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const u = await checkAccess(session?.user ?? null);
+      setUser(u);
       setAuthLoading(false);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUser(session?.user ?? null);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_e, session) => {
+      const u = await checkAccess(session?.user ?? null);
+      setUser(u);
     });
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -1990,7 +2153,7 @@ const TaskManager = () => {
     </div>
   );
 
-  if (!supabase || !user) return <LoginScreen />;
+  if (!supabase || !user) return <LoginScreen accessBlocked={accessBlocked} />;
 
   if (dbLoading) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center" dir="rtl">

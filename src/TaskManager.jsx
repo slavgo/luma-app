@@ -509,62 +509,149 @@ const UserAvatar = ({ name = "S", size = "md" }) => {
   );
 };
 
-const NAV_TABS = [
-  { id: "home",     label: "בית",      icon: "◈" },
-  { id: "tasks",    label: "משימות",   icon: "≡" },
-  { id: "clients",  label: "לקוחות",   icon: "◎" },
-  { id: "calendar", label: "לוח תוכן", icon: "▦" },
+const NAV_ITEMS = [
+  { id: "home",     label: "דשבורד",    icon: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+      <path d="M2 11l8-8 8 8M4 9v8h5v-5h2v5h5V9"/>
+    </svg>
+  )},
+  { id: "tasks",    label: "משימות",    icon: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+      <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd"/>
+    </svg>
+  )},
+  { id: "clients",  label: "לקוחות",   icon: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+      <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+    </svg>
+  )},
+  { id: "calendar", label: "לוח תוכן", icon: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"/>
+    </svg>
+  )},
 ];
 
-const NavTabs = ({ screen, setScreen, user, onSignOut, onOpenAdmin }) => {
+const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin }) => {
   const isAdmin = user?.role === "admin" || user?.provider === "google";
   return (
-    <nav className="bg-white/95 backdrop-blur border-b border-slate-100 px-5 flex items-center justify-between h-14 sticky top-0 z-40" dir="rtl" style={{ boxShadow: '0 1px 0 0 rgba(0,0,0,0.06)' }}>
-      {/* Brand */}
-      <LumaLogo showTagline={false} />
-
-      {/* Tabs */}
-      <div className="flex items-center gap-0.5 bg-slate-50 rounded-full px-1 py-1 border border-slate-100">
-        {NAV_TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setScreen(tab.id)}
-            className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 ${
-              screen === tab.id
-                ? 'bg-white text-slate-800 shadow-sm'
-                : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+    <aside
+      dir="rtl"
+      style={{
+        width: 220,
+        minWidth: 220,
+        background: '#0f172a',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        position: 'sticky',
+        top: 0,
+        borderLeft: '1px solid rgba(255,255,255,0.06)',
+      }}
+    >
+      {/* Logo */}
+      <div style={{ padding: '20px 18px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <svg viewBox="0 0 130 38" xmlns="http://www.w3.org/2000/svg" style={{ height: 28, width: 'auto' }}>
+          <defs>
+            <linearGradient id="sideAGrad" x1="100%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22d3ee"/>
+              <stop offset="40%" stopColor="#6366f1"/>
+              <stop offset="100%" stopColor="#a855f7"/>
+            </linearGradient>
+            <clipPath id="sideAClip">
+              <text x="98" y="34" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="36">A</text>
+            </clipPath>
+          </defs>
+          <text x="0" y="34" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="36" letterSpacing="-1" fill="white">LUM</text>
+          <text x="98" y="34" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="36" letterSpacing="-1" fill="url(#sideAGrad)">A</text>
+          <g clipPath="url(#sideAClip)" opacity="0.35">
+            <line x1="98" y1="34" x2="130" y2="0"  stroke="white" strokeWidth="1.5"/>
+            <line x1="107" y1="34" x2="130" y2="10" stroke="white" strokeWidth="1"/>
+            <line x1="117" y1="34" x2="130" y2="20" stroke="white" strokeWidth="1"/>
+          </g>
+        </svg>
+        <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 4, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Make Digital Brighter</p>
       </div>
 
-      {/* User area */}
-      <div className="flex items-center gap-2">
-        {/* Admin gear — visible only to admins */}
+      {/* Nav items */}
+      <nav style={{ flex: 1, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {NAV_ITEMS.map(item => {
+          const active = screen === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setScreen(item.id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '9px 12px', borderRadius: 8, cursor: 'pointer', border: 'none',
+                textAlign: 'right', width: '100%', transition: 'all 0.15s',
+                background: active ? 'rgba(99,102,241,0.18)' : 'transparent',
+                color: active ? '#a5b4fc' : 'rgba(255,255,255,0.5)',
+                fontWeight: active ? 600 : 400, fontSize: 13,
+              }}
+              onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = active ? 'rgba(99,102,241,0.18)' : 'transparent'; e.currentTarget.style.color = active ? '#a5b4fc' : 'rgba(255,255,255,0.5)'; }}
+            >
+              <span style={{ color: active ? '#6366f1' : 'rgba(255,255,255,0.35)', flexShrink: 0 }}>{item.icon}</span>
+              {item.label}
+              {active && <span style={{ marginRight: 'auto', width: 5, height: 5, borderRadius: '50%', background: '#6366f1', flexShrink: 0 }}></span>}
+            </button>
+          );
+        })}
+
+        {/* Divider */}
+        <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '8px 4px' }} />
+
         {isAdmin && (
           <button
             onClick={onOpenAdmin}
-            title="פאנל ניהול"
-            className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-all text-base relative group"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '9px 12px', borderRadius: 8, cursor: 'pointer', border: 'none',
+              textAlign: 'right', width: '100%', background: 'transparent',
+              color: 'rgba(255,255,255,0.4)', fontSize: 13, transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.4)'; }}
           >
-            ⚙
-            <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">ניהול משתמשים</span>
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4" style={{ flexShrink: 0, opacity: 0.5 }}>
+              <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/>
+            </svg>
+            ניהול
           </button>
         )}
-        <div className="text-left hidden sm:block">
-          <div className="flex items-center gap-1.5">
-            <p className="text-xs font-semibold text-slate-700 leading-none">{user?.name || "משתמש"}</p>
-            {isAdmin && <span className="text-xs px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-600 font-medium leading-none">Admin</span>}
+      </nav>
+
+      {/* User section */}
+      <div style={{ padding: '12px 10px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.05)' }}>
+          <UserAvatar name={user?.name || "U"} size="sm" />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || "משתמש"}</p>
+            {isAdmin && <span style={{ fontSize: 10, color: '#6366f1', fontWeight: 500 }}>Admin</span>}
           </div>
-          <button onClick={onSignOut} className="text-xs text-slate-400 leading-none mt-0.5 hover:text-red-400 transition-colors">יציאה ↩</button>
+          <button
+            onClick={onSignOut}
+            title="יציאה"
+            style={{ color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: 4, fontSize: 14, transition: 'color 0.15s', flexShrink: 0 }}
+            onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
+            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.3)'}
+          >↩</button>
         </div>
-        <UserAvatar name={user?.name || "U"} />
       </div>
-    </nav>
+    </aside>
   );
 };
+
+// ── Layout wrapper ──────────────────────────────────────────────────────────
+const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, children }) => (
+  <div dir="rtl" style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f8fafc' }}>
+    <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+      {children}
+    </main>
+    <Sidebar screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} />
+  </div>
+);
 
 // ─── Dashboard / Home Screen ─────────────────────────────────────────────────
 // ─── Local AI Pattern Analysis ─────────────────────────────────────────────
@@ -830,7 +917,6 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
   const overdue      = activeTasks.filter(t => t.date < TODAY);
   const highUrgency  = activeTasks.filter(t => t.urgency === 'גבוהה');
   const waiting      = activeTasks.filter(t => t.status === 'ממתין לאישור');
-  // per-client task counts
   const clientLoad = clients
     .map(name => ({
       name,
@@ -840,119 +926,140 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
     .filter(c => c.count > 0)
     .sort((a, b) => b.count - a.count);
 
-  // upcoming 5 tasks sorted by date
   const upcoming = [...activeTasks]
     .filter(t => t.date >= TODAY)
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 5);
 
   const dayNames = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
-  const todayDate = new Date(TODAY);
+  const todayDate = new Date();
   const dayName = dayNames[todayDate.getDay()];
   const [d, m, y] = [todayDate.getDate(), todayDate.getMonth() + 1, todayDate.getFullYear()];
 
-  return (
-    <div className="bg-slate-50 min-h-screen" dir="rtl">
+  const doneRate = tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0;
 
-      {/* Greeting banner */}
-      <div className="bg-white border-b border-slate-100 px-7 py-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-5">
-            <UserAvatar name={user?.name || "S"} size="lg" />
-            <div className="flex flex-col gap-1">
-              <LumaLogo showTagline={true} />
-              <p className="text-xs text-slate-400">שלום {user?.name || "Slav"} — יום {dayName}, {d}/{m}/{y}</p>
-            </div>
+  const KpiCard = ({ label, value, sub, accent, icon }) => (
+    <div style={{ background: 'white', borderRadius: 14, padding: '20px 22px', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', borderRight: `3px solid ${accent}`, position: 'relative', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <p style={{ fontSize: 12, color: '#94a3b8', fontWeight: 500, marginBottom: 4 }}>{label}</p>
+          <p style={{ fontSize: 32, fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{value}</p>
+          {sub && <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 5 }}>{sub}</p>}
+        </div>
+        <div style={{ fontSize: 22, opacity: 0.15 }}>{icon}</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ background: '#f8fafc', minHeight: '100%', padding: '28px 32px' }} dir="rtl">
+
+      {/* Header */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: 0 }}>
+              שלום, {user?.name?.split(' ')[0] || 'Slav'} 👋
+            </h1>
+            <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>יום {dayName} · {d}/{m}/{y}</p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap justify-end">
-            {overdue.length > 0 && (
-              <span className="flex items-center gap-1.5 text-xs bg-red-50 border border-red-100 text-red-600 px-3 py-1.5 rounded-full font-medium">
-                <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>{overdue.length} באיחור
-              </span>
-            )}
-            {todayTasks.length > 0 && (
-              <span className="flex items-center gap-1.5 text-xs bg-violet-50 border border-violet-100 text-violet-600 px-3 py-1.5 rounded-full font-medium">
-                <span className="w-1.5 h-1.5 bg-violet-500 rounded-full"></span>{todayTasks.length} להיום
-              </span>
-            )}
-            {waiting.length > 0 && (
-              <span className="flex items-center gap-1.5 text-xs bg-amber-50 border border-amber-100 text-amber-600 px-3 py-1.5 rounded-full font-medium">
-                <span className="w-1.5 h-1.5 bg-amber-400 rounded-full"></span>{waiting.length} ממתין
-              </span>
-            )}
-            {doneTasks.length > 0 && (
-              <span className="flex items-center gap-1.5 text-xs bg-emerald-50 border border-emerald-100 text-emerald-600 px-3 py-1.5 rounded-full font-medium">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>{doneTasks.length} בוצעו
-              </span>
-            )}
-            {overdue.length === 0 && todayTasks.length === 0 && waiting.length === 0 && (
-              <span className="text-xs text-slate-400">הכל תחת שליטה ✓</span>
-            )}
-          </div>
+          <button
+            onClick={onAddTask}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px',
+              background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+              color: 'white', borderRadius: 10, border: 'none', cursor: 'pointer',
+              fontSize: 13, fontWeight: 600, boxShadow: '0 4px 14px rgba(99,102,241,0.35)',
+            }}
+          >
+            <span style={{ fontSize: 16 }}>+</span> משימה חדשה
+          </button>
         </div>
       </div>
 
-      <div className="p-6">
+      {/* KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+        <KpiCard label="משימות פתוחות" value={activeTasks.length} sub={`${overdue.length} באיחור`} accent="#6366f1" icon="≡" />
+        <KpiCard label="דחוף ומיידי" value={highUrgency.length} sub="דורש טיפול עכשיו" accent="#ef4444" icon="⚡" />
+        <KpiCard label="ממתין לאישור" value={waiting.length} sub="לקוחות ממתינים" accent="#f59e0b" icon="⏳" />
+        <KpiCard label="אחוז השלמה" value={`${doneRate}%`} sub={`${doneTasks.length} מתוך ${tasks.length} בוצעו`} accent="#10b981" icon="✓" />
+      </div>
 
-      <AIInsightsPanel tasks={tasks} clientsData={clientsData} />
+      {/* Progress bar */}
+      {tasks.length > 0 && (
+        <div style={{ background: 'white', borderRadius: 14, padding: '16px 22px', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 24 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>התקדמות כוללת</span>
+            <span style={{ fontSize: 13, color: '#6366f1', fontWeight: 700 }}>{doneRate}%</span>
+          </div>
+          <div style={{ height: 8, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${doneRate}%`, background: 'linear-gradient(90deg, #6366f1, #a855f7)', borderRadius: 99, transition: 'width 0.5s ease' }} />
+          </div>
+          <div style={{ display: 'flex', gap: 20, marginTop: 10 }}>
+            {[
+              { label: 'לביצוע', count: activeTasks.filter(t=>t.status==='לביצוע').length, color: '#94a3b8' },
+              { label: 'בביצוע', count: activeTasks.filter(t=>t.status==='בביצוע').length, color: '#6366f1' },
+              { label: 'ממתין', count: waiting.length, color: '#f59e0b' },
+              { label: 'בוצע', count: doneTasks.length, color: '#10b981' },
+            ].map(s => (
+              <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, display: 'inline-block' }}></span>
+                <span style={{ fontSize: 11, color: '#94a3b8' }}>{s.label} <strong style={{ color: '#475569' }}>{s.count}</strong></span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+      {/* 2-col grid: urgent + upcoming */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
 
-        {/* Urgent / today tasks */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-50">
-            <h3 className="font-semibold text-slate-700 text-sm">🔥 דחוף ומיידי</h3>
-            <button onClick={onGoToTasks} className="text-xs text-blue-500 hover:underline">כל המשימות →</button>
+        {/* Urgent tasks */}
+        <div style={{ background: 'white', borderRadius: 14, border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #f8fafc' }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#334155', margin: 0 }}>🔥 דחוף ומיידי</h3>
+            <button onClick={onGoToTasks} style={{ fontSize: 11, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>כל המשימות ←</button>
           </div>
           {[...todayTasks, ...highUrgency.filter(t => !todayTasks.includes(t))].slice(0, 5).length === 0 ? (
-            <p className="text-sm text-gray-300 italic p-5 text-center">אין משימות דחופות 🎉</p>
+            <p style={{ textAlign: 'center', color: '#cbd5e1', fontSize: 13, padding: '24px 0', fontStyle: 'italic' }}>אין משימות דחופות 🎉</p>
           ) : (
-            <ul className="divide-y divide-gray-50">
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
               {[...todayTasks, ...highUrgency.filter(t => !todayTasks.includes(t))].slice(0, 5).map(task => (
-                <li key={task.id} className="px-5 py-3 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-700 truncate">{task.task}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{task.client} · {PLATFORM_ICONS[task.platform]} {task.platform}</p>
+                <li key={task.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid #f8fafc', gap: 12 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#334155', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.task}</p>
+                    <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{task.client} · {task.platform}</p>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className={`text-xs px-2 py-0.5 rounded-full border ${getUrgencyColor(task.urgency)}`}>{task.urgency}</span>
-                    <span className={`text-xs font-mono ${task.date < TODAY ? 'text-red-500 font-bold' : 'text-gray-400'}`}>{task.date}</span>
-                  </div>
+                  <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: task.urgency === 'גבוהה' ? '#fef2f2' : '#fff7ed', color: task.urgency === 'גבוהה' ? '#dc2626' : '#ea580c', fontWeight: 600, flexShrink: 0 }}>{task.urgency}</span>
                 </li>
               ))}
             </ul>
           )}
-          <div className="px-5 py-3 border-t border-gray-50">
-            <button onClick={onAddTask} className="text-xs text-blue-600 font-medium hover:underline">+ הוסף משימה</button>
+          <div style={{ padding: '10px 20px', borderTop: '1px solid #f8fafc' }}>
+            <button onClick={onAddTask} style={{ fontSize: 12, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>+ הוסף משימה</button>
           </div>
         </div>
 
         {/* Upcoming deadlines */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-50">
-            <h3 className="font-semibold text-slate-700 text-sm">📅 דדליינים קרובים</h3>
-            <span className="text-xs text-gray-400">7 ימים קדימה</span>
+        <div style={{ background: 'white', borderRadius: 14, border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #f8fafc' }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#334155', margin: 0 }}>📅 דדליינים קרובים</h3>
+            <span style={{ fontSize: 11, color: '#94a3b8' }}>7 ימים קדימה</span>
           </div>
           {upcoming.length === 0 ? (
-            <p className="text-sm text-gray-300 italic p-5 text-center">אין דדליינים קרובים</p>
+            <p style={{ textAlign: 'center', color: '#cbd5e1', fontSize: 13, padding: '24px 0', fontStyle: 'italic' }}>אין דדליינים קרובים</p>
           ) : (
-            <ul className="divide-y divide-gray-50">
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
               {upcoming.map(task => {
                 const daysLeft = Math.ceil((new Date(task.date) - new Date(TODAY)) / 86400000);
+                const chip = daysLeft === 0 ? { bg: '#f3e8ff', c: '#7c3aed', t: 'היום' } : daysLeft === 1 ? { bg: '#fee2e2', c: '#dc2626', t: 'מחר' } : daysLeft <= 3 ? { bg: '#ffedd5', c: '#ea580c', t: `${daysLeft} ימים` } : { bg: '#f1f5f9', c: '#64748b', t: `${daysLeft} ימים` };
                 return (
-                  <li key={task.id} className="px-5 py-3 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-700 truncate">{task.task}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{task.client}</p>
+                  <li key={task.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid #f8fafc', gap: 12 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: '#334155', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.task}</p>
+                      <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{task.client}</p>
                     </div>
-                    <div className={`text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0 ${
-                      daysLeft === 0 ? 'bg-purple-100 text-purple-700' :
-                      daysLeft <= 2 ? 'bg-red-100 text-red-600' :
-                      daysLeft <= 5 ? 'bg-orange-100 text-orange-600' :
-                      'bg-gray-100 text-gray-500'
-                    }`}>
-                      {daysLeft === 0 ? 'היום' : daysLeft === 1 ? 'מחר' : `${daysLeft} ימים`}
-                    </div>
+                    <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: chip.bg, color: chip.c, fontWeight: 700, flexShrink: 0 }}>{chip.t}</span>
                   </li>
                 );
               })}
@@ -961,32 +1068,32 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {/* 2-col: client load + AI insights */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
 
         {/* Client workload */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-50">
-            <h3 className="font-semibold text-slate-700 text-sm">👥 עומס לפי לקוח</h3>
-            <button onClick={onGoToClients} className="text-xs text-blue-500 hover:underline">כל הלקוחות →</button>
+        <div style={{ background: 'white', borderRadius: 14, border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #f8fafc' }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#334155', margin: 0 }}>👥 עומס לפי לקוח</h3>
+            <button onClick={onGoToClients} style={{ fontSize: 11, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>כל הלקוחות ←</button>
           </div>
           {clientLoad.length === 0 ? (
-            <p className="text-sm text-gray-300 italic p-5 text-center">אין משימות פעילות</p>
+            <p style={{ textAlign: 'center', color: '#cbd5e1', fontSize: 13, padding: '24px 0', fontStyle: 'italic' }}>אין משימות פעילות</p>
           ) : (
-            <ul className="divide-y divide-gray-50">
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
               {clientLoad.map(({ name, count, urgent }) => {
-                const maxCount = clientLoad[0].count;
-                const pct = Math.round((count / maxCount) * 100);
+                const pct = Math.round((count / clientLoad[0].count) * 100);
                 return (
-                  <li key={name} className="px-5 py-3 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => onSelectClient(name)}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">{name}</span>
-                      <div className="flex items-center gap-2">
-                        {urgent > 0 && <span className="text-xs text-red-500 font-semibold">⚡ {urgent} דחוף</span>}
-                        <span className="text-xs text-gray-400 font-medium">{count} משימות</span>
+                  <li key={name} style={{ padding: '10px 20px', borderBottom: '1px solid #f8fafc', cursor: 'pointer' }} onClick={() => onSelectClient(name)}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{name}</span>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        {urgent > 0 && <span style={{ fontSize: 11, color: '#ef4444', fontWeight: 700 }}>⚡ {urgent}</span>}
+                        <span style={{ fontSize: 11, color: '#94a3b8' }}>{count} משימות</span>
                       </div>
                     </div>
-                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className={`h-1.5 rounded-full transition-all ${urgent > 0 ? 'bg-red-400' : 'bg-blue-400'}`} style={{ width: `${pct}%` }} />
+                    <div style={{ height: 4, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: urgent > 0 ? 'linear-gradient(90deg, #f87171, #ef4444)' : 'linear-gradient(90deg, #818cf8, #6366f1)', borderRadius: 99 }} />
                     </div>
                   </li>
                 );
@@ -995,32 +1102,10 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
           )}
         </div>
 
-        {/* Waiting for approval */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-50">
-            <h3 className="font-semibold text-slate-700 text-sm">⏳ ממתין לאישור לקוח</h3>
-            <span className="text-xs font-bold text-orange-500">{waiting.length}</span>
-          </div>
-          {waiting.length === 0 ? (
-            <p className="text-sm text-gray-300 italic p-5 text-center">אין פריטים ממתינים 👍</p>
-          ) : (
-            <ul className="divide-y divide-gray-50">
-              {waiting.map(task => (
-                <li key={task.id} className="px-5 py-3 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-700 truncate">{task.task}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{task.client}</p>
-                  </div>
-                  <span className="text-xs font-mono text-gray-400 flex-shrink-0">{task.date}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <AIInsightsPanel tasks={tasks} clientsData={clientsData} />
 
       </div>
     </div>
-  </div>
   );
 };
 
@@ -1888,10 +1973,62 @@ const TaskManager = () => {
     />
   ) : null;
 
-  // ── Client detail screen ──
-  if (selectedClient) {
-    return (
-      <>
+  // ── Shared new-task modal (reused across screens) ──
+  const newTaskModal = showTaskModal && (
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={() => setShowTaskModal(false)}>
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md" dir="rtl" onClick={e => e.stopPropagation()}>
+        <h2 className="text-lg font-bold text-gray-800 mb-4">➕ משימה חדשה</h2>
+        <div className="flex flex-col gap-3">
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">לקוח</label>
+            <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.client} onChange={e => setNewTask(p => ({...p, client: e.target.value}))}>
+              <option value="">בחר לקוח</option>
+              {clients.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">תיאור משימה</label>
+            <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="מה צריך לעשות?" value={newTask.task} onChange={e => setNewTask(p => ({...p, task: e.target.value}))} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">פלטפורמה</label>
+              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.platform} onChange={e => setNewTask(p => ({...p, platform: e.target.value}))}>
+                {PLATFORMS.map(pl => <option key={pl} value={pl}>{pl}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">דחיפות</label>
+              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.urgency} onChange={e => setNewTask(p => ({...p, urgency: e.target.value}))}>
+                {URGENCIES.map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">סטטוס</label>
+              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.status} onChange={e => setNewTask(p => ({...p, status: e.target.value}))}>
+                {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">תאריך יעד</label>
+              <input type="date" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.date} onChange={e => setNewTask(p => ({...p, date: e.target.value}))} />
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2 mt-5 justify-end">
+          <button onClick={() => setShowTaskModal(false)} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">ביטול</button>
+          <button onClick={addTask} className="px-5 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-colors">הוסף משימה</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── Render screen content ──
+  const renderContent = () => {
+    if (selectedClient) {
+      return (
         <ClientScreen
           clientName={selectedClient}
           clientData={clientsData[selectedClient] || {}}
@@ -1906,123 +2043,55 @@ const TaskManager = () => {
             setSelectedClient(null);
           }}
         />
-        {taskDetailModal}
-      </>
-    );
-  }
-
-  // ── Home screen ──
-  if (screen === "home") {
-    return (
-      <div className="bg-slate-50 min-h-screen" dir="rtl">
-        <NavTabs screen={screen} setScreen={setScreen} user={currentUser} onSignOut={signOut} onOpenAdmin={() => setShowAdmin(true)} />
-        {taskDetailModal}
-        <HomeScreen
-          tasks={tasks}
-          clientsData={clientsData}
-          onGoToTasks={() => setScreen("tasks")}
-          onGoToClients={() => setScreen("clients")}
-          onSelectClient={(name) => setSelectedClient(name)}
-          onAddTask={() => setShowTaskModal(true)}
-          user={currentUser}
-        />
-        {showTaskModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={() => setShowTaskModal(false)}>
-            <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md" dir="rtl" onClick={e => e.stopPropagation()}>
-              <h2 className="text-lg font-bold text-gray-800 mb-4">➕ משימה חדשה</h2>
-              <div className="flex flex-col gap-3">
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">לקוח</label>
-                  <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.client} onChange={e => setNewTask(p => ({...p, client: e.target.value}))}>
-                    <option value="">בחר לקוח</option>
-                    {clients.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">תיאור משימה</label>
-                  <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="מה צריך לעשות?" value={newTask.task} onChange={e => setNewTask(p => ({...p, task: e.target.value}))} />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">פלטפורמה</label>
-                    <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.platform} onChange={e => setNewTask(p => ({...p, platform: e.target.value}))}>
-                      {PLATFORMS.map(pl => <option key={pl} value={pl}>{pl}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">דחיפות</label>
-                    <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.urgency} onChange={e => setNewTask(p => ({...p, urgency: e.target.value}))}>
-                      {URGENCIES.map(u => <option key={u} value={u}>{u}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">סטטוס</label>
-                    <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.status} onChange={e => setNewTask(p => ({...p, status: e.target.value}))}>
-                      {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1 block">תאריך יעד</label>
-                    <input type="date" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.date} onChange={e => setNewTask(p => ({...p, date: e.target.value}))} />
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-2 mt-5 justify-end">
-                <button onClick={() => setShowTaskModal(false)} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">ביטול</button>
-                <button onClick={addTask} className="px-5 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-colors">הוסף משימה</button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // ── Clients list screen ──
-  if (screen === "clients") {
-    return (
-      <>
-        <NavTabs screen={screen} setScreen={setScreen} user={currentUser} onSignOut={signOut} onOpenAdmin={() => setShowAdmin(true)} />
-        <ClientsListScreen
-          clientsData={clientsData}
-          tasks={tasks}
-          onSelectClient={setSelectedClient}
-          onAddClient={() => setShowClientModal(true)}
-        />
-        {showClientModal && <NewClientModal
-          newClientForm={newClientForm}
-          setNewClientForm={setNewClientForm}
-          emptyClientForm={emptyClientForm}
-          onClose={() => { setShowClientModal(false); setNewClientForm(emptyClientForm); }}
-          onAdd={addClient}
-        />}
-      </>
-    );
-  }
-
-  // ── Calendar screen ──
-  if (screen === "calendar") {
-    return (
-      <div className="bg-slate-50 min-h-screen" dir="rtl">
-        <NavTabs screen={screen} setScreen={setScreen} user={currentUser} onSignOut={signOut} onOpenAdmin={() => setShowAdmin(true)} />
-        {taskDetailModal}
+      );
+    }
+    if (screen === "home") {
+      return (
+        <>
+          <HomeScreen
+            tasks={tasks}
+            clientsData={clientsData}
+            onGoToTasks={() => setScreen("tasks")}
+            onGoToClients={() => setScreen("clients")}
+            onSelectClient={(name) => setSelectedClient(name)}
+            onAddTask={() => setShowTaskModal(true)}
+            user={currentUser}
+          />
+          {newTaskModal}
+        </>
+      );
+    }
+    if (screen === "clients") {
+      return (
+        <>
+          <ClientsListScreen
+            clientsData={clientsData}
+            tasks={tasks}
+            onSelectClient={setSelectedClient}
+            onAddClient={() => setShowClientModal(true)}
+          />
+          {showClientModal && <NewClientModal
+            newClientForm={newClientForm}
+            setNewClientForm={setNewClientForm}
+            emptyClientForm={emptyClientForm}
+            onClose={() => { setShowClientModal(false); setNewClientForm(emptyClientForm); }}
+            onAdd={addClient}
+          />}
+        </>
+      );
+    }
+    if (screen === "calendar") {
+      return (
         <CalendarScreen
           calItems={calItems}
           clients={clients}
           onAddItem={addCalItem}
           onDeleteItem={deleteCalItem}
         />
-      </div>
-    );
-  }
-
-  // ── Main screen ──
-  return (
-    <div className="bg-slate-50 min-h-screen" dir="rtl">
-      <NavTabs screen={screen} setScreen={setScreen} user={currentUser} onSignOut={signOut} onOpenAdmin={() => setShowAdmin(true)} />
-      {taskDetailModal}
+      );
+    }
+    // ── Tasks screen (default) ──
+    return (
     <div className="p-6">
 
       {/* Header Row 1 */}
@@ -2157,58 +2226,7 @@ const TaskManager = () => {
         מעוצב לשימוש אישי כאיש שיווק דיגיטלי • 2026
       </footer>
 
-      {/* Modal: New Task */}
-      {showTaskModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={() => setShowTaskModal(false)}>
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md" dir="rtl" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-gray-800 mb-4">➕ משימה חדשה</h2>
-            <div className="flex flex-col gap-3">
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">לקוח</label>
-                <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.client} onChange={e => setNewTask(p => ({...p, client: e.target.value}))}>
-                  <option value="">בחר לקוח</option>
-                  {clients.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs text-gray-500 mb-1 block">תיאור משימה</label>
-                <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="מה צריך לעשות?" value={newTask.task} onChange={e => setNewTask(p => ({...p, task: e.target.value}))} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">פלטפורמה</label>
-                  <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.platform} onChange={e => setNewTask(p => ({...p, platform: e.target.value}))}>
-                    {PLATFORMS.map(pl => <option key={pl} value={pl}>{pl}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">דחיפות</label>
-                  <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.urgency} onChange={e => setNewTask(p => ({...p, urgency: e.target.value}))}>
-                    {URGENCIES.map(u => <option key={u} value={u}>{u}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">סטטוס</label>
-                  <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.status} onChange={e => setNewTask(p => ({...p, status: e.target.value}))}>
-                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">תאריך יעד</label>
-                  <input type="date" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.date} onChange={e => setNewTask(p => ({...p, date: e.target.value}))} />
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2 mt-5 justify-end">
-              <button onClick={() => setShowTaskModal(false)} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">ביטול</button>
-              <button onClick={addTask} className="px-5 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-colors">הוסף משימה</button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {newTaskModal}
       {showClientModal && <NewClientModal
         newClientForm={newClientForm}
         setNewClientForm={setNewClientForm}
@@ -2217,24 +2235,36 @@ const TaskManager = () => {
         onAdd={addClient}
       />}
     </div>
+    );
+  };
 
-    {/* ─── Claude AI Chat (floating, all screens) ─── */}
-    <ClaudeChat
-      tasks={tasks}
-      clientsData={clientsData}
-      isOpen={chatOpen}
-      onOpen={() => setChatOpen(true)}
-      onClose={() => setChatOpen(false)}
-    />
-
-    {/* ─── Admin Panel (modal, admin only) ─── */}
-    {showAdmin && (
-      <AdminPanel
-        currentUser={currentUser}
-        onClose={() => setShowAdmin(false)}
+  // ── Unified Layout return ──
+  return (
+    <Layout
+      screen={selectedClient ? "clients" : screen}
+      setScreen={setScreen}
+      user={currentUser}
+      onSignOut={signOut}
+      onOpenAdmin={() => setShowAdmin(true)}
+    >
+      {taskDetailModal}
+      {renderContent()}
+      {/* ─── Claude AI Chat (floating, all screens) ─── */}
+      <ClaudeChat
+        tasks={tasks}
+        clientsData={clientsData}
+        isOpen={chatOpen}
+        onOpen={() => setChatOpen(true)}
+        onClose={() => setChatOpen(false)}
       />
-    )}
-    </div>
+      {/* ─── Admin Panel (modal, admin only) ─── */}
+      {showAdmin && (
+        <AdminPanel
+          currentUser={currentUser}
+          onClose={() => setShowAdmin(false)}
+        />
+      )}
+    </Layout>
   );
 };
 

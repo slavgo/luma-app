@@ -2013,14 +2013,24 @@ const TaskManager = () => {
 
     const checkAccess = async (sessionUser) => {
       if (!sessionUser) return null;
-      const { data } = await supabase.from("allowed_users").select("role, display_name").eq("email", sessionUser.email).single();
-      if (!data || data.role === "blocked") {
-        await supabase.auth.signOut();
-        setAccessBlocked(true);
-        return null;
+      try {
+        const { data, error } = await supabase
+          .from("allowed_users")
+          .select("role")
+          .eq("email", sessionUser.email)
+          .maybeSingle();
+        // Only block if EXPLICITLY marked blocked — any error = let through
+        if (!error && data?.role === "blocked") {
+          await supabase.auth.signOut();
+          setAccessBlocked(true);
+          return null;
+        }
+        if (!error && data) {
+          supabase.from("allowed_users").update({ last_seen: new Date().toISOString() }).eq("email", sessionUser.email);
+        }
+      } catch (e) {
+        // DB error → fail open, let user in
       }
-      // Update last_seen
-      supabase.from("allowed_users").update({ last_seen: new Date().toISOString() }).eq("email", sessionUser.email);
       setAccessBlocked(false);
       return sessionUser;
     };

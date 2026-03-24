@@ -777,6 +777,51 @@ const BottomNav = ({ screen, setScreen, user, onSignOut, onOpenAdmin }) => {
   );
 };
 
+// ── Mobile top header ────────────────────────────────────────────────────────
+const SCREEN_LABELS = { home: 'בית', tasks: 'משימות', clients: 'לקוחות', calendar: 'לוח שנה' };
+
+const MobileHeader = ({ screen, user }) => {
+  const initials = (user?.name || "U").trim().charAt(0).toUpperCase();
+  const colors = NAV_COLORS[screen] || NAV_COLORS.home;
+  return (
+    <header dir="rtl" style={{
+      position: 'sticky', top: 0, zIndex: 90,
+      background: 'white',
+      borderBottom: '1px solid #e2e8f0',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '0 16px', height: 52,
+      boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
+    }}>
+      {/* LUMA logo */}
+      <svg width="52" height="22" viewBox="0 0 52 22">
+        <defs>
+          <linearGradient id="mhGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#6366f1"/>
+            <stop offset="100%" stopColor="#a855f7"/>
+          </linearGradient>
+        </defs>
+        <text x="0" y="18" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="20" letterSpacing="-1" fill="#0f172a">L</text>
+        <text x="12" y="18" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="20" letterSpacing="-1" fill="#0f172a">U</text>
+        <text x="24" y="18" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="20" letterSpacing="-1" fill="url(#mhGrad)">M</text>
+        <text x="38" y="18" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="20" letterSpacing="-1" fill="url(#mhGrad)">A</text>
+      </svg>
+
+      {/* Page label */}
+      <span style={{ fontSize: 13, fontWeight: 700, color: colors.from }}>{SCREEN_LABELS[screen] || ''}</span>
+
+      {/* User avatar */}
+      <div style={{
+        width: 32, height: 32, borderRadius: '50%',
+        background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'white', fontWeight: 700, fontSize: 13,
+      }}>
+        {initials}
+      </div>
+    </header>
+  );
+};
+
 // ── Layout wrapper ──────────────────────────────────────────────────────────
 const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, children }) => {
   const mobile = useMobile();
@@ -786,6 +831,7 @@ const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, children }) =
         flex: 1, overflowY: 'auto', overflowX: 'hidden', background: '#f1f5f9',
         paddingBottom: mobile ? 64 : 0,
       }}>
+        {mobile && <MobileHeader screen={screen} user={user} />}
         {children}
       </main>
       {mobile
@@ -888,7 +934,7 @@ const AIInsightsPanel = ({ tasks, clientsData }) => {
 };
 
 // ─── Claude AI Chat ─────────────────────────────────────────────────────────
-const ClaudeChat = ({ tasks, clientsData, isOpen, onClose, onOpen }) => {
+const ClaudeChat = ({ tasks, clientsData, isOpen, onClose, onOpen, isMobile }) => {
   const [apiKey, setApiKey] = useState('');
   const [keyEntered, setKeyEntered] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -953,11 +999,14 @@ ${JSON.stringify(Object.entries(clientsData).map(([name, d]) => ({ name, ...d })
 
   const QUICK_QUESTIONS = ['מה כדאי לעשות ראשון?', 'מי הלקוח הכי עמוס?', 'מה המגמות שאתה רואה?'];
 
+  const chatBottom = isMobile ? 76 : 24;
+
   if (!isOpen) {
     return (
       <button
         onClick={onOpen}
-        className="fixed bottom-6 left-6 z-50 bg-gradient-to-br from-purple-600 to-blue-500 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:scale-110 transition-transform text-2xl"
+        style={{ position: 'fixed', bottom: chatBottom, left: 24, zIndex: 50 }}
+        className="bg-gradient-to-br from-purple-600 to-blue-500 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:scale-110 transition-transform text-2xl"
         title="שאל קלוד AI"
       >
         🤖
@@ -966,7 +1015,8 @@ ${JSON.stringify(Object.entries(clientsData).map(([name, d]) => ({ name, ...d })
   }
 
   return (
-    <div className="fixed bottom-6 left-6 z-50 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden" style={{ maxHeight: '520px' }} dir="rtl">
+    <div style={{ position: 'fixed', bottom: chatBottom, left: 16, zIndex: 50, width: isMobile ? 'calc(100vw - 32px)' : 320, maxHeight: isMobile ? '70vh' : 520 }}
+      className="bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden" dir="rtl">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-500 flex-shrink-0">
         <div className="flex items-center gap-2 text-white">
@@ -1047,6 +1097,7 @@ ${JSON.stringify(Object.entries(clientsData).map(([name, d]) => ({ name, ...d })
 
 // ──────────────────────────────────────────────────────────────────────────────
 const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectClient, onAddTask, user }) => {
+  const mobile = useMobile();
   const activeTasks = tasks.filter(t => !t.done);
   const doneTasks   = tasks.filter(t => t.done);
   const clients     = Object.keys(clientsData);
@@ -1082,46 +1133,49 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
   const doneRate = tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0;
 
   const KpiCard = ({ label, value, sub, accent, icon }) => (
-    <div style={{ background: 'white', borderRadius: 14, padding: '20px 22px', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', borderRight: `3px solid ${accent}`, position: 'relative', overflow: 'hidden' }}>
+    <div style={{ background: 'white', borderRadius: 12, padding: mobile ? '14px 16px' : '20px 22px', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', borderRight: `3px solid ${accent}`, position: 'relative', overflow: 'hidden' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <p style={{ fontSize: 12, color: '#94a3b8', fontWeight: 500, marginBottom: 4 }}>{label}</p>
-          <p style={{ fontSize: 32, fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{value}</p>
-          {sub && <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 5 }}>{sub}</p>}
+          <p style={{ fontSize: mobile ? 10 : 12, color: '#94a3b8', fontWeight: 500, marginBottom: 3 }}>{label}</p>
+          <p style={{ fontSize: mobile ? 26 : 32, fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{value}</p>
+          {sub && !mobile && <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 5 }}>{sub}</p>}
         </div>
-        <div style={{ fontSize: 22, opacity: 0.15 }}>{icon}</div>
+        <div style={{ fontSize: mobile ? 18 : 22, opacity: 0.15 }}>{icon}</div>
       </div>
     </div>
   );
 
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100%', padding: '28px 32px' }} dir="rtl">
+    <div style={{ background: '#f8fafc', minHeight: '100%', padding: mobile ? '16px 14px' : '28px 32px' }} dir="rtl">
 
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
+      <div style={{ marginBottom: mobile ? 16 : 28 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: 0 }}>
+            <h1 style={{ fontSize: mobile ? 18 : 22, fontWeight: 800, color: '#0f172a', margin: 0 }}>
               שלום, {user?.name?.split(' ')[0] || 'Slav'} 👋
             </h1>
-            <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>יום {dayName} · {d}/{m}/{y}</p>
+            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 3 }}>יום {dayName} · {d}/{m}/{y}</p>
           </div>
           <button
             onClick={onAddTask}
             style={{
-              display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px',
+              display: 'flex', alignItems: 'center', gap: mobile ? 4 : 8,
+              padding: mobile ? '8px 14px' : '10px 20px',
               background: 'linear-gradient(135deg, #6366f1, #a855f7)',
               color: 'white', borderRadius: 10, border: 'none', cursor: 'pointer',
-              fontSize: 13, fontWeight: 600, boxShadow: '0 4px 14px rgba(99,102,241,0.35)',
+              fontSize: mobile ? 12 : 13, fontWeight: 600, boxShadow: '0 4px 14px rgba(99,102,241,0.35)',
             }}
           >
-            <span style={{ fontSize: 16 }}>+</span> משימה חדשה
+            <span style={{ fontSize: mobile ? 14 : 16 }}>+</span>
+            {!mobile && ' משימה חדשה'}
+            {mobile && 'משימה'}
           </button>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: mobile ? 10 : 14, marginBottom: mobile ? 14 : 24 }}>
         <KpiCard label="משימות פתוחות" value={activeTasks.length} sub={`${overdue.length} באיחור`} accent="#6366f1" icon="≡" />
         <KpiCard label="דחוף ומיידי" value={highUrgency.length} sub="דורש טיפול עכשיו" accent="#ef4444" icon="⚡" />
         <KpiCard label="ממתין לאישור" value={waiting.length} sub="לקוחות ממתינים" accent="#f59e0b" icon="⏳" />
@@ -1130,7 +1184,7 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
 
       {/* Progress bar */}
       {tasks.length > 0 && (
-        <div style={{ background: 'white', borderRadius: 14, padding: '16px 22px', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 24 }}>
+        <div style={{ background: 'white', borderRadius: 12, padding: mobile ? '12px 16px' : '16px 22px', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: mobile ? 14 : 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>התקדמות כוללת</span>
             <span style={{ fontSize: 13, color: '#6366f1', fontWeight: 700 }}>{doneRate}%</span>
@@ -1155,7 +1209,7 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
       )}
 
       {/* 2-col grid: urgent + upcoming */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: mobile ? 12 : 18, marginBottom: mobile ? 12 : 18 }}>
 
         {/* Urgent tasks */}
         <div style={{ background: 'white', borderRadius: 14, border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
@@ -1212,7 +1266,7 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
       </div>
 
       {/* 2-col: client load + AI insights */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: mobile ? 12 : 18 }}>
 
         {/* Client workload */}
         <div style={{ background: 'white', borderRadius: 14, border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
@@ -1966,6 +2020,44 @@ const AdminPanel = ({ currentUser, onClose }) => {
   );
 };
 
+// ─── Mobile Task Card ────────────────────────────────────────────────────────
+const TaskCard = ({ task, onToggleDone, onClientClick, onTaskClick }) => {
+  const urgencyColors = { 'גבוהה': { bg: '#fef2f2', color: '#dc2626' }, 'בינונית': { bg: '#fff7ed', color: '#ea580c' }, 'נמוכה': { bg: '#eff6ff', color: '#2563eb' } };
+  const uc = urgencyColors[task.urgency] || urgencyColors['נמוכה'];
+  const isOverdue = task.date && task.date < TODAY && !task.done;
+  return (
+    <div style={{
+      background: 'white', borderRadius: 12, padding: '12px 14px',
+      border: `1px solid ${isOverdue ? '#fecaca' : '#f1f5f9'}`,
+      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+      opacity: task.done ? 0.5 : 1,
+      display: 'flex', gap: 10, alignItems: 'flex-start',
+    }}>
+      <div style={{ paddingTop: 2 }}>
+        <DoneCheckbox done={task.done} onToggle={() => onToggleDone(task.id)} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }} onClick={() => onTaskClick && onTaskClick(task)}>
+        <p style={{
+          fontSize: 14, fontWeight: 600, color: '#334155', margin: '0 0 4px 0',
+          textDecoration: task.done ? 'line-through' : 'none',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>{task.task}</p>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+          <button onClick={e => { e.stopPropagation(); onClientClick(task.client); }}
+            style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: '#ede9fe', color: '#6d28d9', fontWeight: 600, border: 'none', cursor: 'pointer' }}>
+            {task.client}
+          </button>
+          <span style={{ fontSize: 11, color: '#94a3b8' }}>{PLATFORM_ICONS[task.platform]} {task.platform}</span>
+          {task.date && <span style={{ fontSize: 11, color: isOverdue ? '#dc2626' : '#94a3b8' }}>{isOverdue ? '⚠️ ' : '📅 '}{task.date}</span>}
+        </div>
+      </div>
+      {!task.done && (
+        <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: uc.bg, color: uc.color, fontWeight: 600, flexShrink: 0 }}>{task.urgency}</span>
+      )}
+    </div>
+  );
+};
+
 // ─── Main Task Manager ───────────────────────────────────────────────────────
 const HOLIDAYS = [
   { id: "h1", date: "2026-03-29", type: "holiday", title: "פסח (ערב חג)", client: "", platform: "", status: "" },
@@ -1978,6 +2070,7 @@ const HOLIDAYS = [
 ];
 
 const TaskManager = () => {
+  const mobile = useMobile();
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [dbLoading, setDbLoading] = useState(false);
@@ -2297,12 +2390,12 @@ const TaskManager = () => {
     }
     // ── Tasks screen (default) ──
     return (
-    <div className="p-6">
+    <div className={mobile ? "p-3" : "p-6"}>
 
       {/* Header Row 1 */}
       <header className="mb-4">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">משימות</h1>
+          {!mobile && <h1 className="text-2xl font-bold text-slate-800 tracking-tight">משימות</h1>}
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 text-sm">
               <span className="text-gray-400">משימות פתוחות</span>
@@ -2388,44 +2481,65 @@ const TaskManager = () => {
         ))}
       </div>
 
-      {/* Task Table */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
-        <table className="w-full text-right border-collapse">
-          <thead>
-            <tr className="bg-slate-50/80 border-b border-slate-100">
-              {COL_HEADERS.map((h, i) => (
-                <th key={i} className="px-3 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">{h}</th>
+      {/* Task Table / Cards */}
+      {mobile ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {activeFiltered.map(task => (
+            <TaskCard key={task.id} task={task} onToggleDone={toggleDone} onClientClick={setSelectedClient} onTaskClick={setSelectedTask} />
+          ))}
+          {doneFiltered.length > 0 && (
+            <>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', padding: '8px 4px 2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                ✓ בוצעו ({doneFiltered.length})
+              </p>
+              {doneFiltered.map(task => (
+                <TaskCard key={task.id} task={task} onToggleDone={toggleDone} onClientClick={setSelectedClient} onTaskClick={setSelectedTask} />
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {activeFiltered.map(task => (
-              <TaskRow key={task.id} task={task} onToggleDone={toggleDone} onClientClick={setSelectedClient} onTaskClick={setSelectedTask} />
-            ))}
-
-            {doneFiltered.length > 0 && (
-              <>
-                <tr>
-                  <td colSpan={7} className="px-5 pt-5 pb-2 bg-gray-50 border-t border-gray-100">
-                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                      ✓ משימות שבוצעו ({doneFiltered.length})
-                    </span>
-                  </td>
-                </tr>
-                {doneFiltered.map(task => (
-                  <TaskRow key={task.id} task={task} onToggleDone={toggleDone} onClientClick={setSelectedClient} onTaskClick={setSelectedTask} />
+            </>
+          )}
+          {activeFiltered.length === 0 && doneFiltered.length === 0 && (
+            <p style={{ textAlign: 'center', color: '#cbd5e1', fontSize: 14, padding: '32px 0', fontStyle: 'italic' }}>אין משימות להצגה</p>
+          )}
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+          <table className="w-full text-right border-collapse">
+            <thead>
+              <tr className="bg-slate-50/80 border-b border-slate-100">
+                {COL_HEADERS.map((h, i) => (
+                  <th key={i} className="px-3 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">{h}</th>
                 ))}
-              </>
-            )}
-
-            {activeFiltered.length === 0 && doneFiltered.length === 0 && (
-              <tr>
-                <td colSpan={7} className="p-10 text-center text-gray-400 text-sm">אין משימות להצגה</td>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {activeFiltered.map(task => (
+                <TaskRow key={task.id} task={task} onToggleDone={toggleDone} onClientClick={setSelectedClient} onTaskClick={setSelectedTask} />
+              ))}
+
+              {doneFiltered.length > 0 && (
+                <>
+                  <tr>
+                    <td colSpan={7} className="px-5 pt-5 pb-2 bg-gray-50 border-t border-gray-100">
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        ✓ משימות שבוצעו ({doneFiltered.length})
+                      </span>
+                    </td>
+                  </tr>
+                  {doneFiltered.map(task => (
+                    <TaskRow key={task.id} task={task} onToggleDone={toggleDone} onClientClick={setSelectedClient} onTaskClick={setSelectedTask} />
+                  ))}
+                </>
+              )}
+
+              {activeFiltered.length === 0 && doneFiltered.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="p-10 text-center text-gray-400 text-sm">אין משימות להצגה</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <footer className="mt-6 text-center text-gray-400 text-sm pb-6">
         מעוצב לשימוש אישי כאיש שיווק דיגיטלי • 2026
@@ -2461,6 +2575,7 @@ const TaskManager = () => {
         isOpen={chatOpen}
         onOpen={() => setChatOpen(true)}
         onClose={() => setChatOpen(false)}
+        isMobile={mobile}
       />
       {/* ─── Admin Panel (modal, admin only) ─── */}
       {showAdmin && (

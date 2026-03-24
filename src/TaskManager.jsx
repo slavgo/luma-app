@@ -2007,53 +2007,17 @@ const TaskManager = () => {
     provider: user.app_metadata?.provider || "email"
   } : null;
 
-  // ── Auth listener with allowed_users gate ──
+  // ── Auth listener ──
   useEffect(() => {
     if (!supabase) { setAuthLoading(false); return; }
 
-    const checkAccess = async (sessionUser) => {
-      if (!sessionUser) return null;
-      try {
-        const { data, error } = await supabase
-          .from("allowed_users")
-          .select("role")
-          .eq("email", sessionUser.email)
-          .maybeSingle();
-        // Only block if EXPLICITLY marked blocked — any error = let through
-        if (!error && data?.role === "blocked") {
-          await supabase.auth.signOut();
-          setAccessBlocked(true);
-          return null;
-        }
-        if (!error && data) {
-          supabase.from("allowed_users").update({ last_seen: new Date().toISOString() }).eq("email", sessionUser.email);
-        }
-      } catch (e) {
-        // DB error → fail open, let user in
-      }
-      setAccessBlocked(false);
-      return sessionUser;
-    };
-
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      try {
-        const u = await checkAccess(session?.user ?? null);
-        setUser(u);
-      } catch (e) {
-        console.error('Auth check error:', e);
-        setUser(null);
-      } finally {
-        setAuthLoading(false);
-      }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_e, session) => {
-      try {
-        const u = await checkAccess(session?.user ?? null);
-        setUser(u);
-      } catch (e) {
-        setUser(null);
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
     });
 
     return () => subscription.unsubscribe();

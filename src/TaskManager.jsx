@@ -793,7 +793,7 @@ const MobileHeader = ({ screen, user }) => {
       boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
     }}>
       {/* LUMA logo */}
-      <svg width="52" height="22" viewBox="0 0 52 22">
+      <svg width="68" height="22" viewBox="0 0 68 22">
         <defs>
           <linearGradient id="mhGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#6366f1"/>
@@ -803,7 +803,7 @@ const MobileHeader = ({ screen, user }) => {
         <text x="0" y="18" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="20" letterSpacing="-1" fill="#0f172a">L</text>
         <text x="12" y="18" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="20" letterSpacing="-1" fill="#0f172a">U</text>
         <text x="24" y="18" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="20" letterSpacing="-1" fill="url(#mhGrad)">M</text>
-        <text x="38" y="18" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="20" letterSpacing="-1" fill="url(#mhGrad)">A</text>
+        <text x="39" y="18" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="20" letterSpacing="-1" fill="url(#mhGrad)">A</text>
       </svg>
 
       {/* Page label */}
@@ -1096,7 +1096,7 @@ ${JSON.stringify(Object.entries(clientsData).map(([name, d]) => ({ name, ...d })
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
-const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectClient, onAddTask, user }) => {
+const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectClient, onAddTask, user, onNavigateWithFilter, onTaskClick }) => {
   const mobile = useMobile();
   const activeTasks = tasks.filter(t => !t.done);
   const doneTasks   = tasks.filter(t => t.done);
@@ -1132,8 +1132,8 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
 
   const doneRate = tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0;
 
-  const KpiCard = ({ label, value, sub, accent, icon }) => (
-    <div style={{ background: 'white', borderRadius: 12, padding: mobile ? '14px 16px' : '20px 22px', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', borderRight: `3px solid ${accent}`, position: 'relative', overflow: 'hidden' }}>
+  const KpiCard = ({ label, value, sub, accent, icon, onClick }) => (
+    <div onClick={onClick} style={{ background: 'white', borderRadius: 12, padding: mobile ? '14px 16px' : '20px 22px', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', borderRight: `3px solid ${accent}`, position: 'relative', overflow: 'hidden', cursor: onClick ? 'pointer' : 'default', transition: 'box-shadow 0.15s' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <p style={{ fontSize: mobile ? 10 : 12, color: '#94a3b8', fontWeight: 500, marginBottom: 3 }}>{label}</p>
@@ -1176,9 +1176,9 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: mobile ? 10 : 14, marginBottom: mobile ? 14 : 24 }}>
-        <KpiCard label="משימות פתוחות" value={activeTasks.length} sub={`${overdue.length} באיחור`} accent="#6366f1" icon="≡" />
-        <KpiCard label="דחוף ומיידי" value={highUrgency.length} sub="דורש טיפול עכשיו" accent="#ef4444" icon="⚡" />
-        <KpiCard label="ממתין לאישור" value={waiting.length} sub="לקוחות ממתינים" accent="#f59e0b" icon="⏳" />
+        <KpiCard label="משימות פתוחות" value={activeTasks.length} sub={`${overdue.length} באיחור`} accent="#6366f1" icon="≡" onClick={onNavigateWithFilter ? () => onNavigateWithFilter(null) : undefined} />
+        <KpiCard label="דחוף ומיידי" value={highUrgency.length} sub="דורש טיפול עכשיו" accent="#ef4444" icon="⚡" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'urgency', value: 'גבוהה' }) : undefined} />
+        <KpiCard label="ממתין לאישור" value={waiting.length} sub="לקוחות ממתינים" accent="#f59e0b" icon="⏳" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'status', value: 'ממתין לאישור' }) : undefined} />
         <KpiCard label="אחוז השלמה" value={`${doneRate}%`} sub={`${doneTasks.length} מתוך ${tasks.length} בוצעו`} accent="#10b981" icon="✓" />
       </div>
 
@@ -1222,7 +1222,9 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
           ) : (
             <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
               {[...todayTasks, ...highUrgency.filter(t => !todayTasks.includes(t))].slice(0, 5).map(task => (
-                <li key={task.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid #f8fafc', gap: 12 }}>
+                <li key={task.id} onClick={() => onTaskClick && onTaskClick(task)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid #f8fafc', gap: 12, cursor: 'pointer', transition: 'background 0.12s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                  onMouseLeave={e => e.currentTarget.style.background = ''}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: 13, fontWeight: 600, color: '#334155', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.task}</p>
                     <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{task.client} · {task.platform}</p>
@@ -1251,7 +1253,9 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
                 const daysLeft = Math.ceil((new Date(task.date) - new Date(TODAY)) / 86400000);
                 const chip = daysLeft === 0 ? { bg: '#f3e8ff', c: '#7c3aed', t: 'היום' } : daysLeft === 1 ? { bg: '#fee2e2', c: '#dc2626', t: 'מחר' } : daysLeft <= 3 ? { bg: '#ffedd5', c: '#ea580c', t: `${daysLeft} ימים` } : { bg: '#f1f5f9', c: '#64748b', t: `${daysLeft} ימים` };
                 return (
-                  <li key={task.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid #f8fafc', gap: 12 }}>
+                  <li key={task.id} onClick={() => onTaskClick && onTaskClick(task)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid #f8fafc', gap: 12, cursor: 'pointer', transition: 'background 0.12s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                    onMouseLeave={e => e.currentTarget.style.background = ''}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 13, fontWeight: 600, color: '#334155', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.task}</p>
                       <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{task.client}</p>
@@ -2084,6 +2088,7 @@ const TaskManager = () => {
   const [screen, setScreen] = useState("home");
   const [chatOpen, setChatOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("כל הלקוחות");
+  const [statusFilter, setStatusFilter] = useState(null); // null | { type: 'urgency'|'status', value: string }
   const [selectedClient, setSelectedClient] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -2253,8 +2258,11 @@ const TaskManager = () => {
   const doneTasks = tasks.filter(t => t.done);
 
   const baseFiltered = activeFilter === "כל הלקוחות" ? tasks : tasks.filter(t => t.client === activeFilter);
-  const activeFiltered = baseFiltered.filter(t => !t.done);
-  const doneFiltered = baseFiltered.filter(t => t.done);
+  const statusFiltered = statusFilter
+    ? baseFiltered.filter(t => statusFilter.type === 'urgency' ? t.urgency === statusFilter.value : t.status === statusFilter.value)
+    : baseFiltered;
+  const activeFiltered = statusFiltered.filter(t => !t.done);
+  const doneFiltered = statusFiltered.filter(t => t.done);
 
 
   const COL_HEADERS = ["", "לקוח", "משימה", "פלטפורמה", "דחיפות", "סטטוס", "תאריך יעד"];
@@ -2354,6 +2362,8 @@ const TaskManager = () => {
             onSelectClient={(name) => setSelectedClient(name)}
             onAddTask={() => setShowTaskModal(true)}
             user={currentUser}
+            onNavigateWithFilter={(filter) => { setStatusFilter(filter); setScreen("tasks"); }}
+            onTaskClick={setSelectedTask}
           />
           {newTaskModal}
         </>
@@ -2464,8 +2474,8 @@ const TaskManager = () => {
         </div>
       </header>
 
-      {/* Filters */}
-      <div className="flex gap-3 mb-6 overflow-x-auto pb-2 flex-wrap">
+      {/* Filters — לקוח */}
+      <div className="flex gap-2 mb-3 overflow-x-auto pb-1 flex-wrap">
         {['כל הלקוחות', ...clients].map(client => (
           <button
             key={client}
@@ -2479,6 +2489,30 @@ const TaskManager = () => {
             {client}
           </button>
         ))}
+      </div>
+
+      {/* Filters — סטטוס/דחיפות */}
+      <div className="flex gap-2 mb-5 overflow-x-auto pb-1 flex-wrap">
+        {[
+          { label: 'הכל', filter: null },
+          { label: '⚡ דחוף ומיידי', filter: { type: 'urgency', value: 'גבוהה' }, activeClass: 'bg-red-600 border-red-600 text-white' },
+          { label: '⏳ ממתין לאישור', filter: { type: 'status', value: 'ממתין לאישור' }, activeClass: 'bg-orange-500 border-orange-500 text-white' },
+          { label: '🔵 בביצוע', filter: { type: 'status', value: 'בביצוע' }, activeClass: 'bg-blue-600 border-blue-600 text-white' },
+          { label: 'לביצוע', filter: { type: 'status', value: 'לביצוע' }, activeClass: 'bg-slate-600 border-slate-600 text-white' },
+        ].map(({ label, filter, activeClass }) => {
+          const isActive = !filter ? !statusFilter : (statusFilter?.type === filter.type && statusFilter?.value === filter.value);
+          return (
+            <button
+              key={label}
+              onClick={() => setStatusFilter(filter)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 whitespace-nowrap ${
+                isActive ? (activeClass || 'bg-slate-800 border-slate-800 text-white shadow-sm') : 'bg-white border-slate-200 text-slate-500 hover:border-slate-400 hover:text-slate-700'
+              }`}
+            >
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Task Table / Cards */}

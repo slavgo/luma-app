@@ -2215,8 +2215,9 @@ const TaskManager = () => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
     const newDone = !task.done;
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, done: newDone } : t));
-    if (supabase) await supabase.from("tasks").update({ done: newDone }).eq("id", id);
+    const updates = { done: newDone, ...(newDone ? { status: 'בוצע' } : {}) };
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+    if (supabase) await supabase.from("tasks").update(updates).eq("id", id);
   };
 
   const updateTask = async (updated) => {

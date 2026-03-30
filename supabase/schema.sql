@@ -76,3 +76,20 @@ CREATE POLICY "cal_delete" ON cal_items FOR DELETE USING (auth.uid() = user_id);
 -- INSERT INTO clients (user_id, name, phone, email) VALUES
 --   (auth.uid(), 'Sea Club', '054-1234567', 'info@seaclub.co.il'),
 --   (auth.uid(), 'נדב מאירסון', '052-9876543', 'nadav@gmail.com');
+
+-- ── TASK TEMPLATES ───────────────────────────────────────
+CREATE TABLE IF NOT EXISTS task_templates (
+  id         BIGSERIAL PRIMARY KEY,
+  user_id    UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  name       TEXT NOT NULL DEFAULT '',
+  task       TEXT NOT NULL DEFAULT '',
+  platform   TEXT NOT NULL DEFAULT 'כללי',
+  urgency    TEXT NOT NULL DEFAULT 'בינונית',
+  status     TEXT NOT NULL DEFAULT 'לביצוע',
+  notes      TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE task_templates ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "tmpl_select" ON task_templates FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "tmpl_insert" ON task_templates FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "tmpl_delete" ON task_templates FOR DELETE USING (auth.uid() = user_id);

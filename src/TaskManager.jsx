@@ -825,18 +825,10 @@ const MobileHeader = ({ screen, user }) => {
       boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
     }}>
       {/* LUMA logo */}
-      <svg width="68" height="22" viewBox="0 0 68 22">
-        <defs>
-          <linearGradient id="mhGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#6366f1"/>
-            <stop offset="100%" stopColor="#a855f7"/>
-          </linearGradient>
-        </defs>
-        <text x="0" y="18" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="20" letterSpacing="-1" fill="#0f172a">L</text>
-        <text x="12" y="18" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="20" letterSpacing="-1" fill="#0f172a">U</text>
-        <text x="24" y="18" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="20" letterSpacing="-1" fill="url(#mhGrad)">M</text>
-        <text x="39" y="18" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="20" letterSpacing="-1" fill="url(#mhGrad)">A</text>
-      </svg>
+      <div style={{ display: 'flex', alignItems: 'baseline', lineHeight: 1, userSelect: 'none' }}>
+        <span style={{ fontFamily: "'Helvetica Neue',Arial,sans-serif", fontWeight: 900, fontSize: 22, letterSpacing: '-1px', color: '#0f172a' }}>LUM</span>
+        <span style={{ fontFamily: "'Helvetica Neue',Arial,sans-serif", fontWeight: 900, fontSize: 22, letterSpacing: '-1px', background: 'linear-gradient(135deg, #6366f1, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>A</span>
+      </div>
 
       {/* Page label */}
       <span style={{ fontSize: 13, fontWeight: 700, color: colors.from }}>{SCREEN_LABELS[screen] || ''}</span>
@@ -2142,6 +2134,8 @@ const TaskManager = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showClientModal, setShowClientModal] = useState(false);
+  const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
+  const [showManageTemplates, setShowManageTemplates] = useState(false);
   const [newTask, setNewTask] = useState(emptyTask);
 
   const emptyClientForm = { name: "", phone: "", email: "", website: "", notes: "" };
@@ -2349,9 +2343,6 @@ const TaskManager = () => {
   ) : null;
 
   // ── Shared new-task modal (reused across screens) ──
-  const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
-  const [showManageTemplates, setShowManageTemplates] = useState(false);
-
   const newTaskModal = showTaskModal && (
     <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={() => { setShowTaskModal(false); setShowTemplateDropdown(false); }}>
       <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md" dir="rtl" onClick={e => e.stopPropagation()}>

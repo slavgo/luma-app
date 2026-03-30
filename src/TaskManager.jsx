@@ -111,12 +111,21 @@ const TaskRow = ({ task, onToggleDone, onClientClick, onTaskClick, showClient = 
 );
 
 // ─── Task Detail Modal ───────────────────────────────────────────────────────
-const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCalendar }) => {
+const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCalendar, onSaveTemplate }) => {
   const [form, setForm] = useState({ ...task });
   const [linkedToCalendar, setLinkedToCalendar] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+  const [templateName, setTemplateName] = useState(task.task || '');
+  const [templateSaved, setTemplateSaved] = useState(false);
 
   const handleSave = () => { onSave(form); onClose(); };
+
+  const handleSaveTemplate = async () => {
+    if (!templateName.trim() || !onSaveTemplate) return;
+    const ok = await onSaveTemplate({ name: templateName.trim(), task: form.task, platform: form.platform, urgency: form.urgency, status: form.status, notes: form.notes || '' });
+    if (ok !== false) { setTemplateSaved(true); setShowSaveTemplate(false); }
+  };
 
   const handleLinkCalendar = () => {
     onLinkToCalendar({
@@ -227,19 +236,42 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCal
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-5 flex items-center justify-between border-t border-gray-50 pt-4">
-          {confirmDelete ? (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-red-500">בטוח?</span>
-              <button onClick={() => { onDelete(task.id); onClose(); }} className="px-3 py-1.5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600">מחק</button>
-              <button onClick={() => setConfirmDelete(false)} className="px-3 py-1.5 text-gray-500 text-xs hover:text-gray-700">ביטול</button>
+        <div className="px-6 pb-5 border-t border-gray-50 pt-4">
+          {/* Save as template row */}
+          {showSaveTemplate ? (
+            <div className="flex items-center gap-2 mb-3">
+              <input
+                className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="שם התבנית..."
+                value={templateName}
+                onChange={e => setTemplateName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSaveTemplate()}
+                autoFocus
+              />
+              <button onClick={handleSaveTemplate} disabled={!templateName.trim()} className="px-3 py-1.5 bg-indigo-600 text-white rounded-full text-xs font-medium hover:bg-indigo-700 disabled:opacity-40">שמור</button>
+              <button onClick={() => setShowSaveTemplate(false)} className="px-3 py-1.5 text-gray-400 text-xs hover:text-gray-600">ביטול</button>
             </div>
-          ) : (
-            <button onClick={() => setConfirmDelete(true)} className="text-xs text-gray-400 hover:text-red-500 transition-colors">🗑 מחק משימה</button>
-          )}
-          <div className="flex gap-2">
-            <button onClick={onClose} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">ביטול</button>
-            <button onClick={handleSave} className="px-5 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-colors">שמור</button>
+          ) : templateSaved ? (
+            <p className="text-xs text-green-600 mb-3">✓ נשמר כתבנית</p>
+          ) : null}
+
+          <div className="flex items-center justify-between">
+            {confirmDelete ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-red-500">בטוח?</span>
+                <button onClick={() => { onDelete(task.id); onClose(); }} className="px-3 py-1.5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600">מחק</button>
+                <button onClick={() => setConfirmDelete(false)} className="px-3 py-1.5 text-gray-500 text-xs hover:text-gray-700">ביטול</button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <button onClick={() => setConfirmDelete(true)} className="text-xs text-gray-400 hover:text-red-500 transition-colors">🗑 מחק</button>
+                {!templateSaved && <button onClick={() => { setShowSaveTemplate(true); setTemplateName(form.task); }} className="text-xs text-indigo-400 hover:text-indigo-600 transition-colors">📌 שמור כתבנית</button>}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <button onClick={onClose} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">ביטול</button>
+              <button onClick={handleSave} className="px-5 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-colors">שמור</button>
+            </div>
           </div>
         </div>
       </div>
@@ -884,7 +916,7 @@ const analyzePatterns = (tasks, clientsData) => {
   activeTasks.forEach(t => { if (t.task) textCounts[t.task.trim()] = (textCounts[t.task.trim()] || 0) + 1; });
   const recurring = Object.entries(textCounts).filter(([, v]) => v > 1).sort((a, b) => b[1] - a[1])[0];
   if (recurring) {
-    insights.push({ icon: '🔁', color: 'purple', text: `"${recurring[0]}" מופיעה ${recurring[1]} פעמים — שקול ליצור תבנית משימה קבועה` });
+    insights.push({ icon: '🔁', color: 'purple', text: `"${recurring[0]}" מופיעה ${recurring[1]} פעמים — שקול ליצור תבנית משימה קבועה`, recurringTaskName: recurring[0] });
   }
 
   // 5. Client with high social load
@@ -915,8 +947,9 @@ const AI_COLORS = {
   gray:   'bg-gray-50 border-gray-200 text-gray-600',
 };
 
-const AIInsightsPanel = ({ tasks, clientsData }) => {
+const AIInsightsPanel = ({ tasks, clientsData, onCreateTemplate }) => {
   const insights = analyzePatterns(tasks, clientsData);
+  const [created, setCreated] = useState({});
   if (insights.length === 0) return null;
   return (
     <div className="mb-5">
@@ -925,7 +958,22 @@ const AIInsightsPanel = ({ tasks, clientsData }) => {
         {insights.map((ins, i) => (
           <div key={i} className={`flex items-start gap-2 text-sm px-3 py-2 rounded-xl border ${AI_COLORS[ins.color] || AI_COLORS.gray}`}>
             <span className="flex-shrink-0 mt-0.5">{ins.icon}</span>
-            <span>{ins.text}</span>
+            <span className="flex-1">{ins.text}</span>
+            {ins.recurringTaskName && onCreateTemplate && (
+              created[i] ? (
+                <span className="text-xs text-green-600 flex-shrink-0 font-medium">✓ נשמר</span>
+              ) : (
+                <button
+                  onClick={async () => {
+                    const ok = await onCreateTemplate({ name: ins.recurringTaskName, task: ins.recurringTaskName, platform: 'כללי', urgency: 'בינונית', status: 'לביצוע', notes: '' });
+                    if (ok !== false) setCreated(p => ({ ...p, [i]: true }));
+                  }}
+                  className="text-xs text-purple-600 hover:text-purple-800 flex-shrink-0 font-medium whitespace-nowrap border border-purple-200 bg-white rounded-full px-2 py-0.5 hover:bg-purple-50 transition-colors"
+                >
+                  💾 צור תבנית
+                </button>
+              )
+            )}
           </div>
         ))}
       </div>
@@ -1096,7 +1144,7 @@ ${JSON.stringify(Object.entries(clientsData).map(([name, d]) => ({ name, ...d })
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
-const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectClient, onAddTask, user, onNavigateWithFilter, onTaskClick }) => {
+const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectClient, onAddTask, user, onNavigateWithFilter, onTaskClick, onCreateTemplate }) => {
   const mobile = useMobile();
   const activeTasks = tasks.filter(t => !t.done);
   const doneTasks   = tasks.filter(t => t.done);
@@ -1303,7 +1351,7 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
           )}
         </div>
 
-        <AIInsightsPanel tasks={tasks} clientsData={clientsData} />
+        <AIInsightsPanel tasks={tasks} clientsData={clientsData} onCreateTemplate={onCreateTemplate} />
 
       </div>
     </div>
@@ -2083,6 +2131,7 @@ const TaskManager = () => {
   const [tasks, setTasks] = useState([]);
   const [calItems, setCalItems] = useState(HOLIDAYS);
   const [clientsData, setClientsData] = useState({});
+  const [templates, setTemplates] = useState([]);
 
   const [showAdmin, setShowAdmin] = useState(false);
   const [screen, setScreen] = useState("home");
@@ -2125,7 +2174,7 @@ const TaskManager = () => {
   useEffect(() => {
     if (!user || !supabase) return;
     setDbLoading(true);
-    Promise.all([loadTasks(), loadClients(), loadCalItems()]).finally(() => setDbLoading(false));
+    Promise.all([loadTasks(), loadClients(), loadCalItems(), loadTemplates()]).finally(() => setDbLoading(false));
   }, [user]);
 
   const loadTasks = async () => {
@@ -2145,6 +2194,25 @@ const TaskManager = () => {
   const loadCalItems = async () => {
     const { data } = await supabase.from("cal_items").select("*").order("date");
     if (data) setCalItems([...HOLIDAYS, ...data]);
+  };
+
+  const loadTemplates = async () => {
+    const { data } = await supabase.from("task_templates").select("*").order("created_at");
+    if (data) setTemplates(data);
+  };
+
+  const saveTemplate = async (templateData) => {
+    const { data, error } = await supabase
+      .from("task_templates")
+      .insert([{ ...templateData, user_id: user?.id }])
+      .select().single();
+    if (!error && data) setTemplates(prev => [...prev, data]);
+    return !error;
+  };
+
+  const deleteTemplate = async (id) => {
+    setTemplates(prev => prev.filter(t => t.id !== id));
+    await supabase.from("task_templates").delete().eq("id", id);
   };
 
   const clients = Object.keys(clientsData);
@@ -2276,14 +2344,45 @@ const TaskManager = () => {
       onSave={(updated) => { updateTask(updated); setSelectedTask(null); }}
       onDelete={(id) => { deleteTask(id); setSelectedTask(null); }}
       onLinkToCalendar={(item) => setCalItems(prev => [...prev, item])}
+      onSaveTemplate={saveTemplate}
     />
   ) : null;
 
   // ── Shared new-task modal (reused across screens) ──
+  const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
+  const [showManageTemplates, setShowManageTemplates] = useState(false);
+
   const newTaskModal = showTaskModal && (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={() => setShowTaskModal(false)}>
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={() => { setShowTaskModal(false); setShowTemplateDropdown(false); }}>
       <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md" dir="rtl" onClick={e => e.stopPropagation()}>
-        <h2 className="text-lg font-bold text-gray-800 mb-4">➕ משימה חדשה</h2>
+        {/* Header row with template button */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-gray-800">➕ משימה חדשה</h2>
+          {templates.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setShowTemplateDropdown(v => !v)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-full hover:bg-indigo-100 transition-colors"
+              >
+                📋 מתבנית ▾
+              </button>
+              {showTemplateDropdown && (
+                <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 z-10 min-w-48 overflow-hidden">
+                  {templates.map(t => (
+                    <button key={t.id} onClick={() => { setNewTask(p => ({ ...p, task: t.task, platform: t.platform, urgency: t.urgency, status: t.status, notes: t.notes || '' })); setShowTemplateDropdown(false); }}
+                      className="w-full text-right px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 border-b border-gray-50 last:border-0 transition-colors">
+                      {t.name}
+                    </button>
+                  ))}
+                  <button onClick={() => { setShowTemplateDropdown(false); setShowManageTemplates(true); }}
+                    className="w-full text-right px-4 py-2 text-xs text-gray-400 hover:text-gray-600 bg-gray-50">
+                    ✏️ נהל תבניות
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <div className="flex flex-col gap-3">
           <div>
             <label className="text-xs text-gray-500 mb-1 block">לקוח</label>
@@ -2324,9 +2423,37 @@ const TaskManager = () => {
           </div>
         </div>
         <div className="flex gap-2 mt-5 justify-end">
-          <button onClick={() => setShowTaskModal(false)} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">ביטול</button>
+          <button onClick={() => { setShowTaskModal(false); setShowTemplateDropdown(false); }} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">ביטול</button>
           <button onClick={addTask} className="px-5 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-colors">הוסף משימה</button>
         </div>
+      </div>
+    </div>
+  );
+
+  // ── Manage templates modal ──
+  const manageTemplatesModal = showManageTemplates && (
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={() => setShowManageTemplates(false)}>
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm" dir="rtl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-bold text-gray-800">📋 תבניות משמורות</h2>
+          <button onClick={() => setShowManageTemplates(false)} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
+        </div>
+        {templates.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-6 italic">אין תבניות שמורות</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {templates.map(t => (
+              <div key={t.id} className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-gray-700 truncate">{t.name}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{PLATFORM_ICONS[t.platform]} {t.platform} · {t.urgency}</p>
+                </div>
+                <button onClick={() => deleteTemplate(t.id)} className="text-gray-300 hover:text-red-500 text-sm flex-shrink-0 transition-colors">🗑</button>
+              </div>
+            ))}
+          </div>
+        )}
+        <button onClick={() => setShowManageTemplates(false)} className="mt-4 w-full py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-xl">סגור</button>
       </div>
     </div>
   );
@@ -2364,6 +2491,7 @@ const TaskManager = () => {
             user={currentUser}
             onNavigateWithFilter={(filter) => { setStatusFilter(filter); setScreen("tasks"); }}
             onTaskClick={setSelectedTask}
+            onCreateTemplate={saveTemplate}
           />
           {newTaskModal}
         </>
@@ -2601,6 +2729,7 @@ const TaskManager = () => {
       onOpenAdmin={() => setShowAdmin(true)}
     >
       {taskDetailModal}
+      {manageTemplatesModal}
       {renderContent()}
       {/* ─── Claude AI Chat (floating, all screens) ─── */}
       <ClaudeChat

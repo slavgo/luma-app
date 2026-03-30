@@ -826,8 +826,8 @@ const MobileHeader = ({ screen, user }) => {
     }}>
       {/* LUMA logo */}
       <div style={{ display: 'flex', alignItems: 'baseline', lineHeight: 1, userSelect: 'none' }}>
-        <span style={{ fontFamily: "'Helvetica Neue',Arial,sans-serif", fontWeight: 900, fontSize: 22, letterSpacing: '-1px', color: '#0f172a' }}>LUM</span>
         <span style={{ fontFamily: "'Helvetica Neue',Arial,sans-serif", fontWeight: 900, fontSize: 22, letterSpacing: '-1px', background: 'linear-gradient(135deg, #6366f1, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>A</span>
+        <span style={{ fontFamily: "'Helvetica Neue',Arial,sans-serif", fontWeight: 900, fontSize: 22, letterSpacing: '-1px', color: '#0f172a' }}>LUM</span>
       </div>
 
       {/* Page label */}

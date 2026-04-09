@@ -572,162 +572,204 @@ const NAV_COLORS = {
   calendar: { from: '#f59e0b', to: '#ef4444', glow: 'rgba(245,158,11,0.4)'  },
 };
 
-const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin }) => {
+const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => {
   const isAdmin = user?.role === "admin" || user?.provider === "google";
   const initials = (user?.name || "U").trim().charAt(0).toUpperCase();
+  const userName = user?.name?.split(' ')[0] || user?.email?.split('@')[0] || 'משתמש';
+
+  // Badge counts for nav items
+  const activeTasks = (tasks || []).filter(t => !t.done);
+  const overdueCount = activeTasks.filter(t => t.date && t.date < TODAY).length;
+  const highCount = activeTasks.filter(t => t.urgency === 'גבוהה').length;
+  const NAV_BADGES = {
+    tasks: overdueCount > 0 ? overdueCount : null,
+    home: highCount > 0 ? highCount : null,
+  };
 
   return (
     <aside
       dir="rtl"
       style={{
-        width: 68,
-        minWidth: 68,
-        background: 'linear-gradient(180deg, #0f172a 0%, #1a1040 100%)',
+        width: 220,
+        minWidth: 220,
+        background: 'linear-gradient(180deg, #0c1122 0%, #0f0d2a 60%, #130d24 100%)',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
         height: '100vh',
         position: 'sticky',
         top: 0,
-        borderLeft: '1px solid rgba(255,255,255,0.06)',
-        paddingBottom: 12,
+        borderLeft: '1px solid rgba(255,255,255,0.05)',
+        paddingBottom: 16,
         zIndex: 10,
       }}
     >
-      {/* Logo mark */}
+      {/* Logo — full LUMA wordmark */}
       <div style={{
-        width: '100%', padding: '18px 0 14px',
-        display: 'flex', justifyContent: 'center',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        padding: '22px 22px 18px',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
-        <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" style={{ width: 32, height: 32 }}>
+        <svg viewBox="0 0 108 36" xmlns="http://www.w3.org/2000/svg" style={{ height: 28, width: 'auto', display: 'block' }} aria-label="LUMA">
           <defs>
-            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#22d3ee"/>
-              <stop offset="50%" stopColor="#6366f1"/>
-              <stop offset="100%" stopColor="#a855f7"/>
+            <linearGradient id="sidebarAGrad" x1="100%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%"   stopColor="#22d3ee" />
+              <stop offset="40%"  stopColor="#6366f1" />
+              <stop offset="100%" stopColor="#a855f7" />
             </linearGradient>
+            <clipPath id="sidebarAClip">
+              <text x="78" y="32" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="36">A</text>
+            </clipPath>
           </defs>
-          <rect width="36" height="36" rx="10" fill="url(#logoGrad)" opacity="0.15"/>
-          <text x="5" y="27" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="22" letterSpacing="-1" fill="white">L</text>
-          <text x="17" y="27" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="22" letterSpacing="-1" fill="url(#logoGrad)">A</text>
+          <text x="0" y="32" fontFamily="'Helvetica Neue',Helvetica,Arial,sans-serif" fontWeight="900" fontSize="36" letterSpacing="-1" fill="white">LUM</text>
+          <text x="78" y="32" fontFamily="'Helvetica Neue',Helvetica,Arial,sans-serif" fontWeight="900" fontSize="36" letterSpacing="-1" fill="url(#sidebarAGrad)">A</text>
+          <g clipPath="url(#sidebarAClip)" opacity="0.35">
+            <line x1="78" y1="32" x2="108" y2="0"  stroke="white" strokeWidth="1"/>
+            <line x1="84" y1="32" x2="108" y2="8"  stroke="white" strokeWidth="0.8"/>
+            <line x1="90" y1="32" x2="108" y2="16" stroke="white" strokeWidth="0.8"/>
+            <line x1="96" y1="0"  x2="78"  y2="24" stroke="white" strokeWidth="0.7"/>
+            <line x1="108" y1="4" x2="82"  y2="32" stroke="white" strokeWidth="0.7"/>
+          </g>
         </svg>
+        <p style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.14em', marginTop: 5, textTransform: 'uppercase', fontWeight: 500, fontFamily: "'Helvetica Neue',Arial,sans-serif" }}>
+          Make Digital Brighter
+        </p>
       </div>
 
-      {/* Nav icons */}
-      <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '14px 0', width: '100%' }}>
+      {/* Nav items */}
+      <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, padding: '14px 10px', width: '100%', boxSizing: 'border-box' }}>
         {NAV_ITEMS.map(item => {
           const active = screen === item.id;
           const colors = NAV_COLORS[item.id] || NAV_COLORS.home;
+          const badge = NAV_BADGES[item.id];
           return (
-            <div key={item.id} style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
-              {/* Active indicator bar on right */}
+            <div key={item.id} style={{ position: 'relative' }}>
+              {/* Active indicator bar */}
               {active && (
                 <span style={{
                   position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
                   width: 3, height: 28, borderRadius: '0 3px 3px 0',
                   background: `linear-gradient(180deg, ${colors.from}, ${colors.to})`,
-                  boxShadow: `0 0 8px ${colors.glow}`,
+                  boxShadow: `0 0 10px ${colors.glow}`,
                 }}/>
               )}
               <button
                 onClick={() => setScreen(item.id)}
-                title={item.label}
                 style={{
-                  width: 44, height: 44, borderRadius: 12, cursor: 'pointer', border: 'none',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'all 0.18s',
+                  width: '100%', borderRadius: 10, cursor: 'pointer', border: 'none',
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 14px 10px 18px',
+                  transition: 'all 0.15s',
                   background: active
-                    ? `linear-gradient(135deg, ${colors.from}33, ${colors.to}22)`
+                    ? `linear-gradient(135deg, ${colors.from}22, ${colors.to}18)`
                     : 'transparent',
-                  color: active ? colors.from : 'rgba(255,255,255,0.35)',
-                  boxShadow: active ? `0 0 16px ${colors.glow}` : 'none',
-                  transform: active ? 'scale(1.08)' : 'scale(1)',
+                  color: active ? 'white' : 'rgba(255,255,255,0.38)',
+                  boxShadow: active ? `0 0 20px ${colors.glow}` : 'none',
+                  textAlign: 'right',
+                  boxSizing: 'border-box',
                 }}
                 onMouseEnter={e => {
                   if (!active) {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-                    e.currentTarget.style.color = 'rgba(255,255,255,0.75)';
-                    e.currentTarget.style.transform = 'scale(1.05)';
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                    e.currentTarget.style.color = 'rgba(255,255,255,0.72)';
                   }
                 }}
                 onMouseLeave={e => {
                   if (!active) {
                     e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = 'rgba(255,255,255,0.35)';
-                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.color = 'rgba(255,255,255,0.38)';
                   }
                 }}
               >
-                <span style={{ width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: active ? colors.from : 'inherit' }}>
                   {item.icon}
                 </span>
+                <span style={{ fontSize: 13.5, fontWeight: active ? 700 : 500, letterSpacing: '0.01em', flex: 1, fontFamily: "'Helvetica Neue',Arial,sans-serif" }}>
+                  {item.label}
+                </span>
+                {badge && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, minWidth: 18, height: 18, borderRadius: 99,
+                    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '0 5px', flexShrink: 0, boxShadow: '0 2px 6px rgba(239,68,68,0.4)',
+                  }}>
+                    {badge}
+                  </span>
+                )}
               </button>
             </div>
           );
         })}
 
         {/* Divider */}
-        <div style={{ width: 28, height: 1, background: 'rgba(255,255,255,0.08)', margin: '6px 0' }} />
+        <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '8px 4px' }} />
 
-        {/* Admin gear */}
+        {/* Admin */}
         {isAdmin && (
           <button
             onClick={onOpenAdmin}
-            title="ניהול"
             style={{
-              width: 44, height: 44, borderRadius: 12, cursor: 'pointer', border: 'none',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'transparent', color: 'rgba(255,255,255,0.25)', transition: 'all 0.18s',
+              width: '100%', borderRadius: 10, cursor: 'pointer', border: 'none',
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '10px 14px 10px 18px',
+              background: 'transparent', color: 'rgba(255,255,255,0.25)', transition: 'all 0.15s',
+              textAlign: 'right', boxSizing: 'border-box',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.25)'; }}
           >
-            <svg viewBox="0 0 20 20" fill="currentColor" style={{ width: 18, height: 18 }}>
-              <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/>
-            </svg>
+            <span style={{ width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg viewBox="0 0 20 20" fill="currentColor" style={{ width: 16, height: 16 }}>
+                <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/>
+              </svg>
+            </span>
+            <span style={{ fontSize: 13.5, fontWeight: 500 }}>ניהול מערכת</span>
           </button>
         )}
       </nav>
 
-      {/* User avatar + sign out */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-        {/* Avatar with gradient ring */}
-        <div style={{ position: 'relative' }}>
-          <div style={{
-            width: 38, height: 38, borderRadius: '50%',
-            background: 'linear-gradient(135deg, #6366f1, #a855f7)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'white', fontWeight: 700, fontSize: 14,
-            boxShadow: '0 0 0 2px rgba(99,102,241,0.3), 0 0 12px rgba(168,85,247,0.25)',
-            cursor: 'default',
-          }} title={user?.name || "משתמש"}>
-            {initials}
-          </div>
-          {isAdmin && (
-            <span style={{
-              position: 'absolute', bottom: -1, right: -1,
-              width: 12, height: 12, borderRadius: '50%',
-              background: '#6366f1', border: '2px solid #0f172a',
+      {/* User section */}
+      <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Avatar */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: '50%',
+              background: 'linear-gradient(135deg, #6366f1, #a855f7)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 7, color: 'white', fontWeight: 700,
-            }}>★</span>
-          )}
+              color: 'white', fontWeight: 700, fontSize: 14,
+              boxShadow: '0 0 0 2px rgba(99,102,241,0.25), 0 0 10px rgba(168,85,247,0.2)',
+            }}>
+              {initials}
+            </div>
+            {isAdmin && (
+              <span style={{
+                position: 'absolute', bottom: -1, right: -1,
+                width: 11, height: 11, borderRadius: '50%',
+                background: '#6366f1', border: '2px solid #0c1122',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 6, color: 'white', fontWeight: 700,
+              }}>★</span>
+            )}
+          </div>
+          {/* Name + role */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{userName}</p>
+            <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.28)', margin: 0 }}>{isAdmin ? 'מנהל' : 'משתמש'}</p>
+          </div>
+          {/* Sign out */}
+          <button
+            onClick={onSignOut}
+            title="יציאה"
+            style={{
+              width: 30, height: 30, borderRadius: 8, border: 'none', cursor: 'pointer', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'transparent', color: 'rgba(255,255,255,0.18)', transition: 'all 0.15s',
+              fontSize: 14,
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(248,113,113,0.1)'; e.currentTarget.style.color = '#f87171'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.18)'; }}
+          >↩</button>
         </div>
-
-        {/* Sign out */}
-        <button
-          onClick={onSignOut}
-          title="יציאה"
-          style={{
-            width: 32, height: 32, borderRadius: 8, border: 'none', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'transparent', color: 'rgba(255,255,255,0.2)', transition: 'all 0.15s',
-            fontSize: 15,
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(248,113,113,0.12)'; e.currentTarget.style.color = '#f87171'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.2)'; }}
-        >↩</button>
       </div>
     </aside>
   );
@@ -847,7 +889,7 @@ const MobileHeader = ({ screen, user }) => {
 };
 
 // ── Layout wrapper ──────────────────────────────────────────────────────────
-const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, children }) => {
+const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks, children }) => {
   const mobile = useMobile();
   return (
     <div dir="rtl" style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f1f5f9' }}>
@@ -860,7 +902,7 @@ const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, children }) =
       </main>
       {mobile
         ? <BottomNav screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} />
-        : <Sidebar screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} />
+        : <Sidebar screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} tasks={tasks} />
       }
     </div>
   );
@@ -1485,7 +1527,7 @@ const ClientsListScreen = ({ clientsData, tasks, onSelectClient, onAddClient }) 
 // ─── Client Detail Screen ────────────────────────────────────────────────────
 const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onToggleDone, onSaveClientData, onTaskClick }) => {
   const [editMode, setEditMode] = useState(false);
-  const [editForm, setEditForm] = useState({ ...clientData });
+  const [editForm, setEditForm] = useState({ name: clientName, ...clientData });
 
   const allClientTasks = tasks.filter(t => t.client === clientName);
   const activeTasks = allClientTasks.filter(t => !t.done);
@@ -1496,7 +1538,8 @@ const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onTogg
   const COL_HEADERS = ["", "משימה", "פלטפורמה", "דחיפות", "סטטוס", "תאריך יעד"];
 
   const handleSave = () => {
-    onSaveClientData(clientName, editForm);
+    const { name: newName, ...rest } = editForm;
+    onSaveClientData(clientName, newName.trim() || clientName, rest);
     setEditMode(false);
   };
 
@@ -1513,10 +1556,19 @@ const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onTogg
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold shadow-sm">
-              {clientName.charAt(0)}
+              {(editMode ? editForm.name : clientName).charAt(0)}
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">{clientName}</h2>
+              {editMode ? (
+                <input
+                  className="text-2xl font-bold text-gray-800 border-b-2 border-blue-400 bg-transparent outline-none w-full mb-1"
+                  value={editForm.name}
+                  onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                  placeholder="שם הלקוח"
+                />
+              ) : (
+                <h2 className="text-2xl font-bold text-gray-800">{clientName}</h2>
+              )}
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 {activePlatforms.map(p => (
                   <span key={p} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
@@ -2247,13 +2299,34 @@ const TaskManager = () => {
     setShowTaskModal(false);
   };
 
-  const saveClientData = async (name, data) => {
-    setClientsData(prev => ({ ...prev, [name]: data }));
-    if (supabase) {
-      const existing = clientsData[name];
-      if (existing?._id) {
-        const { _id, ...rest } = data;
-        await supabase.from("clients").update(rest).eq("id", existing._id);
+  const saveClientData = async (oldName, newName, data) => {
+    const isRename = newName && newName !== oldName;
+    if (isRename) {
+      // Rename: delete old key, add new key, update tasks client field
+      setClientsData(prev => {
+        const updated = { ...prev };
+        delete updated[oldName];
+        updated[newName] = { ...data, _id: prev[oldName]?._id };
+        return updated;
+      });
+      setTasks(prev => prev.map(t => t.client === oldName ? { ...t, client: newName } : t));
+      if (supabase) {
+        const existing = clientsData[oldName];
+        if (existing?._id) {
+          await supabase.from("clients").update({ name: newName, ...data }).eq("id", existing._id);
+        }
+        await supabase.from("tasks").update({ client: newName }).eq("client", oldName);
+      }
+      // Navigate to new client name
+      setSelectedClient(newName);
+    } else {
+      setClientsData(prev => ({ ...prev, [oldName]: { ...data, _id: prev[oldName]?._id } }));
+      if (supabase) {
+        const existing = clientsData[oldName];
+        if (existing?._id) {
+          const { _id, ...rest } = data;
+          await supabase.from("clients").update(rest).eq("id", existing._id);
+        }
       }
     }
   };
@@ -2522,10 +2595,25 @@ const TaskManager = () => {
     return (
     <div className={mobile ? "p-3" : "p-6"}>
 
+      {/* Premium desktop page title bar */}
+      {!mobile && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+            <h1 style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>משימות</h1>
+            <span style={{ fontSize: 13, color: '#94a3b8', fontWeight: 400 }}>ניהול וורקפלואו</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#94a3b8' }}>
+            <span style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '4px 10px', fontWeight: 500, color: '#475569' }}>
+              {new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Header Row 1 */}
       <header className="mb-4">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
-          {!mobile && <h1 className="text-2xl font-bold text-slate-800 tracking-tight">משימות</h1>}
+          {!mobile && <div />}
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 text-sm">
               <span className="text-gray-400">משימות פתוחות</span>
@@ -2719,6 +2807,7 @@ const TaskManager = () => {
       user={currentUser}
       onSignOut={signOut}
       onOpenAdmin={() => setShowAdmin(true)}
+      tasks={tasks}
     >
       {taskDetailModal}
       {manageTemplatesModal}

@@ -598,7 +598,7 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
         height: '100vh',
         position: 'sticky',
         top: 0,
-        borderLeft: '1px solid rgba(255,255,255,0.05)',
+        borderRight: '1px solid rgba(255,255,255,0.05)',
         paddingBottom: 16,
         zIndex: 10,
       }}
@@ -642,11 +642,11 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
           const badge = NAV_BADGES[item.id];
           return (
             <div key={item.id} style={{ position: 'relative' }}>
-              {/* Active indicator bar */}
+              {/* Active indicator bar — right edge facing content */}
               {active && (
                 <span style={{
-                  position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
-                  width: 3, height: 28, borderRadius: '0 3px 3px 0',
+                  position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)',
+                  width: 3, height: 28, borderRadius: '3px 0 0 3px',
                   background: `linear-gradient(180deg, ${colors.from}, ${colors.to})`,
                   boxShadow: `0 0 10px ${colors.glow}`,
                 }}/>
@@ -892,18 +892,16 @@ const MobileHeader = ({ screen, user }) => {
 const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks, children }) => {
   const mobile = useMobile();
   return (
-    <div dir="rtl" style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f1f5f9' }}>
-      <main style={{
+    <div style={{ display: 'flex', flexDirection: 'row', height: '100vh', overflow: 'hidden', background: '#f1f5f9' }}>
+      {!mobile && <Sidebar screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} tasks={tasks} />}
+      <main dir="rtl" style={{
         flex: 1, overflowY: 'auto', overflowX: 'hidden', background: '#f1f5f9',
         paddingBottom: mobile ? 64 : 0,
       }}>
         {mobile && <MobileHeader screen={screen} user={user} />}
         {children}
       </main>
-      {mobile
-        ? <BottomNav screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} />
-        : <Sidebar screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} tasks={tasks} />
-      }
+      {mobile && <BottomNav screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} />}
     </div>
   );
 };

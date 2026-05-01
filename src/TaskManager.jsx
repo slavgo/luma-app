@@ -604,7 +604,7 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
         height: '100vh',
         position: 'sticky',
         top: 0,
-        borderRight: '1px solid rgba(255,255,255,0.05)',
+        borderLeft: '1px solid rgba(255,255,255,0.05)',
         paddingBottom: 16,
         zIndex: 10,
       }}
@@ -647,8 +647,8 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
               {/* Active indicator bar — left edge facing content */}
               {active && (
                 <span style={{
-                  position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
-                  width: 3, height: 28, borderRadius: '0 3px 3px 0',
+                  position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)',
+                  width: 3, height: 28, borderRadius: '3px 0 0 3px',
                   background: `linear-gradient(180deg, ${colors.from}, ${colors.to})`,
                   boxShadow: `0 0 10px ${colors.glow}`,
                 }}/>
@@ -894,7 +894,7 @@ const MobileHeader = ({ screen, user }) => {
 const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks, children }) => {
   const mobile = useMobile();
   return (
-    <div style={{ display: 'flex', flexDirection: 'row', height: '100vh', overflow: 'hidden', background: '#f5f6fa' }}>
+    <div style={{ display: 'flex', flexDirection: 'row-reverse', height: '100vh', overflow: 'hidden', background: '#f5f6fa' }}>
       <main dir="rtl" style={{
         flex: 1, overflowY: 'auto', overflowX: 'hidden', background: '#f5f6fa',
         paddingBottom: mobile ? 64 : 0,

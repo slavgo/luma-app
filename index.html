@@ -6,6 +6,116 @@
     <title>ניהול משימות שיווק דיגיטלי</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body { margin: 0; background: #07070f; }
+      #root { font-family: 'Heebo', 'Helvetica Neue', Arial, sans-serif; }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar { width: 5px; height: 5px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 99px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+
+      /* Page backgrounds */
+      .bg-gray-50  { background: #07070f !important; }
+      .min-h-screen { background: #07070f !important; }
+
+      /* Cards — white → dark glass */
+      .bg-white { background: #0f1628 !important; }
+
+      /* Borders */
+      .border-slate-50, .border-gray-50   { border-color: rgba(255,255,255,0.05) !important; }
+      .border-gray-100, .border-slate-100 { border-color: rgba(255,255,255,0.07) !important; }
+      .border-gray-200, .border-slate-200 { border-color: rgba(255,255,255,0.11) !important; }
+
+      /* Text */
+      .text-gray-800, .text-slate-800 { color: rgba(255,255,255,0.90) !important; }
+      .text-gray-700, .text-slate-700 { color: rgba(255,255,255,0.80) !important; }
+      .text-gray-600, .text-slate-600 { color: rgba(255,255,255,0.60) !important; }
+      .text-gray-500, .text-slate-500 { color: rgba(255,255,255,0.44) !important; }
+      .text-gray-400, .text-slate-400 { color: rgba(255,255,255,0.34) !important; }
+      .text-gray-300                  { color: rgba(255,255,255,0.22) !important; }
+
+      /* Hover states */
+      .hover\:bg-slate-50\/80:hover,
+      .hover\:bg-slate-50:hover,
+      .hover\:bg-gray-50:hover { background: rgba(255,255,255,0.04) !important; }
+      .hover\:bg-red-50:hover  { background: rgba(239,68,68,0.08)  !important; }
+
+      /* Overdue row tint */
+      .bg-red-50\/60 { background: rgba(239,68,68,0.07) !important; }
+
+      /* Table header */
+      thead tr, .bg-gray-50:not(.min-h-screen):not(body):not(html) { background: rgba(255,255,255,0.03) !important; }
+
+      /* Inputs / selects / textareas */
+      input:not([type="checkbox"]):not([type="radio"]),
+      textarea, select {
+        background: rgba(255,255,255,0.07) !important;
+        color: rgba(255,255,255,0.88) !important;
+        border-color: rgba(255,255,255,0.11) !important;
+      }
+      input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.26) !important; }
+      select option { background: #1a2235; color: rgba(255,255,255,0.9); }
+
+      /* Urgency chips */
+      .bg-red-100    { background: rgba(239,68,68,0.14)  !important; }
+      .bg-orange-100 { background: rgba(249,115,22,0.14) !important; }
+      .bg-blue-100   { background: rgba(59,130,246,0.14) !important; }
+      .border-red-200    { border-color: rgba(239,68,68,0.28)  !important; }
+      .border-orange-200 { border-color: rgba(249,115,22,0.28) !important; }
+      .border-blue-200   { border-color: rgba(59,130,246,0.28) !important; }
+      .text-red-700    { color: rgba(252,165,165,0.95) !important; }
+      .text-orange-700 { color: rgba(253,186,116,0.95) !important; }
+      .text-blue-700   { color: rgba(147,197,253,0.95) !important; }
+
+      /* Client badge colors */
+      .bg-violet-100  { background: rgba(139,92,246,0.14) !important; }
+      .bg-emerald-100 { background: rgba(16,185,129,0.14) !important; }
+      .bg-amber-100   { background: rgba(245,158,11,0.14) !important; }
+      .bg-rose-100    { background: rgba(244,63,94,0.14)  !important; }
+      .bg-cyan-100    { background: rgba(6,182,212,0.14)  !important; }
+      .text-violet-700  { color: rgba(196,181,253,0.95) !important; }
+      .text-emerald-700 { color: rgba(110,231,183,0.95) !important; }
+      .text-amber-700   { color: rgba(252,211,77,0.95)  !important; }
+      .text-rose-700    { color: rgba(251,182,206,0.95) !important; }
+      .text-cyan-700    { color: rgba(103,232,249,0.95) !important; }
+
+      /* AI insight chips */
+      .bg-orange-50 { background: rgba(251,146,60,0.10)  !important; }
+      .bg-yellow-50 { background: rgba(234,179,8,0.08)   !important; }
+      .bg-blue-50   { background: rgba(59,130,246,0.10)  !important; }
+      .bg-purple-50 { background: rgba(168,85,247,0.10)  !important; }
+      .bg-indigo-50 { background: rgba(99,102,241,0.10)  !important; }
+      .bg-green-50  { background: rgba(16,185,129,0.09)  !important; }
+      .text-orange-800 { color: rgba(251,146,60,0.92)  !important; }
+      .text-yellow-800 { color: rgba(234,179,8,0.92)   !important; }
+      .text-blue-800   { color: rgba(96,165,250,0.92)  !important; }
+      .text-purple-800 { color: rgba(192,132,252,0.92) !important; }
+      .text-indigo-800 { color: rgba(129,140,248,0.92) !important; }
+      .text-green-800  { color: rgba(52,211,153,0.92)  !important; }
+      .border-orange-200 { border-color: rgba(251,146,60,0.22)  !important; }
+      .border-yellow-200 { border-color: rgba(234,179,8,0.22)   !important; }
+      .border-purple-200 { border-color: rgba(168,85,247,0.22)  !important; }
+      .border-indigo-200 { border-color: rgba(99,102,241,0.22)  !important; }
+      .border-green-200  { border-color: rgba(16,185,129,0.22)  !important; }
+
+      /* Calendar chips */
+      .bg-green-100  { background: rgba(16,185,129,0.13) !important; }
+      .bg-purple-100 { background: rgba(168,85,247,0.13) !important; }
+      .text-green-700  { color: rgba(110,231,183,0.95) !important; }
+      .text-purple-700 { color: rgba(216,180,254,0.95) !important; }
+
+      /* Misc */
+      .border-gray-300  { border-color: rgba(255,255,255,0.16) !important; }
+      .bg-slate-100     { background: rgba(255,255,255,0.07) !important; }
+      .bg-slate-50.rounded-2xl { background: rgba(255,255,255,0.05) !important; }
+
+      /* Login card elevated slightly more */
+      .rounded-3xl { background: #111d35 !important; border-color: rgba(255,255,255,0.09) !important; }
+    </style>
   </head>
   <body>
     <div id="root"></div>

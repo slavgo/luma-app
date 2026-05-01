@@ -328,13 +328,13 @@ const CalendarScreen = ({ calItems, onAddItem, onDeleteItem, clients }) => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen" dir="rtl">
+    <div className="p-6 min-h-screen" style={{ background: '#07070f' }} dir="rtl">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 text-lg">‹</button>
-          <h2 className="text-xl font-bold text-gray-800 min-w-32 text-center">{HEBREW_MONTHS[viewMonth]} {viewYear}</h2>
-          <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-full bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 text-lg">›</button>
+          <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-full border text-lg" style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }}>‹</button>
+          <h2 className="text-xl font-bold min-w-32 text-center" style={{ color: 'rgba(255,255,255,0.9)' }}>{HEBREW_MONTHS[viewMonth]} {viewYear}</h2>
+          <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-full border text-lg" style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }}>›</button>
         </div>
         <div className="flex items-center gap-3">
           {/* Legend */}
@@ -350,11 +350,11 @@ const CalendarScreen = ({ calItems, onAddItem, onDeleteItem, clients }) => {
       </div>
 
       {/* Calendar grid */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
         {/* Day headers */}
-        <div className="grid grid-cols-7 border-b border-gray-100">
+        <div className="grid grid-cols-7" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           {HEBREW_DAYS.map(d => (
-            <div key={d} className="py-2 text-center text-xs font-semibold text-gray-400">{d}</div>
+            <div key={d} className="py-2.5 text-center text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.35)' }}>{d}</div>
           ))}
         </div>
         {/* Cells */}
@@ -366,14 +366,20 @@ const CalendarScreen = ({ calItems, onAddItem, onDeleteItem, clients }) => {
               <div
                 key={idx}
                 onClick={() => openDay(day)}
-                className={`min-h-20 p-1.5 border-b border-l border-gray-50 transition-colors ${
-                  day ? 'cursor-pointer hover:bg-blue-50' : 'bg-gray-50'
-                } ${isToday ? 'bg-blue-50' : ''}`}
+                className="min-h-20 p-1.5 transition-colors"
+                style={{
+                  borderBottom: '1px solid rgba(255,255,255,0.04)',
+                  borderLeft: '1px solid rgba(255,255,255,0.04)',
+                  cursor: day ? 'pointer' : 'default',
+                  background: isToday ? 'rgba(99,102,241,0.08)' : !day ? 'rgba(255,255,255,0.01)' : 'transparent',
+                }}
+                onMouseEnter={e => { if (day && !isToday) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+                onMouseLeave={e => { if (day && !isToday) e.currentTarget.style.background = 'transparent'; }}
               >
                 {day && (
                   <>
-                    <span className={`text-xs font-semibold mb-1 block ${isToday ? 'text-blue-600' : 'text-gray-500'}`}>
-                      {isToday ? <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">{day}</span> : day}
+                    <span className="text-xs font-semibold mb-1 block" style={{ color: isToday ? '#818cf8' : 'rgba(255,255,255,0.45)' }}>
+                      {isToday ? <span style={{ background: '#6366f1', color: 'white', borderRadius: '50%', width: 20, height: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>{day}</span> : day}
                     </span>
                     <div className="flex flex-col gap-0.5">
                       {items.slice(0, 3).map(item => (
@@ -603,33 +609,29 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
         zIndex: 10,
       }}
     >
-      {/* Logo — full LUMA wordmark */}
+      {/* Logo — A mark + slogan */}
       <div style={{
-        padding: '22px 22px 18px',
+        padding: '20px 22px 16px',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
       }}>
-        <svg viewBox="0 0 108 36" xmlns="http://www.w3.org/2000/svg" style={{ height: 28, width: 'auto', display: 'block' }} aria-label="LUMA">
-          <defs>
-            <linearGradient id="sidebarAGrad" x1="100%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%"   stopColor="#22d3ee" />
-              <stop offset="40%"  stopColor="#6366f1" />
-              <stop offset="100%" stopColor="#a855f7" />
-            </linearGradient>
-            <clipPath id="sidebarAClip">
-              <text x="78" y="32" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="36">A</text>
-            </clipPath>
-          </defs>
-          <text x="0" y="32" fontFamily="'Helvetica Neue',Helvetica,Arial,sans-serif" fontWeight="900" fontSize="36" letterSpacing="-1" fill="white">LUM</text>
-          <text x="78" y="32" fontFamily="'Helvetica Neue',Helvetica,Arial,sans-serif" fontWeight="900" fontSize="36" letterSpacing="-1" fill="url(#sidebarAGrad)">A</text>
-          <g clipPath="url(#sidebarAClip)" opacity="0.35">
-            <line x1="78" y1="32" x2="108" y2="0"  stroke="white" strokeWidth="1"/>
-            <line x1="84" y1="32" x2="108" y2="8"  stroke="white" strokeWidth="0.8"/>
-            <line x1="90" y1="32" x2="108" y2="16" stroke="white" strokeWidth="0.8"/>
-            <line x1="96" y1="0"  x2="78"  y2="24" stroke="white" strokeWidth="0.7"/>
-            <line x1="108" y1="4" x2="82"  y2="32" stroke="white" strokeWidth="0.7"/>
-          </g>
-        </svg>
-        <p style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.14em', marginTop: 5, textTransform: 'uppercase', fontWeight: 500, fontFamily: "'Helvetica Neue',Arial,sans-serif" }}>
+        <span style={{
+          fontFamily: "'Helvetica Neue',Helvetica,Arial,sans-serif",
+          fontWeight: 900,
+          fontSize: 42,
+          letterSpacing: '-2px',
+          lineHeight: 1,
+          background: 'linear-gradient(135deg, #22d3ee 0%, #6366f1 45%, #a855f7 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          userSelect: 'none',
+        }}>A</span>
+        <p style={{
+          fontSize: 9, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.16em',
+          marginTop: 2, textTransform: 'uppercase', fontWeight: 500,
+          fontFamily: "'Helvetica Neue',Arial,sans-serif", whiteSpace: 'nowrap',
+        }}>
           Make Digital Brighter
         </p>
       </div>
@@ -642,11 +644,11 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
           const badge = NAV_BADGES[item.id];
           return (
             <div key={item.id} style={{ position: 'relative' }}>
-              {/* Active indicator bar — right edge facing content */}
+              {/* Active indicator bar — left edge facing content */}
               {active && (
                 <span style={{
-                  position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)',
-                  width: 3, height: 28, borderRadius: '3px 0 0 3px',
+                  position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
+                  width: 3, height: 28, borderRadius: '0 3px 3px 0',
                   background: `linear-gradient(180deg, ${colors.from}, ${colors.to})`,
                   boxShadow: `0 0 10px ${colors.glow}`,
                 }}/>
@@ -892,16 +894,18 @@ const MobileHeader = ({ screen, user }) => {
 const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks, children }) => {
   const mobile = useMobile();
   return (
-    <div style={{ display: 'flex', flexDirection: 'row', height: '100vh', overflow: 'hidden', background: '#f1f5f9' }}>
-      {!mobile && <Sidebar screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} tasks={tasks} />}
+    <div style={{ display: 'flex', flexDirection: 'row', height: '100vh', overflow: 'hidden', background: '#07070f' }}>
       <main dir="rtl" style={{
-        flex: 1, overflowY: 'auto', overflowX: 'hidden', background: '#f1f5f9',
+        flex: 1, overflowY: 'auto', overflowX: 'hidden', background: '#07070f',
         paddingBottom: mobile ? 64 : 0,
       }}>
         {mobile && <MobileHeader screen={screen} user={user} />}
         {children}
       </main>
-      {mobile && <BottomNav screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} />}
+      {mobile
+        ? <BottomNav screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} />
+        : <Sidebar screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} tasks={tasks} />
+      }
     </div>
   );
 };
@@ -1213,29 +1217,48 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
   const doneRate = tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0;
 
   const KpiCard = ({ label, value, sub, accent, icon, onClick }) => (
-    <div onClick={onClick} style={{ background: 'white', borderRadius: 12, padding: mobile ? '14px 16px' : '20px 22px', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', borderRight: `3px solid ${accent}`, position: 'relative', overflow: 'hidden', cursor: onClick ? 'pointer' : 'default', transition: 'box-shadow 0.15s' }}>
+    <div
+      onClick={onClick}
+      style={{
+        background: `linear-gradient(135deg, ${accent}18 0%, ${accent}08 100%)`,
+        borderRadius: 14,
+        padding: mobile ? '14px 16px' : '20px 22px',
+        border: `1px solid ${accent}35`,
+        boxShadow: `0 0 28px ${accent}12, 0 1px 0 rgba(255,255,255,0.04) inset`,
+        position: 'relative', overflow: 'hidden',
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'transform 0.15s, box-shadow 0.15s',
+      }}
+      onMouseEnter={e => { if (onClick) { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = `0 0 36px ${accent}22, 0 4px 12px rgba(0,0,0,0.3)`; } }}
+      onMouseLeave={e => { if (onClick) { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = `0 0 28px ${accent}12, 0 1px 0 rgba(255,255,255,0.04) inset`; } }}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <p style={{ fontSize: mobile ? 10 : 12, color: '#94a3b8', fontWeight: 500, marginBottom: 3 }}>{label}</p>
-          <p style={{ fontSize: mobile ? 26 : 32, fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{value}</p>
-          {sub && !mobile && <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 5 }}>{sub}</p>}
+          <p style={{ fontSize: mobile ? 10 : 11, color: 'rgba(255,255,255,0.44)', fontWeight: 600, marginBottom: 6, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{label}</p>
+          <p style={{ fontSize: mobile ? 28 : 34, fontWeight: 800, color: 'rgba(255,255,255,0.95)', lineHeight: 1 }}>{value}</p>
+          {sub && !mobile && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.34)', marginTop: 6 }}>{sub}</p>}
         </div>
-        <div style={{ fontSize: mobile ? 18 : 22, opacity: 0.15 }}>{icon}</div>
+        <div style={{
+          width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+          background: `${accent}28`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 17, color: accent,
+        }}>{icon}</div>
       </div>
     </div>
   );
 
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100%', padding: mobile ? '16px 14px' : '28px 32px' }} dir="rtl">
+    <div style={{ background: '#07070f', minHeight: '100%', padding: mobile ? '16px 14px' : '28px 32px' }} dir="rtl">
 
       {/* Header */}
       <div style={{ marginBottom: mobile ? 16 : 28 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h1 style={{ fontSize: mobile ? 18 : 22, fontWeight: 800, color: '#0f172a', margin: 0 }}>
+            <h1 style={{ fontSize: mobile ? 18 : 22, fontWeight: 800, color: 'rgba(255,255,255,0.92)', margin: 0 }}>
               שלום, {user?.name?.split(' ')[0] || 'Slav'} 👋
             </h1>
-            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 3 }}>יום {dayName} · {d}/{m}/{y}</p>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.34)', marginTop: 3 }}>יום {dayName} · {d}/{m}/{y}</p>
           </div>
           <button
             onClick={onAddTask}
@@ -1264,24 +1287,24 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
 
       {/* Progress bar */}
       {tasks.length > 0 && (
-        <div style={{ background: 'white', borderRadius: 12, padding: mobile ? '12px 16px' : '16px 22px', border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: mobile ? 14 : 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>התקדמות כוללת</span>
-            <span style={{ fontSize: 13, color: '#6366f1', fontWeight: 700 }}>{doneRate}%</span>
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 14, padding: mobile ? '12px 16px' : '16px 22px', border: '1px solid rgba(255,255,255,0.07)', boxShadow: '0 1px 0 rgba(255,255,255,0.04) inset', marginBottom: mobile ? 14 : 24 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.75)' }}>התקדמות כוללת</span>
+            <span style={{ fontSize: 13, color: '#818cf8', fontWeight: 700 }}>{doneRate}%</span>
           </div>
-          <div style={{ height: 8, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${doneRate}%`, background: 'linear-gradient(90deg, #6366f1, #a855f7)', borderRadius: 99, transition: 'width 0.5s ease' }} />
+          <div style={{ height: 6, background: 'rgba(255,255,255,0.07)', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${doneRate}%`, background: 'linear-gradient(90deg, #6366f1, #a855f7)', borderRadius: 99, transition: 'width 0.6s ease', boxShadow: '0 0 12px rgba(99,102,241,0.5)' }} />
           </div>
-          <div style={{ display: 'flex', gap: 20, marginTop: 10 }}>
+          <div style={{ display: 'flex', gap: 20, marginTop: 12 }}>
             {[
-              { label: 'לביצוע', count: activeTasks.filter(t=>t.status==='לביצוע').length, color: '#94a3b8' },
-              { label: 'בביצוע', count: activeTasks.filter(t=>t.status==='בביצוע').length, color: '#6366f1' },
-              { label: 'ממתין', count: waiting.length, color: '#f59e0b' },
-              { label: 'בוצע', count: doneTasks.length, color: '#10b981' },
+              { label: 'לביצוע', count: activeTasks.filter(t=>t.status==='לביצוע').length, color: 'rgba(255,255,255,0.3)' },
+              { label: 'בביצוע', count: activeTasks.filter(t=>t.status==='בביצוע').length, color: '#818cf8' },
+              { label: 'ממתין', count: waiting.length, color: '#fbbf24' },
+              { label: 'בוצע', count: doneTasks.length, color: '#34d399' },
             ].map(s => (
               <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, display: 'inline-block' }}></span>
-                <span style={{ fontSize: 11, color: '#94a3b8' }}>{s.label} <strong style={{ color: '#475569' }}>{s.count}</strong></span>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: s.color, display: 'inline-block' }}></span>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)' }}>{s.label} <strong style={{ color: 'rgba(255,255,255,0.70)' }}>{s.count}</strong></span>
               </div>
             ))}
           </div>
@@ -1292,9 +1315,9 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
       <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: mobile ? 12 : 18, marginBottom: mobile ? 12 : 18 }}>
 
         {/* Urgent tasks */}
-        <div style={{ background: 'white', borderRadius: 14, border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #f8fafc' }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#334155', margin: 0 }}>🔥 דחוף ומיידי</h3>
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.85)', margin: 0 }}>🔥 דחוף ומיידי</h3>
             <button onClick={onGoToTasks} style={{ fontSize: 11, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>כל המשימות ←</button>
           </div>
           {[...todayTasks, ...highUrgency.filter(t => !todayTasks.includes(t))].slice(0, 5).length === 0 ? (
@@ -1302,28 +1325,28 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
           ) : (
             <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
               {[...todayTasks, ...highUrgency.filter(t => !todayTasks.includes(t))].slice(0, 5).map(task => (
-                <li key={task.id} onClick={() => onTaskClick && onTaskClick(task)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid #f8fafc', gap: 12, cursor: 'pointer', transition: 'background 0.12s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                <li key={task.id} onClick={() => onTaskClick && onTaskClick(task)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', gap: 12, cursor: 'pointer', transition: 'background 0.12s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
                   onMouseLeave={e => e.currentTarget.style.background = ''}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: '#334155', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.task}</p>
-                    <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{task.client} · {task.platform}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.task}</p>
+                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginTop: 2 }}>{task.client} · {task.platform}</p>
                   </div>
-                  <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: task.urgency === 'גבוהה' ? '#fef2f2' : '#fff7ed', color: task.urgency === 'גבוהה' ? '#dc2626' : '#ea580c', fontWeight: 600, flexShrink: 0 }}>{task.urgency}</span>
+                  <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: task.urgency === 'גבוהה' ? 'rgba(239,68,68,0.18)' : 'rgba(249,115,22,0.18)', color: task.urgency === 'גבוהה' ? '#fca5a5' : '#fdba74', fontWeight: 600, flexShrink: 0 }}>{task.urgency}</span>
                 </li>
               ))}
             </ul>
           )}
-          <div style={{ padding: '10px 20px', borderTop: '1px solid #f8fafc' }}>
-            <button onClick={onAddTask} style={{ fontSize: 12, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>+ הוסף משימה</button>
+          <div style={{ padding: '10px 20px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            <button onClick={onAddTask} style={{ fontSize: 12, color: '#818cf8', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>+ הוסף משימה</button>
           </div>
         </div>
 
         {/* Upcoming deadlines */}
-        <div style={{ background: 'white', borderRadius: 14, border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #f8fafc' }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#334155', margin: 0 }}>📅 דדליינים קרובים</h3>
-            <span style={{ fontSize: 11, color: '#94a3b8' }}>7 ימים קדימה</span>
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.85)', margin: 0 }}>📅 דדליינים קרובים</h3>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.32)' }}>7 ימים קדימה</span>
           </div>
           {upcoming.length === 0 ? (
             <p style={{ textAlign: 'center', color: '#cbd5e1', fontSize: 13, padding: '24px 0', fontStyle: 'italic' }}>אין דדליינים קרובים</p>
@@ -1333,12 +1356,12 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
                 const daysLeft = Math.ceil((new Date(task.date) - new Date(TODAY)) / 86400000);
                 const chip = daysLeft === 0 ? { bg: '#f3e8ff', c: '#7c3aed', t: 'היום' } : daysLeft === 1 ? { bg: '#fee2e2', c: '#dc2626', t: 'מחר' } : daysLeft <= 3 ? { bg: '#ffedd5', c: '#ea580c', t: `${daysLeft} ימים` } : { bg: '#f1f5f9', c: '#64748b', t: `${daysLeft} ימים` };
                 return (
-                  <li key={task.id} onClick={() => onTaskClick && onTaskClick(task)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid #f8fafc', gap: 12, cursor: 'pointer', transition: 'background 0.12s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                  <li key={task.id} onClick={() => onTaskClick && onTaskClick(task)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', gap: 12, cursor: 'pointer', transition: 'background 0.12s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
                     onMouseLeave={e => e.currentTarget.style.background = ''}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: '#334155', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.task}</p>
-                      <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{task.client}</p>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.task}</p>
+                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)', marginTop: 2 }}>{task.client}</p>
                     </div>
                     <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: chip.bg, color: chip.c, fontWeight: 700, flexShrink: 0 }}>{chip.t}</span>
                   </li>
@@ -1353,10 +1376,10 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
       <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: mobile ? 12 : 18 }}>
 
         {/* Client workload */}
-        <div style={{ background: 'white', borderRadius: 14, border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #f8fafc' }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#334155', margin: 0 }}>👥 עומס לפי לקוח</h3>
-            <button onClick={onGoToClients} style={{ fontSize: 11, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>כל הלקוחות ←</button>
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.85)', margin: 0 }}>👥 עומס לפי לקוח</h3>
+            <button onClick={onGoToClients} style={{ fontSize: 11, color: '#818cf8', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>כל הלקוחות ←</button>
           </div>
           {clientLoad.length === 0 ? (
             <p style={{ textAlign: 'center', color: '#cbd5e1', fontSize: 13, padding: '24px 0', fontStyle: 'italic' }}>אין משימות פעילות</p>
@@ -1365,15 +1388,18 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
               {clientLoad.map(({ name, count, urgent }) => {
                 const pct = Math.round((count / clientLoad[0].count) * 100);
                 return (
-                  <li key={name} style={{ padding: '10px 20px', borderBottom: '1px solid #f8fafc', cursor: 'pointer' }} onClick={() => onSelectClient(name)}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{name}</span>
+                  <li key={name} style={{ padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', transition: 'background 0.12s' }}
+                  onClick={() => onSelectClient(name)}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                  onMouseLeave={e => e.currentTarget.style.background = ''}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{name}</span>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        {urgent > 0 && <span style={{ fontSize: 11, color: '#ef4444', fontWeight: 700 }}>⚡ {urgent}</span>}
-                        <span style={{ fontSize: 11, color: '#94a3b8' }}>{count} משימות</span>
+                        {urgent > 0 && <span style={{ fontSize: 11, color: '#f87171', fontWeight: 700 }}>⚡ {urgent}</span>}
+                        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)' }}>{count} משימות</span>
                       </div>
                     </div>
-                    <div style={{ height: 4, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
+                    <div style={{ height: 4, background: 'rgba(255,255,255,0.07)', borderRadius: 99, overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: `${pct}%`, background: urgent > 0 ? 'linear-gradient(90deg, #f87171, #ef4444)' : 'linear-gradient(90deg, #818cf8, #6366f1)', borderRadius: 99 }} />
                     </div>
                   </li>
@@ -1432,9 +1458,9 @@ const ClientsListScreen = ({ clientsData, tasks, onSelectClient, onAddClient }) 
   const clients = Object.keys(clientsData);
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen" dir="rtl">
+    <div className="p-6 min-h-screen" style={{ background: '#07070f' }} dir="rtl">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-800">רשימת לקוחות</h2>
+        <h2 className="text-xl font-bold" style={{ color: 'rgba(255,255,255,0.92)' }}>רשימת לקוחות</h2>
         <button
           onClick={onAddClient}
           className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
@@ -1544,8 +1570,8 @@ const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onTogg
   const data = editMode ? editForm : clientData;
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen" dir="rtl">
-      <button onClick={onBack} className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 mb-6 transition-colors">
+    <div className="p-6 min-h-screen" style={{ background: '#07070f' }} dir="rtl">
+      <button onClick={onBack} className="flex items-center gap-2 text-sm mb-6 transition-colors" style={{ color: 'rgba(255,255,255,0.44)', background: 'none', border: 'none', cursor: 'pointer' }}>
         <span className="text-lg">→</span> חזרה לכל המשימות
       </button>
 
@@ -2116,15 +2142,15 @@ const AdminPanel = ({ currentUser, onClose }) => {
 
 // ─── Mobile Task Card ────────────────────────────────────────────────────────
 const TaskCard = ({ task, onToggleDone, onClientClick, onTaskClick }) => {
-  const urgencyColors = { 'גבוהה': { bg: '#fef2f2', color: '#dc2626' }, 'בינונית': { bg: '#fff7ed', color: '#ea580c' }, 'נמוכה': { bg: '#eff6ff', color: '#2563eb' } };
+  const urgencyColors = { 'גבוהה': { bg: 'rgba(239,68,68,0.18)', color: '#fca5a5' }, 'בינונית': { bg: 'rgba(249,115,22,0.18)', color: '#fdba74' }, 'נמוכה': { bg: 'rgba(59,130,246,0.18)', color: '#93c5fd' } };
   const uc = urgencyColors[task.urgency] || urgencyColors['נמוכה'];
   const isOverdue = task.date && task.date < TODAY && !task.done;
   return (
     <div style={{
-      background: 'white', borderRadius: 12, padding: '12px 14px',
-      border: `1px solid ${isOverdue ? '#fecaca' : '#f1f5f9'}`,
-      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-      opacity: task.done ? 0.5 : 1,
+      background: isOverdue ? 'rgba(239,68,68,0.06)' : 'rgba(255,255,255,0.04)',
+      borderRadius: 12, padding: '12px 14px',
+      border: `1px solid ${isOverdue ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.08)'}`,
+      opacity: task.done ? 0.4 : 1,
       display: 'flex', gap: 10, alignItems: 'flex-start',
     }}>
       <div style={{ paddingTop: 2 }}>
@@ -2132,17 +2158,17 @@ const TaskCard = ({ task, onToggleDone, onClientClick, onTaskClick }) => {
       </div>
       <div style={{ flex: 1, minWidth: 0 }} onClick={() => onTaskClick && onTaskClick(task)}>
         <p style={{
-          fontSize: 14, fontWeight: 600, color: '#334155', margin: '0 0 4px 0',
+          fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.88)', margin: '0 0 4px 0',
           textDecoration: task.done ? 'line-through' : 'none',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>{task.task}</p>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           <button onClick={e => { e.stopPropagation(); onClientClick(task.client); }}
-            style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: '#ede9fe', color: '#6d28d9', fontWeight: 600, border: 'none', cursor: 'pointer' }}>
+            style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: 'rgba(129,140,248,0.2)', color: '#a5b4fc', fontWeight: 600, border: 'none', cursor: 'pointer' }}>
             {task.client}
           </button>
-          <span style={{ fontSize: 11, color: '#94a3b8' }}>{PLATFORM_ICONS[task.platform]} {task.platform}</span>
-          {task.date && <span style={{ fontSize: 11, color: isOverdue ? '#dc2626' : '#94a3b8' }}>{isOverdue ? '⚠️ ' : '📅 '}{task.date}</span>}
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.36)' }}>{PLATFORM_ICONS[task.platform]} {task.platform}</span>
+          {task.date && <span style={{ fontSize: 11, color: isOverdue ? '#f87171' : 'rgba(255,255,255,0.36)' }}>{isOverdue ? '⚠️ ' : '📅 '}{task.date}</span>}
         </div>
       </div>
       {!task.done && (
@@ -2364,16 +2390,16 @@ const TaskManager = () => {
 
   // ── Auth / loading gates ──
   if (authLoading) return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center" dir="rtl">
-      <div className="text-slate-400 text-lg">⏳ טוען...</div>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#07070f' }} dir="rtl">
+      <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 16 }}>⏳ טוען...</div>
     </div>
   );
 
   if (!supabase || !user) return <LoginScreen accessBlocked={accessBlocked} />;
 
   if (dbLoading) return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center" dir="rtl">
-      <div className="text-slate-400 text-lg">⏳ טוען נתונים...</div>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#07070f' }} dir="rtl">
+      <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 16 }}>⏳ טוען נתונים...</div>
     </div>
   );
 
@@ -2597,11 +2623,11 @@ const TaskManager = () => {
       {!mobile && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-            <h1 style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>משימות</h1>
-            <span style={{ fontSize: 13, color: '#94a3b8', fontWeight: 400 }}>ניהול וורקפלואו</span>
+            <h1 style={{ fontSize: 26, fontWeight: 800, color: 'rgba(255,255,255,0.93)', margin: 0, letterSpacing: '-0.5px' }}>משימות</h1>
+            <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', fontWeight: 400 }}>ניהול וורקפלואו</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#94a3b8' }}>
-            <span style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '4px 10px', fontWeight: 500, color: '#475569' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+            <span style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 8, padding: '4px 12px', fontWeight: 500, color: 'rgba(255,255,255,0.55)' }}>
               {new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}
             </span>
           </div>
@@ -2686,11 +2712,12 @@ const TaskManager = () => {
           <button
             key={client}
             onClick={() => setActiveFilter(client)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 whitespace-nowrap ${
-              activeFilter === client
-                ? 'bg-slate-800 text-white border-slate-800 shadow-sm'
-                : 'bg-white border-slate-200 text-slate-500 hover:border-slate-400 hover:text-slate-700'
-            }`}
+            style={{
+              padding: '5px 14px', borderRadius: 99, fontSize: 12, fontWeight: 500, border: '1px solid', whiteSpace: 'nowrap', transition: 'all 0.15s', cursor: 'pointer',
+              background: activeFilter === client ? 'rgba(129,140,248,0.2)' : 'rgba(255,255,255,0.04)',
+              borderColor: activeFilter === client ? 'rgba(129,140,248,0.5)' : 'rgba(255,255,255,0.10)',
+              color: activeFilter === client ? '#a5b4fc' : 'rgba(255,255,255,0.45)',
+            }}
           >
             {client}
           </button>
@@ -2711,9 +2738,12 @@ const TaskManager = () => {
             <button
               key={label}
               onClick={() => setStatusFilter(filter)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all duration-150 whitespace-nowrap ${
-                isActive ? (activeClass || 'bg-slate-800 border-slate-800 text-white shadow-sm') : 'bg-white border-slate-200 text-slate-500 hover:border-slate-400 hover:text-slate-700'
-              }`}
+              style={{
+                padding: '5px 14px', borderRadius: 99, fontSize: 12, fontWeight: 500, border: '1px solid', whiteSpace: 'nowrap', transition: 'all 0.15s', cursor: 'pointer',
+                background: isActive ? 'rgba(129,140,248,0.18)' : 'rgba(255,255,255,0.04)',
+                borderColor: isActive ? 'rgba(129,140,248,0.45)' : 'rgba(255,255,255,0.09)',
+                color: isActive ? '#c7d2fe' : 'rgba(255,255,255,0.42)',
+              }}
             >
               {label}
             </button>
@@ -2742,10 +2772,10 @@ const TaskManager = () => {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
           <table className="w-full text-right border-collapse">
             <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-100">
+              <tr style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 {COL_HEADERS.map((h, i) => (
                   <th key={i} className="px-3 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">{h}</th>
                 ))}
@@ -2759,8 +2789,8 @@ const TaskManager = () => {
               {doneFiltered.length > 0 && (
                 <>
                   <tr>
-                    <td colSpan={7} className="px-5 pt-5 pb-2 bg-gray-50 border-t border-gray-100">
-                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    <td colSpan={7} style={{ padding: '16px 20px 8px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                         ✓ משימות שבוצעו ({doneFiltered.length})
                       </span>
                     </td>
@@ -2781,7 +2811,7 @@ const TaskManager = () => {
         </div>
       )}
 
-      <footer className="mt-6 text-center text-gray-400 text-sm pb-6">
+      <footer className="mt-6 text-center text-sm pb-6" style={{ color: 'rgba(255,255,255,0.18)' }}>
         מעוצב לשימוש אישי כאיש שיווק דיגיטלי • 2026
       </footer>
 

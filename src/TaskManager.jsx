@@ -111,7 +111,7 @@ const TaskRow = ({ task, onToggleDone, onClientClick, onTaskClick, showClient = 
 );
 
 // ─── Task Detail Modal ───────────────────────────────────────────────────────
-const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCalendar, onSaveTemplate }) => {
+const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCalendar, onSaveTemplate, onFollowUp }) => {
   const [form, setForm] = useState({ ...task });
   const [linkedToCalendar, setLinkedToCalendar] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -266,6 +266,12 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCal
               <div className="flex items-center gap-3">
                 <button onClick={() => setConfirmDelete(true)} className="text-xs text-gray-400 hover:text-red-500 transition-colors">🗑 מחק</button>
                 {!templateSaved && <button onClick={() => { setShowSaveTemplate(true); setTemplateName(form.task); }} className="text-xs text-indigo-400 hover:text-indigo-600 transition-colors">📌 שמור כתבנית</button>}
+                {onFollowUp && (
+                  <button
+                    onClick={() => onFollowUp({ client: form.client, platform: form.platform })}
+                    className="text-xs text-emerald-600 hover:text-emerald-800 transition-colors font-medium"
+                  >➕ המשימה הבאה</button>
+                )}
               </div>
             )}
             <div className="flex gap-2">
@@ -2439,6 +2445,11 @@ const TaskManager = () => {
       onDelete={(id) => { deleteTask(id); setSelectedTask(null); }}
       onLinkToCalendar={(item) => setCalItems(prev => [...prev, item])}
       onSaveTemplate={saveTemplate}
+      onFollowUp={({ client, platform }) => {
+        setSelectedTask(null);
+        setNewTask({ ...emptyTask, client, platform });
+        setShowTaskModal(true);
+      }}
     />
   ) : null;
 

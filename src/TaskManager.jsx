@@ -1555,10 +1555,205 @@ const ClientsListScreen = ({ clientsData, tasks, onSelectClient, onAddClient }) 
   );
 };
 
+// ─── Client Brief Tab ────────────────────────────────────────────────────────
+const ClientBriefTab = ({ brief = {}, onSave }) => {
+  const [form, setForm] = useState({
+    contact_person: '', business_description: '', main_product: '', ad_goal: '',
+    advertised_before: null, what_worked: '',
+    has_meta_account: null, has_google_account: null, has_tracking: null,
+    website_link: '', facebook_link: '', instagram_link: '',
+    has_materials: null, has_mailing_list: null,
+    has_logo: null, has_brand_guide: null, brand_3_words: '', differentiator: '',
+    target_audience: '', ideal_customer: '', customer_problem: '', why_choose_us: '',
+    references: '', what_liked: '',
+    lead_process: '', lead_response_time: '', lead_handler: '', closing_rate: '',
+    monthly_budget: '', expectations: '',
+    additional_notes: '',
+    ...brief,
+  });
+  const [saved, setSaved] = useState(false);
+
+  const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setSaved(false); };
+  const handleSave = () => { onSave(form); setSaved(true); setTimeout(() => setSaved(false), 2500); };
+
+  const sectionsFilled = [
+    form.contact_person || form.business_description || form.main_product || form.ad_goal,
+    form.advertised_before !== null || form.what_worked,
+    form.website_link || form.facebook_link || form.instagram_link,
+    form.has_logo !== null || form.brand_3_words || form.differentiator,
+    form.target_audience || form.ideal_customer || form.customer_problem,
+    form.references || form.what_liked,
+    form.lead_process || form.lead_response_time,
+    form.monthly_budget || form.expectations,
+    form.additional_notes,
+  ].filter(Boolean).length;
+
+  const Sec = ({ title, icon, children }) => (
+    <div style={{ marginBottom: 24 }}>
+      <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span>{icon}</span> {title}
+      </p>
+      {children}
+    </div>
+  );
+  const Lbl = ({ children }) => <label style={{ fontSize: 12, color: '#64748b', marginBottom: 4, display: 'block', fontWeight: 500 }}>{children}</label>;
+  const Inp = ({ field, placeholder }) => (
+    <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+      placeholder={placeholder} value={form[field] || ''} onChange={e => set(field, e.target.value)} />
+  );
+  const Txt = ({ field, placeholder, rows = 3 }) => (
+    <textarea className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none"
+      rows={rows} placeholder={placeholder} value={form[field] || ''} onChange={e => set(field, e.target.value)} />
+  );
+  const YesNo = ({ field }) => (
+    <div style={{ display: 'flex', gap: 8 }}>
+      {[[true, 'כן', '#10b981', '#ecfdf5', '#059669'], [false, 'לא', '#f43f5e', '#fff1f2', '#e11d48']].map(([boolVal, label, borderC, bgC, textC]) => (
+        <button key={String(boolVal)} onClick={() => set(field, form[field] === boolVal ? null : boolVal)}
+          style={{
+            padding: '5px 14px', borderRadius: 99, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            border: `1.5px solid ${form[field] === boolVal ? borderC : '#e2e8f0'}`,
+            background: form[field] === boolVal ? bgC : 'white',
+            color: form[field] === boolVal ? textC : '#94a3b8',
+          }}>{label}</button>
+      ))}
+    </div>
+  );
+
+  return (
+    <div style={{ paddingTop: 18 }}>
+      {/* Completion bar */}
+      <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 14px', border: '1px solid #f1f5f9', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ flex: 1, height: 4, background: '#e2e8f0', borderRadius: 99, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${(sectionsFilled / 9) * 100}%`, background: 'linear-gradient(90deg, #6366f1, #a855f7)', borderRadius: 99, transition: 'width 0.3s' }} />
+        </div>
+        <span style={{ fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap', fontWeight: 600 }}>{sectionsFilled}/9 סעיפים</span>
+      </div>
+
+      {/* 1 — פרטי העסק */}
+      <Sec title="פרטי העסק" icon="🏢">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div><Lbl>איש קשר</Lbl><Inp field="contact_person" placeholder="שם + תפקיד" /></div>
+          <div><Lbl>מה מוכרים?</Lbl><Inp field="business_description" placeholder="תיאור קצר של העסק" /></div>
+          <div><Lbl>מוצר / שירות עיקרי</Lbl><Inp field="main_product" placeholder="למה מפרסמים?" /></div>
+          <div>
+            <Lbl>מטרת הפרסום</Lbl>
+            <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={form.ad_goal || ''} onChange={e => set('ad_goal', e.target.value)}>
+              <option value="">בחר מטרה</option>
+              {['לידים', 'מכירות', 'תנועה לאתר', 'מודעות מותג', 'אחר'].map(g => <option key={g} value={g}>{g}</option>)}
+            </select>
+          </div>
+        </div>
+      </Sec>
+
+      {/* 2 — מצב קיים */}
+      <Sec title="מצב קיים" icon="📊">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div>
+            <Lbl>פרסם בעבר?</Lbl>
+            <YesNo field="advertised_before" />
+          </div>
+          {form.advertised_before && (
+            <div><Lbl>מה עבד?</Lbl><Inp field="what_worked" placeholder="קמפיינים, פורמטים, ערוצים..." /></div>
+          )}
+          <div><Lbl>יש חשבון Meta Business?</Lbl><YesNo field="has_meta_account" /></div>
+          <div><Lbl>יש חשבון Google Ads?</Lbl><YesNo field="has_google_account" /></div>
+          <div><Lbl>יש Pixel / GTM / המרות?</Lbl><YesNo field="has_tracking" /></div>
+        </div>
+      </Sec>
+
+      {/* 3 — נכסים ותשתיות */}
+      <Sec title="נכסים ותשתיות" icon="🔗">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+          <div><Lbl>אתר</Lbl><Inp field="website_link" placeholder="https://..." /></div>
+          <div><Lbl>עמוד פייסבוק</Lbl><Inp field="facebook_link" placeholder="https://facebook.com/..." /></div>
+          <div><Lbl>פרופיל אינסטגרם</Lbl><Inp field="instagram_link" placeholder="https://instagram.com/..." /></div>
+        </div>
+        <div style={{ display: 'flex', gap: 32 }}>
+          <div><Lbl>יש חומרי גלם? (תמונות, סרטונים)</Lbl><YesNo field="has_materials" /></div>
+          <div><Lbl>יש רשימת תפוצה?</Lbl><YesNo field="has_mailing_list" /></div>
+        </div>
+      </Sec>
+
+      {/* 4 — מיתוג ושפה */}
+      <Sec title="מיתוג ושפה" icon="🎨">
+        <div style={{ display: 'flex', gap: 32, marginBottom: 14 }}>
+          <div><Lbl>יש לוגו?</Lbl><YesNo field="has_logo" /></div>
+          <div><Lbl>יש ברנד בוק / מדריך מיתוג?</Lbl><YesNo field="has_brand_guide" /></div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div><Lbl>3 מילים שמתארות את המותג</Lbl><Inp field="brand_3_words" placeholder="לדוגמה: מקצועי, חם, מודרני" /></div>
+          <div><Lbl>מה מייחד אתכם מהמתחרים?</Lbl><Inp field="differentiator" placeholder="ה-USP שלכם..." /></div>
+        </div>
+      </Sec>
+
+      {/* 5 — קהל יעד */}
+      <Sec title="קהל יעד" icon="🎯">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div><Lbl>קהל יעד כללי</Lbl><Inp field="target_audience" placeholder="גיל, מגדר, תחומי עניין, גיאוגרפיה..." /></div>
+          <div><Lbl>הלקוח האידיאלי (פרסונה)</Lbl><Inp field="ideal_customer" placeholder="מי הלקוח שהכי כדאי לכם?" /></div>
+          <div><Lbl>מה הבעיה שהלקוח פותר?</Lbl><Inp field="customer_problem" placeholder="כאב / צורך..." /></div>
+          <div><Lbl>למה לקנות דווקא מכם?</Lbl><Inp field="why_choose_us" placeholder="הסיבה שהם יבחרו בכם..." /></div>
+        </div>
+      </Sec>
+
+      {/* 6 — השראה ורפרנסים */}
+      <Sec title="השראה ורפרנסים" icon="✨">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div><Lbl>דוגמאות שאהבת (פרסומות, עמודים, גרפיקה)</Lbl><Txt field="references" placeholder="לינקים, שמות מותגים, תיאור..." /></div>
+          <div><Lbl>מה אהבת בהן?</Lbl><Txt field="what_liked" placeholder="סגנון, טון, צבעוניות, מסר..." rows={2} /></div>
+        </div>
+      </Sec>
+
+      {/* 7 — תהליך לידים ומכירה */}
+      <Sec title="תהליך לידים ומכירה" icon="🔄">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div><Lbl>מה קורה אחרי שמגיע ליד?</Lbl><Txt field="lead_process" placeholder="תהליך המכירה..." rows={2} /></div>
+          <div>
+            <div style={{ marginBottom: 12 }}><Lbl>זמן מענה ללידים</Lbl><Inp field="lead_response_time" placeholder="לדוגמה: עד שעה" /></div>
+            <div><Lbl>מי מטפל בלידים?</Lbl><Inp field="lead_handler" placeholder="שם / תפקיד" /></div>
+          </div>
+          <div><Lbl>אחוז סגירה משוער</Lbl><Inp field="closing_rate" placeholder="לדוגמה: 20%" /></div>
+        </div>
+      </Sec>
+
+      {/* 8 — תקציב וציפיות */}
+      <Sec title="תקציב וציפיות" icon="💰">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div><Lbl>תקציב חודשי לפרסום (₪)</Lbl><Inp field="monthly_budget" placeholder="לדוגמה: 5,000" /></div>
+          <div><Lbl>ציפיות / יעדים</Lbl><Inp field="expectations" placeholder="כמה לידים? ROI מצופה?" /></div>
+        </div>
+      </Sec>
+
+      {/* 9 — דגשים נוספים */}
+      <Sec title="דגשים נוספים" icon="📌">
+        <Txt field="additional_notes" placeholder="כל מה שחשוב לדעת שלא נכלל למעלה..." rows={3} />
+      </Sec>
+
+      {/* Save */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 4, paddingBottom: 8 }}>
+        <button onClick={handleSave} style={{
+          padding: '9px 22px', borderRadius: 99, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer',
+          background: saved ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,#6366f1,#a855f7)',
+          color: 'white',
+          boxShadow: saved ? '0 4px 14px rgba(16,185,129,0.3)' : '0 4px 14px rgba(99,102,241,0.3)',
+          transition: 'all 0.2s',
+        }}>
+          {saved ? '✓ נשמר' : 'שמור אפיון'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // ─── Client Detail Screen ────────────────────────────────────────────────────
 const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onToggleDone, onSaveClientData, onTaskClick }) => {
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({ name: clientName, ...clientData });
+  const [activeTab, setActiveTab] = useState('details');
+
+  const handleBriefSave = (briefData) => {
+    onSaveClientData(clientName, clientName, { ...clientData, brief: briefData });
+  };
 
   const allClientTasks = tasks.filter(t => t.client === clientName);
   const activeTasks = allClientTasks.filter(t => !t.done);
@@ -1625,44 +1820,67 @@ const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onTogg
           </div>
         </div>
 
-        {/* Contact fields */}
-        <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { icon: "📞", label: "טלפון", key: "phone" },
-            { icon: "✉️", label: 'דוא"ל', key: "email" },
-            { icon: "🌐", label: "אתר", key: "website" },
-          ].map(({ icon, label, key }) => (
-            <div key={key}>
-              <p className="text-xs text-gray-400 mb-1">{icon} {label}</p>
-              {editMode ? (
-                <input
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                  value={editForm[key]}
-                  onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))}
-                  placeholder={`הזן ${label}`}
-                />
-              ) : (
-                <p className={`text-sm ${data[key] ? 'text-gray-700' : 'text-gray-300 italic'}`}>{data[key] || "לא הוזן"}</p>
-              )}
-            </div>
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: 0, marginTop: 20, borderBottom: '1px solid #f1f5f9' }}>
+          {[['details', '📋 פרטים'], ['brief', '📝 אפיון']].map(([tab, label]) => (
+            <button key={tab} onClick={() => setActiveTab(tab)} style={{
+              padding: '8px 18px', fontSize: 13, fontWeight: activeTab === tab ? 700 : 500,
+              color: activeTab === tab ? '#6366f1' : '#94a3b8',
+              background: 'none', border: 'none', cursor: 'pointer',
+              borderBottom: activeTab === tab ? '2px solid #6366f1' : '2px solid transparent',
+              marginBottom: -1, transition: 'all 0.15s',
+            }}>{label}</button>
           ))}
         </div>
 
-        {/* Notes */}
-        <div className="mt-4 pt-4 border-t border-gray-50">
-          <p className="text-xs text-gray-400 mb-1">📝 הערות</p>
-          {editMode ? (
-            <textarea
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none"
-              rows={3}
-              value={editForm.notes}
-              onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))}
-              placeholder="הוסף הערות על הלקוח..."
-            />
-          ) : (
-            <p className={`text-sm ${data.notes ? 'text-gray-500' : 'text-gray-300 italic'}`}>{data.notes || "אין הערות"}</p>
-          )}
-        </div>
+        {/* Tab: פרטים */}
+        {activeTab === 'details' && (
+          <>
+            {/* Contact fields */}
+            <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { icon: "📞", label: "טלפון", key: "phone" },
+                { icon: "✉️", label: 'דוא"ל', key: "email" },
+                { icon: "🌐", label: "אתר", key: "website" },
+              ].map(({ icon, label, key }) => (
+                <div key={key}>
+                  <p className="text-xs text-gray-400 mb-1">{icon} {label}</p>
+                  {editMode ? (
+                    <input
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                      value={editForm[key]}
+                      onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))}
+                      placeholder={`הזן ${label}`}
+                    />
+                  ) : (
+                    <p className={`text-sm ${data[key] ? 'text-gray-700' : 'text-gray-300 italic'}`}>{data[key] || "לא הוזן"}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Notes */}
+            <div className="mt-4 pt-4 border-t border-gray-50">
+              <p className="text-xs text-gray-400 mb-1">📝 הערות</p>
+              {editMode ? (
+                <textarea
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none"
+                  rows={3}
+                  value={editForm.notes}
+                  onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))}
+                  placeholder="הוסף הערות על הלקוח..."
+                />
+              ) : (
+                <p className={`text-sm ${data.notes ? 'text-gray-500' : 'text-gray-300 italic'}`}>{data.notes || "אין הערות"}</p>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Tab: אפיון */}
+        {activeTab === 'brief' && (
+          <ClientBriefTab brief={clientData.brief || {}} onSave={handleBriefSave} />
+        )}
       </div>
 
       {/* Stats */}
@@ -2264,7 +2482,7 @@ const TaskManager = () => {
     const { data } = await supabase.from("clients").select("*").order("name");
     if (data) {
       const map = {};
-      data.forEach(c => { map[c.name] = { phone: c.phone, email: c.email, website: c.website, notes: c.notes, _id: c.id }; });
+      data.forEach(c => { map[c.name] = { phone: c.phone, email: c.email, website: c.website, notes: c.notes, brief: c.brief || {}, _id: c.id }; });
       setClientsData(map);
     }
   };

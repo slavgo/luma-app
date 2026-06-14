@@ -60,10 +60,12 @@ const ClientBadge = ({ name, onClick, done }) => {
   );
 };
 
+const URGENCY_BORDER = { 'גבוהה': '#ef4444', 'בינונית': '#f97316', 'נמוכה': '#6366f1' };
+
 const TaskRow = ({ task, onToggleDone, onClientClick, onTaskClick, showClient = true }) => (
   <tr className={`border-b border-slate-50 transition-all duration-150 group ${
     task.done ? 'opacity-40' : task.date < TODAY ? 'bg-red-50/60 hover:bg-red-50' : 'hover:bg-slate-50/80'
-  }`}>
+  }`} style={{ borderRight: `3px solid ${task.done ? '#e2e8f0' : (URGENCY_BORDER[task.urgency] || '#6366f1')}` }}>
     <td className="pl-5 pr-3 py-3.5">
       <DoneCheckbox done={task.done} onToggle={() => onToggleDone(task.id)} />
     </td>
@@ -830,13 +832,13 @@ const BottomNav = ({ screen, setScreen, user, onSignOut, onOpenAdmin }) => {
   return (
     <nav dir="rtl" style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
-      background: 'white',
-      borderTop: '1px solid #e2e8f0',
+      background: 'linear-gradient(180deg, #0f0d2a 0%, #0c1122 100%)',
+      borderTop: '1px solid rgba(255,255,255,0.06)',
       display: 'flex', alignItems: 'center',
-      padding: '0 4px',
-      height: 60,
+      padding: '0 8px',
+      height: 64,
       paddingBottom: 'env(safe-area-inset-bottom)',
-      boxShadow: '0 -4px 24px rgba(0,0,0,0.07)',
+      boxShadow: '0 -8px 32px rgba(0,0,0,0.25)',
     }}>
       {NAV_ITEMS.map(item => {
         const active = screen === item.id;
@@ -847,14 +849,15 @@ const BottomNav = ({ screen, setScreen, user, onSignOut, onOpenAdmin }) => {
             onClick={() => setScreen(item.id)}
             style={{
               flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-              gap: 3, padding: '6px 0', border: 'none', background: 'transparent',
-              cursor: 'pointer', transition: 'all 0.15s',
-              color: active ? colors.from : '#94a3b8',
+              gap: 4, padding: '8px 0', border: 'none',
+              background: active ? `linear-gradient(135deg,${colors.from}22,${colors.to}18)` : 'transparent',
+              borderRadius: 12, margin: '0 2px',
+              cursor: 'pointer', transition: 'all 0.18s',
+              color: active ? colors.from : 'rgba(255,255,255,0.35)',
             }}
           >
-            <span style={{ width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</span>
+            <span style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', filter: active ? `drop-shadow(0 0 6px ${colors.from})` : 'none' }}>{item.icon}</span>
             <span style={{ fontSize: 10, fontWeight: active ? 700 : 400, letterSpacing: '0.01em' }}>{item.label}</span>
-            {active && <span style={{ width: 18, height: 2.5, borderRadius: 2, background: colors.from, position: 'absolute', bottom: 6 }}/>}
           </button>
         );
       })}
@@ -898,16 +901,16 @@ const MobileHeader = ({ screen, user }) => {
   return (
     <header dir="rtl" style={{
       position: 'sticky', top: 0, zIndex: 90,
-      background: 'white',
-      borderBottom: '1px solid #e2e8f0',
+      background: 'linear-gradient(180deg, #0c1122 0%, #0f0d2a 100%)',
+      borderBottom: '1px solid rgba(255,255,255,0.06)',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '0 16px', height: 52,
-      boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
+      padding: '0 16px', height: 56,
+      boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
     }}>
       {/* LUMA logo */}
       <div style={{ display: 'flex', alignItems: 'baseline', lineHeight: 1, userSelect: 'none' }}>
         <span style={{ fontFamily: "'Helvetica Neue',Arial,sans-serif", fontWeight: 900, fontSize: 22, letterSpacing: '-1px', background: 'linear-gradient(135deg, #6366f1, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>A</span>
-        <span style={{ fontFamily: "'Helvetica Neue',Arial,sans-serif", fontWeight: 900, fontSize: 22, letterSpacing: '-1px', color: '#0f172a' }}>LUM</span>
+        <span style={{ fontFamily: "'Helvetica Neue',Arial,sans-serif", fontWeight: 900, fontSize: 22, letterSpacing: '-1px', color: 'rgba(255,255,255,0.92)' }}>LUM</span>
       </div>
 
       {/* Page label */}
@@ -1252,74 +1255,84 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
 
   const doneRate = tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0;
 
-  const KpiCard = ({ label, value, sub, accent, icon, onClick }) => (
+  const KpiCard = ({ label, value, sub, gradient, glow, icon, onClick }) => (
     <div
       onClick={onClick}
       style={{
-        background: '#ffffff',
-        borderRadius: 12,
-        padding: mobile ? '14px 16px' : '18px 20px',
-        border: '1px solid #e8eaf0',
-        borderTop: `3px solid ${accent}`,
-        boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+        background: gradient,
+        borderRadius: 16,
+        padding: mobile ? '16px 18px' : '20px 22px',
+        boxShadow: `0 4px 24px ${glow}`,
         position: 'relative', overflow: 'hidden',
         cursor: onClick ? 'pointer' : 'default',
-        transition: 'transform 0.15s, box-shadow 0.15s',
+        transition: 'transform 0.18s, box-shadow 0.18s',
       }}
-      onMouseEnter={e => { if (onClick) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.10)'; } }}
-      onMouseLeave={e => { if (onClick) { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.06)'; } }}
+      onMouseEnter={e => { if (onClick) { e.currentTarget.style.transform = 'translateY(-3px) scale(1.01)'; e.currentTarget.style.boxShadow = `0 10px 32px ${glow}`; } }}
+      onMouseLeave={e => { if (onClick) { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = `0 4px 24px ${glow}`; } }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      {/* Decorative circle */}
+      <div style={{ position: 'absolute', top: -18, left: -18, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative' }}>
         <div>
-          <p style={{ fontSize: mobile ? 10 : 11, color: '#94a3b8', fontWeight: 600, marginBottom: 6, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{label}</p>
-          <p style={{ fontSize: mobile ? 28 : 32, fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{value}</p>
-          {sub && !mobile && <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 5 }}>{sub}</p>}
+          <p style={{ fontSize: mobile ? 10 : 11, color: 'rgba(255,255,255,0.75)', fontWeight: 600, marginBottom: 6, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{label}</p>
+          <p style={{ fontSize: mobile ? 30 : 36, fontWeight: 900, color: '#ffffff', lineHeight: 1, letterSpacing: '-1px' }}>{value}</p>
+          {sub && !mobile && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 6 }}>{sub}</p>}
         </div>
         <div style={{
-          width: 36, height: 36, borderRadius: 9, flexShrink: 0,
-          background: `${accent}14`,
+          width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+          background: 'rgba(255,255,255,0.18)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 16, color: accent,
+          fontSize: 18,
         }}>{icon}</div>
       </div>
     </div>
   );
 
   return (
-    <div style={{ background: '#f5f6fa', minHeight: '100%', padding: mobile ? '16px 14px' : '28px 32px' }} dir="rtl">
+    <div style={{ background: 'linear-gradient(160deg,#f0f1ff 0%,#f4f5f9 40%,#f9f5ff 100%)', minHeight: '100%' }} dir="rtl">
 
-      {/* Header */}
-      <div style={{ marginBottom: mobile ? 16 : 28 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* Hero Header */}
+      <div style={{
+        background: 'linear-gradient(135deg,#0c1122 0%,#1a0f3a 50%,#0d1f3a 100%)',
+        padding: mobile ? '20px 18px 24px' : '28px 36px 32px',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        {/* decorative blobs */}
+        <div style={{ position:'absolute',top:-40,right:-40,width:180,height:180,borderRadius:'50%',background:'radial-gradient(circle,rgba(99,102,241,0.25) 0%,transparent 70%)',pointerEvents:'none' }}/>
+        <div style={{ position:'absolute',bottom:-50,left:60,width:220,height:220,borderRadius:'50%',background:'radial-gradient(circle,rgba(168,85,247,0.18) 0%,transparent 70%)',pointerEvents:'none' }}/>
+        <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',position:'relative' }}>
           <div>
-            <h1 style={{ fontSize: mobile ? 18 : 22, fontWeight: 800, color: '#0f172a', margin: 0 }}>
+            <p style={{ fontSize: mobile ? 12 : 13, color:'rgba(255,255,255,0.45)', margin:'0 0 4px', letterSpacing:'0.04em' }}>יום {dayName} · {d}/{m}/{y}</p>
+            <h1 style={{ fontSize: mobile ? 22 : 28, fontWeight: 900, color:'#ffffff', margin: 0, letterSpacing:'-0.5px' }}>
               שלום, {user?.name?.split(' ')[0] || 'Slav'} 👋
             </h1>
-            <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 3 }}>יום {dayName} · {d}/{m}/{y}</p>
+            <p style={{ fontSize: mobile ? 12 : 13, color:'rgba(255,255,255,0.45)', marginTop: 6 }}>
+              {activeTasks.length} משימות פתוחות · {overdue.length > 0 ? <span style={{color:'#fb923c'}}>⚠ {overdue.length} באיחור</span> : '✓ הכל בזמן'}
+            </p>
           </div>
-          <button
-            onClick={onAddTask}
-            style={{
-              display: 'flex', alignItems: 'center', gap: mobile ? 4 : 8,
-              padding: mobile ? '8px 14px' : '10px 20px',
-              background: 'linear-gradient(135deg, #6366f1, #a855f7)',
-              color: 'white', borderRadius: 10, border: 'none', cursor: 'pointer',
-              fontSize: mobile ? 12 : 13, fontWeight: 600, boxShadow: '0 4px 14px rgba(99,102,241,0.35)',
-            }}
-          >
-            <span style={{ fontSize: mobile ? 14 : 16 }}>+</span>
-            {!mobile && ' משימה חדשה'}
-            {mobile && 'משימה'}
+          <button onClick={onAddTask} style={{
+            display:'flex',alignItems:'center',gap:8,
+            padding: mobile ? '10px 16px' : '12px 22px',
+            background:'linear-gradient(135deg,#6366f1,#a855f7)',
+            color:'white',borderRadius:14,border:'none',cursor:'pointer',
+            fontSize: mobile ? 13 : 14,fontWeight:700,
+            boxShadow:'0 4px 20px rgba(99,102,241,0.5)',
+            flexShrink:0,
+          }}>
+            <span style={{fontSize:18,lineHeight:1}}>+</span>
+            {!mobile && 'משימה חדשה'}
           </button>
         </div>
       </div>
 
+      <div style={{ padding: mobile ? '16px 14px' : '24px 32px' }}>
+
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: mobile ? 10 : 14, marginBottom: mobile ? 14 : 24 }}>
-        <KpiCard label="משימות פתוחות" value={activeTasks.length} sub={`${overdue.length} באיחור`} accent="#6366f1" icon="≡" onClick={onNavigateWithFilter ? () => onNavigateWithFilter(null) : undefined} />
-        <KpiCard label="דחוף ומיידי" value={highUrgency.length} sub="דורש טיפול עכשיו" accent="#ef4444" icon="⚡" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'urgency', value: 'גבוהה' }) : undefined} />
-        <KpiCard label="ממתין לאישור" value={waiting.length} sub="לקוחות ממתינים" accent="#f59e0b" icon="⏳" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'status', value: 'ממתין לאישור' }) : undefined} />
-        <KpiCard label="אחוז השלמה" value={`${doneRate}%`} sub={`${doneTasks.length} מתוך ${tasks.length} בוצעו`} accent="#10b981" icon="✓" />
+        <KpiCard label="משימות פתוחות" value={activeTasks.length} sub={`${overdue.length} באיחור`} gradient="linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)" glow="rgba(99,102,241,0.35)" icon="📋" onClick={onNavigateWithFilter ? () => onNavigateWithFilter(null) : undefined} />
+        <KpiCard label="דחוף ומיידי" value={highUrgency.length} sub="דורש טיפול עכשיו" gradient="linear-gradient(135deg,#ef4444 0%,#f97316 100%)" glow="rgba(239,68,68,0.35)" icon="⚡" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'urgency', value: 'גבוהה' }) : undefined} />
+        <KpiCard label="ממתין לאישור" value={waiting.length} sub="לקוחות ממתינים" gradient="linear-gradient(135deg,#f59e0b 0%,#fb923c 100%)" glow="rgba(245,158,11,0.35)" icon="⏳" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'status', value: 'ממתין לאישור' }) : undefined} />
+        <KpiCard label="אחוז השלמה" value={`${doneRate}%`} sub={`${doneTasks.length} מתוך ${tasks.length} בוצעו`} gradient="linear-gradient(135deg,#10b981 0%,#34d399 100%)" glow="rgba(16,185,129,0.35)" icon="✅" />
       </div>
 
       {/* Progress bar */}
@@ -1477,6 +1490,7 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
 
         <AIInsightsPanel tasks={tasks} clientsData={clientsData} onCreateTemplate={onCreateTemplate} />
 
+      </div>
       </div>
     </div>
   );

@@ -2498,40 +2498,69 @@ const AdminPanel = ({ currentUser, onClose }) => {
 };
 
 // ─── Mobile Task Card ────────────────────────────────────────────────────────
+const URGENCY_CONFIG = {
+  'גבוהה':  { border: '#ef4444', badge: 'linear-gradient(135deg,#ef4444,#f97316)', label: '⚡ דחוף' },
+  'בינונית': { border: '#f97316', badge: 'linear-gradient(135deg,#f97316,#fbbf24)', label: '● בינוני' },
+  'נמוכה':  { border: '#6366f1', badge: 'linear-gradient(135deg,#6366f1,#8b5cf6)', label: '● נמוך' },
+};
+const STATUS_COLORS = { 'בביצוע': '#3b82f6', 'ממתין לאישור': '#f59e0b', 'לביצוע': '#94a3b8', 'בוצע': '#10b981' };
+
 const TaskCard = ({ task, onToggleDone, onClientClick, onTaskClick }) => {
-  const urgencyColors = { 'גבוהה': { bg: '#fee2e2', color: '#dc2626' }, 'בינונית': { bg: '#ffedd5', color: '#ea580c' }, 'נמוכה': { bg: '#dbeafe', color: '#2563eb' } };
-  const uc = urgencyColors[task.urgency] || urgencyColors['נמוכה'];
+  const uc = URGENCY_CONFIG[task.urgency] || URGENCY_CONFIG['נמוכה'];
   const isOverdue = task.date && task.date < TODAY && !task.done;
+  const hasFollowUp = task.follow_up_date && task.follow_up_date <= TODAY && !task.done;
   return (
-    <div style={{
-      background: isOverdue ? '#fff5f5' : '#ffffff',
-      borderRadius: 12, padding: '12px 14px',
-      border: `1px solid ${isOverdue ? '#fecaca' : '#e8eaf0'}`,
-      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-      opacity: task.done ? 0.4 : 1,
-      display: 'flex', gap: 10, alignItems: 'flex-start',
-    }}>
-      <div style={{ paddingTop: 2 }}>
-        <DoneCheckbox done={task.done} onToggle={() => onToggleDone(task.id)} />
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }} onClick={() => onTaskClick && onTaskClick(task)}>
+    <div
+      onClick={() => onTaskClick && onTaskClick(task)}
+      style={{
+        background: '#ffffff',
+        borderRadius: 16,
+        padding: '14px 16px',
+        border: '1px solid #eef0f6',
+        borderRight: `4px solid ${task.done ? '#e2e8f0' : uc.border}`,
+        boxShadow: isOverdue ? '0 2px 12px rgba(239,68,68,0.10)' : '0 2px 8px rgba(0,0,0,0.05)',
+        opacity: task.done ? 0.45 : 1,
+        cursor: 'pointer',
+        transition: 'box-shadow 0.15s',
+      }}
+    >
+      {/* Row 1: checkbox + title + urgency */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div onClick={e => { e.stopPropagation(); onToggleDone(task.id); }}>
+          <DoneCheckbox done={task.done} onToggle={() => {}} />
+        </div>
         <p style={{
-          fontSize: 14, fontWeight: 600, color: '#334155', margin: '0 0 4px 0',
+          flex: 1, fontSize: 15, fontWeight: 700, color: '#1e293b', margin: 0,
           textDecoration: task.done ? 'line-through' : 'none',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>{task.task}</p>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-          <button onClick={e => { e.stopPropagation(); onClientClick(task.client); }}
-            style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: '#ede9fe', color: '#6d28d9', fontWeight: 600, border: 'none', cursor: 'pointer' }}>
-            {task.client}
-          </button>
-          <span style={{ fontSize: 11, color: '#94a3b8' }}>{PLATFORM_ICONS[task.platform]} {task.platform}</span>
-          {task.date && <span style={{ fontSize: 11, color: isOverdue ? '#ef4444' : '#94a3b8' }}>{isOverdue ? '⚠️ ' : '📅 '}{task.date}</span>}
-        </div>
+        {!task.done && (
+          <span style={{
+            fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 99,
+            background: uc.badge, color: 'white', flexShrink: 0,
+          }}>{uc.label}</span>
+        )}
       </div>
-      {!task.done && (
-        <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: uc.bg, color: uc.color, fontWeight: 600, flexShrink: 0 }}>{task.urgency}</span>
-      )}
+
+      {/* Row 2: client + platform + date + status */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginTop: 8, paddingRight: 30 }}>
+        <button
+          onClick={e => { e.stopPropagation(); onClientClick(task.client); }}
+          style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: '#ede9fe', color: '#6d28d9', fontWeight: 700, border: 'none', cursor: 'pointer' }}
+        >{task.client}</button>
+        <span style={{ fontSize: 11, color: '#94a3b8' }}>{PLATFORM_ICONS[task.platform]} {task.platform}</span>
+        {task.date && (
+          <span style={{ fontSize: 11, fontWeight: 600, color: isOverdue ? '#ef4444' : '#94a3b8' }}>
+            {isOverdue ? '⚠️' : '📅'} {task.date}
+          </span>
+        )}
+        {!task.done && task.status !== 'לביצוע' && (
+          <span style={{ fontSize: 11, fontWeight: 600, color: STATUS_COLORS[task.status] || '#94a3b8' }}>
+            {task.status === 'בביצוע' ? '🔵' : '🟡'} {task.status}
+          </span>
+        )}
+        {hasFollowUp && <span style={{ fontSize: 11, color: '#f59e0b' }}>🔔 פולו-אפ</span>}
+      </div>
     </div>
   );
 };
@@ -3007,76 +3036,73 @@ const TaskManager = () => {
         </div>
       )}
 
-      {/* Header Row 1 */}
+      {/* Header */}
       <header className="mb-4">
-        <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
-          {!mobile && <div />}
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 text-sm">
-              <span className="text-gray-400">משימות פתוחות</span>
-              <span className="font-bold text-blue-600">{activeTasks.length}</span>
+        {mobile ? (
+          /* Mobile: כפתור + סיכום מינימלי */
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {overdue.length > 0 && (
+                <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 99, background: '#fee2e2', color: '#dc2626', fontWeight: 700 }}>⚠️ {overdue.length} באיחור</span>
+              )}
+              <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 99, background: '#ede9fe', color: '#6d28d9', fontWeight: 700 }}>{activeTasks.length} פתוחות</span>
             </div>
-            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 text-sm">
-              <span className="text-gray-400">דחיפות גבוהה</span>
-              <span className="font-bold text-red-500">{activeTasks.filter(t => t.urgency === 'גבוהה').length}</span>
-            </div>
-            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 text-sm">
-              <span className="text-gray-400">ממתין לאישור</span>
-              <span className="font-bold text-orange-500">{pipeline.waiting}</span>
-            </div>
-            {doneTasks.length > 0 && (
-              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 text-sm">
-                <span className="text-gray-400">בוצעו היום</span>
-                <span className="font-bold text-green-500">{doneTasks.length}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 text-sm">
-              <span className="text-gray-400">הספק שבועי</span>
-              <div className="w-20 h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-2 bg-green-500 rounded-full" style={{ width: '65%' }}></div>
-              </div>
-              <span className="font-bold text-green-600">65%</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Header Row 2 */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-lg text-xs text-blue-700">
-              <span>📅</span>
-              <span><strong>{thisWeek.length}</strong> משימות השבוע</span>
-            </div>
-            {overdue.length > 0 && (
-              <div className="flex items-center gap-1.5 bg-red-50 border border-red-100 px-3 py-1.5 rounded-lg text-xs text-red-700">
-                <span>⚠️</span>
-                <span><strong>{overdue.length}</strong> משימות פג תוקף</span>
-              </div>
-            )}
-            <div className="flex items-center gap-2 bg-white border border-gray-100 px-3 py-1.5 rounded-lg text-xs shadow-sm">
-              <span className="text-gray-400">pipeline:</span>
-              <span className="text-gray-500">לביצוע <strong className="text-gray-700">{pipeline.todo}</strong></span>
-              <span className="text-gray-300">|</span>
-              <span className="text-blue-500">בביצוע <strong>{pipeline.doing}</strong></span>
-              <span className="text-gray-300">|</span>
-              <span className="text-orange-500">ממתין <strong>{pipeline.waiting}</strong></span>
-            </div>
-            {nextTask && (
-              <div className="flex items-center gap-1.5 bg-purple-50 border border-purple-100 px-3 py-1.5 rounded-lg text-xs text-purple-700">
-                <span>🔔</span>
-                <span>הבא: <strong>{nextTask.client}</strong> — {nextTask.date}</span>
-              </div>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => setShowClientModal(true)} className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-full text-sm font-medium shadow-sm hover:bg-gray-50 transition-colors">
-              <span className="text-lg leading-none">+</span> לקוח חדש
-            </button>
-            <button onClick={() => setShowTaskModal(true)} className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium shadow-sm hover:bg-blue-700 transition-colors">
-              <span className="text-lg leading-none">+</span> משימה חדשה
+            <button onClick={() => setShowTaskModal(true)} style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px',
+              background: 'linear-gradient(135deg,#6366f1,#a855f7)', color: 'white',
+              borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
+              boxShadow: '0 4px 14px rgba(99,102,241,0.4)',
+            }}>
+              <span style={{ fontSize: 18, lineHeight: 1 }}>+</span> משימה
             </button>
           </div>
-        </div>
+        ) : (
+          /* Desktop: stats + buttons */
+          <>
+            <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
+              <div />
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 text-sm">
+                  <span className="text-gray-400">משימות פתוחות</span>
+                  <span className="font-bold text-blue-600">{activeTasks.length}</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 text-sm">
+                  <span className="text-gray-400">דחיפות גבוהה</span>
+                  <span className="font-bold text-red-500">{activeTasks.filter(t => t.urgency === 'גבוהה').length}</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 text-sm">
+                  <span className="text-gray-400">ממתין לאישור</span>
+                  <span className="font-bold text-orange-500">{pipeline.waiting}</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-lg text-xs text-blue-700">
+                  <span>📅</span><span><strong>{thisWeek.length}</strong> משימות השבוע</span>
+                </div>
+                {overdue.length > 0 && (
+                  <div className="flex items-center gap-1.5 bg-red-50 border border-red-100 px-3 py-1.5 rounded-lg text-xs text-red-700">
+                    <span>⚠️</span><span><strong>{overdue.length}</strong> משימות פג תוקף</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 bg-white border border-gray-100 px-3 py-1.5 rounded-lg text-xs shadow-sm">
+                  <span className="text-blue-500">בביצוע <strong>{pipeline.doing}</strong></span>
+                  <span className="text-gray-300">|</span>
+                  <span className="text-orange-500">ממתין <strong>{pipeline.waiting}</strong></span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setShowClientModal(true)} className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-full text-sm font-medium shadow-sm hover:bg-gray-50 transition-colors">
+                  <span className="text-lg leading-none">+</span> לקוח חדש
+                </button>
+                <button onClick={() => setShowTaskModal(true)} className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium shadow-sm hover:bg-blue-700 transition-colors">
+                  <span className="text-lg leading-none">+</span> משימה חדשה
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </header>
 
       {/* Filters — לקוח */}

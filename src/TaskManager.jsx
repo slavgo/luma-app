@@ -10,13 +10,14 @@ const emptyTask = { client: "", platform: PLATFORMS[0], task: "", urgency: "בי
 const RECURRENCE_LABELS = { none: 'ללא', daily: 'יומי', weekly: 'שבועי', monthly: 'חודשי', custom: 'ימים קבועים' };
 const HEBREW_WEEKDAYS = ['א׳ (ראשון)','ב׳ (שני)','ג׳ (שלישי)','ד׳ (רביעי)','ה׳ (חמישי)','ו׳ (שישי)','ש׳ (שבת)'];
 
+const RECURRENCE_LOOKAHEAD_DAYS = 2;
+
 const getNextRecurrenceDate = (fromDate, recurrence) => {
   if (!recurrence || recurrence === 'none') return null;
   const d = new Date(fromDate);
   if (recurrence === 'daily') { d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); }
   if (recurrence === 'weekly') { d.setDate(d.getDate() + 7); return d.toISOString().slice(0, 10); }
   if (recurrence === 'monthly') { d.setMonth(d.getMonth() + 1); return d.toISOString().slice(0, 10); }
-  // custom: comma-separated day numbers (0=Sun … 6=Sat)
   const days = recurrence.split(',').map(Number).filter(n => !isNaN(n));
   if (!days.length) return null;
   const next = new Date(fromDate);
@@ -25,6 +26,35 @@ const getNextRecurrenceDate = (fromDate, recurrence) => {
     if (days.includes(next.getDay())) return next.toISOString().slice(0, 10);
   }
   return null;
+};
+
+// Returns next occurrence ON OR AFTER today (for reschedule + auto-fill)
+const getNextRecurrenceOnOrAfterToday = (recurrence) => {
+  if (!recurrence || recurrence === 'none') return '';
+  const days = recurrence.split(',').map(Number).filter(n => !isNaN(n));
+  if (days.length) {
+    const today = new Date(TODAY);
+    if (days.includes(today.getDay())) return TODAY;
+    for (let i = 1; i <= 14; i++) {
+      const d = new Date(TODAY);
+      d.setDate(d.getDate() + i);
+      if (days.includes(d.getDay())) return d.toISOString().slice(0, 10);
+    }
+    return '';
+  }
+  return TODAY; // daily/weekly/monthly: start today
+};
+
+// Advances a past recurring task date forward until it's >= today
+const advanceToNextValidDate = (taskDate, recurrence) => {
+  let date = taskDate;
+  for (let i = 0; i < 60; i++) {
+    if (date >= TODAY) return date;
+    const next = getNextRecurrenceDate(date, recurrence);
+    if (!next) return date;
+    date = next;
+  }
+  return date;
 };
 
 const PLATFORM_ICONS = {
@@ -272,7 +302,9 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCal
               const next = customDays.includes(idx)
                 ? customDays.filter(d => d !== idx)
                 : [...customDays, idx];
-              setForm(f => ({ ...f, recurrence: next.sort().join(',') || 'none' }));
+              const newRec = next.sort().join(',') || 'none';
+              const autoDate = (!form.date && newRec !== 'none') ? getNextRecurrenceOnOrAfterToday(newRec) : form.date;
+              setForm(f => ({ ...f, recurrence: newRec, date: autoDate || f.date }));
             };
 
             const nextDate = form.date && form.recurrence && form.recurrence !== 'none'
@@ -285,7 +317,9 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCal
                   value={selectVal}
                   onChange={e => {
                     const v = e.target.value;
-                    setForm(f => ({ ...f, recurrence: v === 'custom' ? (customDays.join(',') || '0') : v }));
+                    const newRec = v === 'custom' ? (customDays.join(',') || '0') : v;
+                    const autoDate = (!form.date && newRec !== 'none') ? getNextRecurrenceOnOrAfterToday(newRec) : form.date;
+                    setForm(f => ({ ...f, recurrence: newRec, date: autoDate || f.date }));
                   }}
                 >
                   {Object.entries(RECURRENCE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -2759,16 +2793,19 @@ const TaskManager = () => {
   };
 
   const checkAndGenerateRecurring = async (currentTasks) => {
-    const recurring = currentTasks.filter(t => t.recurrence && t.recurrence !== 'none' && t.date && t.date <= TODAY && !t.done === false);
-    // Find done recurring tasks that need a future spawn
+    // 1. Done recurring tasks → spawn next occurrence if missing
     const doneRecurring = currentTasks.filter(t => t.done && t.recurrence && t.recurrence !== 'none' && t.date);
     for (const task of doneRecurring) {
       await spawnRecurringInstance(task, currentTasks);
     }
-    // Also: undone recurring tasks whose date has passed — spawn next occurrence proactively
+    // 2. Overdue undone recurring tasks → advance date to next valid future date (no duplicate creation)
     const overdueRecurring = currentTasks.filter(t => !t.done && t.recurrence && t.recurrence !== 'none' && t.date && t.date < TODAY);
     for (const task of overdueRecurring) {
-      await spawnRecurringInstance(task, currentTasks);
+      const nextDate = advanceToNextValidDate(task.date, task.recurrence);
+      if (nextDate && nextDate !== task.date) {
+        setTasks(prev => prev.map(t => t.id === task.id ? { ...t, date: nextDate } : t));
+        if (supabase) await supabase.from("tasks").update({ date: nextDate }).eq("id", task.id);
+      }
     }
   };
 
@@ -2909,6 +2946,12 @@ const TaskManager = () => {
   const nextTask = [...activeTasks].filter(t => t.date >= TODAY).sort((a, b) => a.date.localeCompare(b.date))[0];
   const doneTasks = tasks.filter(t => t.done);
 
+  const lookaheadDate = (() => {
+    const d = new Date(TODAY);
+    d.setDate(d.getDate() + RECURRENCE_LOOKAHEAD_DAYS);
+    return d.toISOString().slice(0, 10);
+  })();
+
   const baseFiltered = activeFilter === "כל הלקוחות" ? tasks : tasks.filter(t => t.client === activeFilter);
   const statusFiltered = statusFilter
     ? baseFiltered.filter(t => {
@@ -2917,8 +2960,15 @@ const TaskManager = () => {
         return t.status === statusFilter.value;
       })
     : baseFiltered;
-  const activeFiltered = statusFiltered.filter(t => !t.done);
-  const doneFiltered = statusFiltered.filter(t => t.done);
+  // Recurring tasks are hidden until 2 days before their due date
+  const lookaheadFiltered = statusFiltered.filter(t => {
+    if (t.done) return true;
+    if (!t.recurrence || t.recurrence === 'none') return true;
+    if (!t.date) return true;
+    return t.date <= lookaheadDate;
+  });
+  const activeFiltered = lookaheadFiltered.filter(t => !t.done);
+  const doneFiltered = lookaheadFiltered.filter(t => t.done);
 
 
   const COL_HEADERS = ["", "לקוח", "משימה", "פלטפורמה", "דחיפות", "סטטוס", "תאריך יעד"];

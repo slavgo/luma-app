@@ -5,7 +5,7 @@ const TODAY = new Date().toISOString().slice(0, 10);
 const PLATFORMS = ["גוגל אדס", "מטא - ממומן", "סושיאל", "גרפיקה/וידאו", "כללי"];
 const URGENCIES = ["גבוהה", "בינונית", "נמוכה"];
 const STATUSES = ["לביצוע", "בביצוע", "ממתין לאישור"];
-const emptyTask = { client: "", platform: PLATFORMS[0], task: "", urgency: "בינונית", status: "לביצוע", date: "", done: false, notes: "" };
+const emptyTask = { client: "", platform: PLATFORMS[0], task: "", urgency: "בינונית", status: "לביצוע", date: "", done: false, notes: "", follow_up_date: "" };
 
 const PLATFORM_ICONS = {
   "גוגל אדס": "🔍",
@@ -78,6 +78,9 @@ const TaskRow = ({ task, onToggleDone, onClientClick, onTaskClick, showClient = 
           {task.task}
         </span>
         {task.notes && <span className="text-slate-300 text-xs flex-shrink-0">📝</span>}
+        {task.follow_up_date && !task.done && (
+          <span className={`text-xs flex-shrink-0 ${task.follow_up_date === TODAY ? 'text-amber-500 pulse-soft' : task.follow_up_date < TODAY ? 'text-red-400' : 'text-slate-300'}`} title={`פולו-אפ: ${task.follow_up_date}`}>🔔</span>
+        )}
         <span className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 text-xs flex-shrink-0">✏</span>
       </div>
     </td>
@@ -213,25 +216,52 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCal
             />
           </Field>
 
-          {/* Link to calendar */}
-          <div className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${linkedToCalendar ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-100'}`}>
-            <div>
-              <p className="text-sm font-medium text-gray-700">📅 לוח תוכן</p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {linkedToCalendar ? "המשימה קושרה ללוח התוכן ✓" : "הוסף את המשימה הזו ללוח התוכן"}
-              </p>
+          {/* Follow-up date */}
+          <Field label="🔔 תזכורת פולו-אפ">
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                value={form.follow_up_date || ""}
+                onChange={e => setForm(f => ({...f, follow_up_date: e.target.value}))}
+              />
+              {form.follow_up_date && (
+                <button onClick={() => setForm(f => ({...f, follow_up_date: ""}))} className="text-gray-300 hover:text-red-400 text-lg leading-none flex-shrink-0">×</button>
+              )}
             </div>
-            {!linkedToCalendar ? (
-              <button
-                onClick={handleLinkCalendar}
-                disabled={!form.date}
-                className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-xs font-medium hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {form.date ? "קשר ללוח" : "נדרש תאריך"}
-              </button>
-            ) : (
-              <span className="text-green-600 text-sm">✓</span>
+            {form.follow_up_date && (
+              <p className="text-xs text-amber-500 mt-1">
+                {form.follow_up_date === TODAY ? "⚡ תזכורת להיום" : form.follow_up_date < TODAY ? "⚠️ תזכורת בוטלה" : `תזכורת ב-${form.follow_up_date}`}
+              </p>
             )}
+          </Field>
+
+          {/* Link to content calendar + Google Calendar */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className={`flex flex-col gap-1.5 p-3 rounded-xl border transition-colors ${linkedToCalendar ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-100'}`}>
+              <p className="text-xs font-medium text-gray-600">📅 לוח תוכן פנימי</p>
+              {!linkedToCalendar ? (
+                <button onClick={handleLinkCalendar} disabled={!form.date}
+                  className="px-2 py-1 bg-white border border-gray-200 text-gray-600 rounded-lg text-xs font-medium hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed">
+                  {form.date ? "קשר ללוח" : "נדרש תאריך"}
+                </button>
+              ) : <span className="text-green-600 text-xs font-medium">✓ קושר</span>}
+            </div>
+            <div className="flex flex-col gap-1.5 p-3 rounded-xl border bg-gray-50 border-gray-100">
+              <p className="text-xs font-medium text-gray-600">🗓 Google Calendar</p>
+              <a
+                href={form.date ? (() => {
+                  const d = form.date.replace(/-/g, '');
+                  const next = new Date(form.date); next.setDate(next.getDate()+1);
+                  const d2 = next.toISOString().slice(0,10).replace(/-/g,'');
+                  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(form.task)}&dates=${d}/${d2}&details=${encodeURIComponent(`${form.client} · ${form.platform}${form.notes ? '\n' + form.notes : ''}`)}`;
+                })() : '#'}
+                target="_blank" rel="noopener noreferrer"
+                className={`px-2 py-1 bg-white border border-gray-200 text-gray-600 rounded-lg text-xs font-medium text-center hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-colors ${!form.date ? 'opacity-40 pointer-events-none' : ''}`}
+              >
+                {form.date ? "פתח בגוגל" : "נדרש תאריך"}
+              </a>
+            </div>
           </div>
         </div>
 
@@ -1379,6 +1409,35 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
         </div>
       </div>
 
+      {/* Follow-up today banner */}
+      {(() => {
+        const followUps = activeTasks.filter(t => t.follow_up_date === TODAY);
+        if (followUps.length === 0) return null;
+        return (
+          <div style={{ background: 'linear-gradient(135deg, #fffbeb, #fef3c7)', border: '1px solid #fcd34d', borderRadius: 12, padding: '14px 20px', marginBottom: mobile ? 12 : 18 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <span style={{ fontSize: 16 }}>🔔</span>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#92400e', margin: 0 }}>פולו-אפ להיום — {followUps.length} משימ{followUps.length > 1 ? 'ות' : 'ה'}</h3>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {followUps.map(task => (
+                <div key={task.id} onClick={() => onTaskClick && onTaskClick(task)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.7)', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', gap: 10 }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.95)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.7)'}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: '#78350f', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.task}</p>
+                    <p style={{ fontSize: 11, color: '#a16207', marginTop: 2 }}>{task.client} · {task.platform}</p>
+                  </div>
+                  <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: '#fef08a', color: '#854d0e', fontWeight: 700, flexShrink: 0 }}>{task.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* 2-col: client load + AI insights */}
       <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: mobile ? 12 : 18 }}>
 
@@ -1956,6 +2015,65 @@ const GoogleIcon = () => (
   </svg>
 );
 
+// ─── Set New Password Screen ──────────────────────────────────────────────────
+const SetNewPasswordScreen = ({ onDone }) => {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm]   = useState("");
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
+  const [success, setSuccess]   = useState(false);
+
+  const handleSubmit = async () => {
+    if (password.length < 6) { setError("סיסמה חייבת להכיל לפחות 6 תווים"); return; }
+    if (password !== confirm) { setError("הסיסמאות אינן תואמות"); return; }
+    setLoading(true); setError("");
+    const { error: e } = await supabase.auth.updateUser({ password });
+    if (e) { setError(e.message); setLoading(false); return; }
+    setSuccess(true);
+    setTimeout(onDone, 1500);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4" dir="rtl"
+      style={{ background: "radial-gradient(ellipse at 70% 20%, rgba(139,92,246,0.12) 0%, transparent 60%), #f8fafc" }}>
+      <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-8">
+        <h2 className="text-xl font-bold text-slate-800 mb-1">סיסמה חדשה</h2>
+        <p className="text-sm text-slate-400 mb-6">בחר סיסמה חדשה לחשבון שלך</p>
+        {success ? (
+          <div className="text-center text-green-600 font-medium">✅ הסיסמה עודכנה! מתחבר...</div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <input
+              type="password"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+              placeholder="סיסמה חדשה (לפחות 6 תווים)"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+            />
+            <input
+              type="password"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+              placeholder="אימות סיסמה"
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+            />
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-all"
+              style={{ background: loading ? '#94a3b8' : 'linear-gradient(135deg,#6366f1,#a855f7)' }}
+            >
+              {loading ? "⏳ שומר..." : "עדכן סיסמה"}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ─── Login Screen ─────────────────────────────────────────────────────────────
 const LoginScreen = ({ accessBlocked }) => {
   const [mode, setMode] = useState("login"); // "login" | "register" | "reset"
@@ -2421,6 +2539,7 @@ const TaskManager = () => {
   const [authLoading, setAuthLoading] = useState(true);
   const [dbLoading, setDbLoading] = useState(false);
   const [accessBlocked, setAccessBlocked] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
 
   const [tasks, setTasks] = useState([]);
   const [calItems, setCalItems] = useState(HOLIDAYS);
@@ -2454,16 +2573,23 @@ const TaskManager = () => {
   useEffect(() => {
     if (!supabase) { setAuthLoading(false); return; }
 
+    const timeout = setTimeout(() => setAuthLoading(false), 5000);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
+      clearTimeout(timeout);
       setUser(session?.user ?? null);
+      setAuthLoading(false);
+    }).catch(() => {
+      clearTimeout(timeout);
       setAuthLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUser(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') { setIsRecoveryMode(true); }
+      else { setUser(session?.user ?? null); }
     });
 
-    return () => subscription.unsubscribe();
+    return () => { subscription.unsubscribe(); clearTimeout(timeout); };
   }, []);
 
   // ── Load data when user logs in ──
@@ -2620,6 +2746,8 @@ const TaskManager = () => {
       <div style={{ color: '#94a3b8', fontSize: 16 }}>⏳ טוען...</div>
     </div>
   );
+
+  if (isRecoveryMode) return <SetNewPasswordScreen onDone={() => { setIsRecoveryMode(false); window.location.hash = ''; }} />;
 
   if (!supabase || !user) return <LoginScreen accessBlocked={accessBlocked} />;
 

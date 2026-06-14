@@ -13,10 +13,14 @@ CREATE TABLE IF NOT EXISTS tasks (
   urgency     TEXT NOT NULL DEFAULT 'בינונית',
   status      TEXT NOT NULL DEFAULT 'לביצוע',
   date        TEXT DEFAULT '',
-  done        BOOLEAN NOT NULL DEFAULT false,
-  notes       TEXT DEFAULT '',
-  created_at  TIMESTAMPTZ DEFAULT NOW()
+  done           BOOLEAN NOT NULL DEFAULT false,
+  notes          TEXT DEFAULT '',
+  follow_up_date TEXT DEFAULT '',
+  created_at     TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- הוסף לטבלה קיימת:
+-- ALTER TABLE tasks ADD COLUMN IF NOT EXISTS follow_up_date TEXT DEFAULT '';
 
 -- ── CLIENTS ──────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS clients (

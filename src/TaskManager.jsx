@@ -1332,7 +1332,7 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
         <KpiCard label="משימות פתוחות" value={activeTasks.length} sub={`${overdue.length} באיחור`} gradient="linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)" glow="rgba(99,102,241,0.35)" icon="📋" onClick={onNavigateWithFilter ? () => onNavigateWithFilter(null) : undefined} />
         <KpiCard label="דחוף ומיידי" value={highUrgency.length} sub="דורש טיפול עכשיו" gradient="linear-gradient(135deg,#ef4444 0%,#f97316 100%)" glow="rgba(239,68,68,0.35)" icon="⚡" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'urgency', value: 'גבוהה' }) : undefined} />
         <KpiCard label="ממתין לאישור" value={waiting.length} sub="לקוחות ממתינים" gradient="linear-gradient(135deg,#f59e0b 0%,#fb923c 100%)" glow="rgba(245,158,11,0.35)" icon="⏳" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'status', value: 'ממתין לאישור' }) : undefined} />
-        <KpiCard label="אחוז השלמה" value={`${doneRate}%`} sub={`${doneTasks.length} מתוך ${tasks.length} בוצעו`} gradient="linear-gradient(135deg,#10b981 0%,#34d399 100%)" glow="rgba(16,185,129,0.35)" icon="✅" />
+        <KpiCard label="פולו-אפ ממתין" value={activeTasks.filter(t => t.follow_up_date && t.follow_up_date <= TODAY).length} sub={`${activeTasks.filter(t => t.follow_up_date === TODAY).length} להיום`} gradient="linear-gradient(135deg,#10b981 0%,#34d399 100%)" glow="rgba(16,185,129,0.35)" icon="🔔" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'followup', value: true }) : undefined} />
       </div>
 
       {/* Progress bar */}

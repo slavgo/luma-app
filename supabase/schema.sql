@@ -16,11 +16,14 @@ CREATE TABLE IF NOT EXISTS tasks (
   done           BOOLEAN NOT NULL DEFAULT false,
   notes          TEXT DEFAULT '',
   follow_up_date TEXT DEFAULT '',
+  recurrence     TEXT DEFAULT 'none',
   created_at     TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- הוסף לטבלה קיימת:
 -- ALTER TABLE tasks ADD COLUMN IF NOT EXISTS follow_up_date TEXT DEFAULT '';
+-- ALTER TABLE tasks ADD COLUMN IF NOT EXISTS recurrence TEXT DEFAULT 'none';
+-- recurrence values: 'none' | 'daily' | 'weekly' | 'monthly' | '0,2,4' (ימי שבוע: 0=א 1=ב...6=ש)
 
 -- ── CLIENTS ──────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS clients (

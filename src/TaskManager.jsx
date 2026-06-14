@@ -5,7 +5,27 @@ const TODAY = new Date().toISOString().slice(0, 10);
 const PLATFORMS = ["גוגל אדס", "מטא - ממומן", "סושיאל", "גרפיקה/וידאו", "כללי"];
 const URGENCIES = ["גבוהה", "בינונית", "נמוכה"];
 const STATUSES = ["לביצוע", "בביצוע", "ממתין לאישור"];
-const emptyTask = { client: "", platform: PLATFORMS[0], task: "", urgency: "בינונית", status: "לביצוע", date: "", done: false, notes: "", follow_up_date: "" };
+const emptyTask = { client: "", platform: PLATFORMS[0], task: "", urgency: "בינונית", status: "לביצוע", date: "", done: false, notes: "", follow_up_date: "", recurrence: "none" };
+
+const RECURRENCE_LABELS = { none: 'ללא', daily: 'יומי', weekly: 'שבועי', monthly: 'חודשי', custom: 'ימים קבועים' };
+const HEBREW_WEEKDAYS = ['א׳ (ראשון)','ב׳ (שני)','ג׳ (שלישי)','ד׳ (רביעי)','ה׳ (חמישי)','ו׳ (שישי)','ש׳ (שבת)'];
+
+const getNextRecurrenceDate = (fromDate, recurrence) => {
+  if (!recurrence || recurrence === 'none') return null;
+  const d = new Date(fromDate);
+  if (recurrence === 'daily') { d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); }
+  if (recurrence === 'weekly') { d.setDate(d.getDate() + 7); return d.toISOString().slice(0, 10); }
+  if (recurrence === 'monthly') { d.setMonth(d.getMonth() + 1); return d.toISOString().slice(0, 10); }
+  // custom: comma-separated day numbers (0=Sun … 6=Sat)
+  const days = recurrence.split(',').map(Number).filter(n => !isNaN(n));
+  if (!days.length) return null;
+  const next = new Date(fromDate);
+  for (let i = 1; i <= 14; i++) {
+    next.setDate(next.getDate() + 1);
+    if (days.includes(next.getDay())) return next.toISOString().slice(0, 10);
+  }
+  return null;
+};
 
 const PLATFORM_ICONS = {
   "גוגל אדס": "🔍",
@@ -80,6 +100,9 @@ const TaskRow = ({ task, onToggleDone, onClientClick, onTaskClick, showClient = 
           {task.task}
         </span>
         {task.notes && <span className="text-slate-300 text-xs flex-shrink-0">📝</span>}
+        {task.recurrence && task.recurrence !== 'none' && !task.done && (
+          <span className="text-xs flex-shrink-0 text-indigo-400" title={`חוזרת: ${RECURRENCE_LABELS[task.recurrence] || 'ימים קבועים'}`}>🔁</span>
+        )}
         {task.follow_up_date && !task.done && (
           <span className={`text-xs flex-shrink-0 ${task.follow_up_date === TODAY ? 'text-amber-500 pulse-soft' : task.follow_up_date < TODAY ? 'text-red-400' : 'text-slate-300'}`} title={`פולו-אפ: ${task.follow_up_date}`}>🔔</span>
         )}
@@ -237,6 +260,52 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCal
               </p>
             )}
           </Field>
+
+          {/* Recurrence */}
+          {(() => {
+            const FIXED = ['none','daily','weekly','monthly'];
+            const isCustom = form.recurrence && !FIXED.includes(form.recurrence);
+            const customDays = isCustom ? form.recurrence.split(',').map(Number).filter(n => !isNaN(n)) : [];
+            const selectVal = isCustom ? 'custom' : (form.recurrence || 'none');
+
+            const toggleDay = (idx) => {
+              const next = customDays.includes(idx)
+                ? customDays.filter(d => d !== idx)
+                : [...customDays, idx];
+              setForm(f => ({ ...f, recurrence: next.sort().join(',') || 'none' }));
+            };
+
+            const nextDate = form.date && form.recurrence && form.recurrence !== 'none'
+              ? getNextRecurrenceDate(form.date, form.recurrence) : null;
+
+            return (
+              <Field label="🔁 משימה חוזרת">
+                <select
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  value={selectVal}
+                  onChange={e => {
+                    const v = e.target.value;
+                    setForm(f => ({ ...f, recurrence: v === 'custom' ? (customDays.join(',') || '0') : v }));
+                  }}
+                >
+                  {Object.entries(RECURRENCE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+                {isCustom && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'].map((label, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => toggleDay(idx)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${customDays.includes(idx) ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-200 text-gray-500 hover:border-indigo-300'}`}
+                      >{label}</button>
+                    ))}
+                  </div>
+                )}
+                {nextDate && <p className="text-xs text-indigo-500 mt-1">המחזור הבא: {nextDate}</p>}
+              </Field>
+            );
+          })()}
 
           {/* Link to content calendar + Google Calendar */}
           <div className="grid grid-cols-2 gap-2">
@@ -647,31 +716,13 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
         zIndex: 10,
       }}
     >
-      {/* Logo — A mark + slogan */}
+      {/* Logo */}
       <div style={{
-        padding: '20px 22px 16px',
+        padding: '16px 22px 14px',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+        display: 'flex', alignItems: 'center',
       }}>
-        <span style={{
-          fontFamily: "'Helvetica Neue',Helvetica,Arial,sans-serif",
-          fontWeight: 900,
-          fontSize: 42,
-          letterSpacing: '-2px',
-          lineHeight: 1,
-          background: 'linear-gradient(135deg, #22d3ee 0%, #6366f1 45%, #a855f7 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-          userSelect: 'none',
-        }}>A</span>
-        <p style={{
-          fontSize: 9, color: 'rgba(255,255,255,0.22)', letterSpacing: '0.16em',
-          marginTop: 2, textTransform: 'uppercase', fontWeight: 500,
-          fontFamily: "'Helvetica Neue',Arial,sans-serif", whiteSpace: 'nowrap',
-        }}>
-          Make Digital Brighter
-        </p>
+        <img src="/luma-light.png" alt="LUMA" style={{ height: 52, width: 'auto', display: 'block', userSelect: 'none' }} />
       </div>
 
       {/* Nav items */}
@@ -908,10 +959,7 @@ const MobileHeader = ({ screen, user }) => {
       boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
     }}>
       {/* LUMA logo */}
-      <div style={{ display: 'flex', alignItems: 'baseline', lineHeight: 1, userSelect: 'none' }}>
-        <span style={{ fontFamily: "'Helvetica Neue',Arial,sans-serif", fontWeight: 900, fontSize: 22, letterSpacing: '-1px', background: 'linear-gradient(135deg, #6366f1, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>A</span>
-        <span style={{ fontFamily: "'Helvetica Neue',Arial,sans-serif", fontWeight: 900, fontSize: 22, letterSpacing: '-1px', color: 'rgba(255,255,255,0.92)' }}>LUM</span>
-      </div>
+      <img src="/luma-light.png" alt="LUMA" style={{ height: 30, width: 'auto', userSelect: 'none' }} />
 
       {/* Page label */}
       <span style={{ fontSize: 13, fontWeight: 700, color: colors.from }}>{SCREEN_LABELS[screen] || ''}</span>
@@ -2559,6 +2607,9 @@ const TaskCard = ({ task, onToggleDone, onClientClick, onTaskClick }) => {
             {task.status === 'בביצוע' ? '🔵' : '🟡'} {task.status}
           </span>
         )}
+        {task.recurrence && task.recurrence !== 'none' && !task.done && (
+          <span style={{ fontSize: 11, color: '#6366f1' }}>🔁 חוזרת</span>
+        )}
         {hasFollowUp && <span style={{ fontSize: 11, color: '#f59e0b' }}>🔔 פולו-אפ</span>}
       </div>
     </div>
@@ -2644,7 +2695,11 @@ const TaskManager = () => {
 
   const loadTasks = async () => {
     const { data } = await supabase.from("tasks").select("*").order("created_at");
-    if (data) setTasks(data);
+    if (data) {
+      setTasks(data);
+      // Run on next tick so state is settled
+      setTimeout(() => checkAndGenerateRecurring(data), 0);
+    }
   };
 
   const loadClients = async () => {
@@ -2682,13 +2737,53 @@ const TaskManager = () => {
 
   const clients = Object.keys(clientsData);
 
+  // ── Recurring task generation ──
+  const spawnRecurringInstance = async (sourceTask, allTasks) => {
+    if (!sourceTask.recurrence || sourceTask.recurrence === 'none' || !sourceTask.date) return;
+    const nextDate = getNextRecurrenceDate(sourceTask.date, sourceTask.recurrence);
+    if (!nextDate) return;
+    // Don't spawn if an undone sibling with same text+client already exists for that date
+    const alreadyExists = allTasks.some(t =>
+      !t.done && t.task === sourceTask.task && t.client === sourceTask.client &&
+      t.date === nextDate && t.id !== sourceTask.id
+    );
+    if (alreadyExists) return;
+    const { id: _id, created_at: _c, done: _d, status: _s, ...rest } = sourceTask;
+    const newTask = { ...rest, date: nextDate, done: false, status: 'לביצוע', user_id: user?.id };
+    if (supabase) {
+      const { data, error } = await supabase.from("tasks").insert([newTask]).select().single();
+      if (!error && data) setTasks(prev => [...prev, data]);
+    } else {
+      setTasks(prev => [...prev, { ...newTask, id: Date.now() }]);
+    }
+  };
+
+  const checkAndGenerateRecurring = async (currentTasks) => {
+    const recurring = currentTasks.filter(t => t.recurrence && t.recurrence !== 'none' && t.date && t.date <= TODAY && !t.done === false);
+    // Find done recurring tasks that need a future spawn
+    const doneRecurring = currentTasks.filter(t => t.done && t.recurrence && t.recurrence !== 'none' && t.date);
+    for (const task of doneRecurring) {
+      await spawnRecurringInstance(task, currentTasks);
+    }
+    // Also: undone recurring tasks whose date has passed — spawn next occurrence proactively
+    const overdueRecurring = currentTasks.filter(t => !t.done && t.recurrence && t.recurrence !== 'none' && t.date && t.date < TODAY);
+    for (const task of overdueRecurring) {
+      await spawnRecurringInstance(task, currentTasks);
+    }
+  };
+
   const toggleDone = async (id) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
     const newDone = !task.done;
     const updates = { done: newDone, ...(newDone ? { status: 'בוצע' } : {}) };
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+    const updatedTasks = tasks.map(t => t.id === id ? { ...t, ...updates } : t);
+    setTasks(updatedTasks);
     if (supabase) await supabase.from("tasks").update(updates).eq("id", id);
+    // If marking done, spawn next recurrence
+    if (newDone && task.recurrence && task.recurrence !== 'none') {
+      await spawnRecurringInstance({ ...task, done: true }, updatedTasks);
+    }
   };
 
   const updateTask = async (updated) => {
@@ -2816,7 +2911,11 @@ const TaskManager = () => {
 
   const baseFiltered = activeFilter === "כל הלקוחות" ? tasks : tasks.filter(t => t.client === activeFilter);
   const statusFiltered = statusFilter
-    ? baseFiltered.filter(t => statusFilter.type === 'urgency' ? t.urgency === statusFilter.value : t.status === statusFilter.value)
+    ? baseFiltered.filter(t => {
+        if (statusFilter.type === 'urgency') return t.urgency === statusFilter.value;
+        if (statusFilter.type === 'recurrence') return t.recurrence && t.recurrence !== 'none';
+        return t.status === statusFilter.value;
+      })
     : baseFiltered;
   const activeFiltered = statusFiltered.filter(t => !t.done);
   const doneFiltered = statusFiltered.filter(t => t.done);
@@ -3127,10 +3226,11 @@ const TaskManager = () => {
       <div className="flex gap-2 mb-5 overflow-x-auto pb-1 flex-wrap">
         {[
           { label: 'הכל', filter: null },
-          { label: '⚡ דחוף ומיידי', filter: { type: 'urgency', value: 'גבוהה' }, activeClass: 'bg-red-600 border-red-600 text-white' },
-          { label: '⏳ ממתין לאישור', filter: { type: 'status', value: 'ממתין לאישור' }, activeClass: 'bg-orange-500 border-orange-500 text-white' },
-          { label: '🔵 בביצוע', filter: { type: 'status', value: 'בביצוע' }, activeClass: 'bg-blue-600 border-blue-600 text-white' },
-          { label: 'לביצוע', filter: { type: 'status', value: 'לביצוע' }, activeClass: 'bg-slate-600 border-slate-600 text-white' },
+          { label: '⚡ דחוף ומיידי', filter: { type: 'urgency', value: 'גבוהה' } },
+          { label: '⏳ ממתין לאישור', filter: { type: 'status', value: 'ממתין לאישור' } },
+          { label: '🔵 בביצוע', filter: { type: 'status', value: 'בביצוע' } },
+          { label: 'לביצוע', filter: { type: 'status', value: 'לביצוע' } },
+          { label: '🔁 חוזרות', filter: { type: 'recurrence', value: true } },
         ].map(({ label, filter, activeClass }) => {
           const isActive = !filter ? !statusFilter : (statusFilter?.type === filter.type && statusFilter?.value === filter.value);
           return (

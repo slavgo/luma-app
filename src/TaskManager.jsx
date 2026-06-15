@@ -169,7 +169,7 @@ const TaskRow = ({ task, onToggleDone, onClientClick, onTaskClick, showClient = 
 );
 
 // ─── Task Detail Modal ───────────────────────────────────────────────────────
-const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCalendar, onSaveTemplate, onFollowUp }) => {
+const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCalendar, onSaveTemplate, onFollowUp, isNew = false, templates = [], onApplyTemplate }) => {
   const [form, setForm] = useState({ ...task });
   const [linkedToCalendar, setLinkedToCalendar] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -206,27 +206,40 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCal
   );
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-screen overflow-y-auto" dir="rtl" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-end sm:items-center justify-center z-50 sm:p-4" onClick={onClose}>
+      <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col" style={{ maxHeight: '93vh' }} dir="rtl" onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div className={`px-6 pt-5 pb-4 border-b border-gray-50 ${task.urgency === 'גבוהה' ? 'bg-red-50' : task.urgency === 'בינונית' ? 'bg-orange-50' : 'bg-blue-50'}`}>
+        <div className={`px-6 pt-5 pb-4 border-b border-gray-50 flex-shrink-0 ${isNew ? 'bg-indigo-50' : task.urgency === 'גבוהה' ? 'bg-red-50' : task.urgency === 'בינונית' ? 'bg-orange-50' : 'bg-blue-50'}`}>
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-400 mb-1">{task.client} · {PLATFORM_ICONS[task.platform]} {task.platform}</p>
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-xs text-gray-400">{isNew ? '➕ משימה חדשה' : `${task.client} · ${PLATFORM_ICONS[task.platform]} ${task.platform}`}</p>
+                {isNew && templates.length > 0 && onApplyTemplate && (
+                  <select
+                    className="text-xs border border-indigo-200 rounded-full px-2 py-0.5 bg-white text-indigo-600 focus:outline-none"
+                    defaultValue=""
+                    onChange={e => { if (e.target.value) { onApplyTemplate(templates.find(t => String(t.id) === e.target.value)); e.target.value = ''; } }}
+                  >
+                    <option value="">📋 מתבנית</option>
+                    {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                )}
+              </div>
               <input
                 className="text-lg font-bold text-gray-800 bg-transparent border-none outline-none w-full placeholder-gray-300"
                 value={form.task}
                 onChange={e => setForm(f => ({...f, task: e.target.value}))}
                 placeholder="שם המשימה"
+                autoFocus={isNew}
               />
             </div>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl flex-shrink-0 mt-1">×</button>
           </div>
         </div>
 
-        {/* Body */}
-        <div className="px-6 py-5 flex flex-col gap-4">
+        {/* Body — scrollable */}
+        <div className="px-6 py-5 flex flex-col gap-4 overflow-y-auto flex-1">
 
           {/* Row 1: client + platform */}
           <div className="grid grid-cols-2 gap-3">
@@ -371,9 +384,9 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCal
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-5 border-t border-gray-50 pt-4">
+        <div className="px-6 pb-5 border-t border-gray-50 pt-4 flex-shrink-0">
           {/* Save as template row */}
-          {showSaveTemplate ? (
+          {!isNew && showSaveTemplate ? (
             <div className="flex items-center gap-2 mb-3">
               <input
                 className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -386,12 +399,12 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCal
               <button onClick={handleSaveTemplate} disabled={!templateName.trim()} className="px-3 py-1.5 bg-indigo-600 text-white rounded-full text-xs font-medium hover:bg-indigo-700 disabled:opacity-40">שמור</button>
               <button onClick={() => setShowSaveTemplate(false)} className="px-3 py-1.5 text-gray-400 text-xs hover:text-gray-600">ביטול</button>
             </div>
-          ) : templateSaved ? (
+          ) : !isNew && templateSaved ? (
             <p className="text-xs text-green-600 mb-3">✓ נשמר כתבנית</p>
           ) : null}
 
           <div className="flex items-center justify-between">
-            {confirmDelete ? (
+            {!isNew && (confirmDelete ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-red-500">בטוח?</span>
                 <button onClick={() => { onDelete(task.id); onClose(); }} className="px-3 py-1.5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600">מחק</button>
@@ -400,7 +413,7 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCal
             ) : (
               <div className="flex items-center gap-3">
                 <button onClick={() => setConfirmDelete(true)} className="text-xs text-gray-400 hover:text-red-500 transition-colors">🗑 מחק</button>
-                {!templateSaved && <button onClick={() => { setShowSaveTemplate(true); setTemplateName(form.task); }} className="text-xs text-indigo-400 hover:text-indigo-600 transition-colors">📌 שמור כתבנית</button>}
+                {!templateSaved && onSaveTemplate && <button onClick={() => { setShowSaveTemplate(true); setTemplateName(form.task); }} className="text-xs text-indigo-400 hover:text-indigo-600 transition-colors">📌 שמור כתבנית</button>}
                 {onFollowUp && (
                   <button
                     onClick={() => onFollowUp({ client: form.client, platform: form.platform })}
@@ -408,10 +421,13 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCal
                   >➕ המשימה הבאה</button>
                 )}
               </div>
-            )}
+            ))}
+            {isNew && <div />}
             <div className="flex gap-2">
               <button onClick={onClose} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">ביטול</button>
-              <button onClick={handleSave} className="px-5 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-colors">שמור</button>
+              <button onClick={handleSave} className={`px-5 py-2 rounded-full text-sm font-medium transition-colors text-white ${isNew ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                {isNew ? 'הוסף משימה' : 'שמור'}
+              </button>
             </div>
           </div>
         </div>
@@ -2991,83 +3007,33 @@ const TaskManager = () => {
     />
   ) : null;
 
-  // ── Shared new-task modal (reused across screens) ──
+  // ── Shared new-task modal — uses full TaskDetailModal ──
   const newTaskModal = showTaskModal && (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={() => { setShowTaskModal(false); setShowTemplateDropdown(false); }}>
-      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md" dir="rtl" onClick={e => e.stopPropagation()}>
-        {/* Header row with template button */}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-gray-800">➕ משימה חדשה</h2>
-          {templates.length > 0 && (
-            <div className="relative">
-              <button
-                onClick={() => setShowTemplateDropdown(v => !v)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-full hover:bg-indigo-100 transition-colors"
-              >
-                📋 מתבנית ▾
-              </button>
-              {showTemplateDropdown && (
-                <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 z-10 min-w-48 overflow-hidden">
-                  {templates.map(t => (
-                    <button key={t.id} onClick={() => { setNewTask(p => ({ ...p, task: t.task, platform: t.platform, urgency: t.urgency, status: t.status, notes: t.notes || '' })); setShowTemplateDropdown(false); }}
-                      className="w-full text-right px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 border-b border-gray-50 last:border-0 transition-colors">
-                      {t.name}
-                    </button>
-                  ))}
-                  <button onClick={() => { setShowTemplateDropdown(false); setShowManageTemplates(true); }}
-                    className="w-full text-right px-4 py-2 text-xs text-gray-400 hover:text-gray-600 bg-gray-50">
-                    ✏️ נהל תבניות
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        <div className="flex flex-col gap-3">
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">לקוח</label>
-            <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.client} onChange={e => setNewTask(p => ({...p, client: e.target.value}))}>
-              <option value="">בחר לקוח</option>
-              {clients.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">תיאור משימה</label>
-            <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="מה צריך לעשות?" value={newTask.task} onChange={e => setNewTask(p => ({...p, task: e.target.value}))} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">פלטפורמה</label>
-              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.platform} onChange={e => setNewTask(p => ({...p, platform: e.target.value}))}>
-                {PLATFORMS.map(pl => <option key={pl} value={pl}>{pl}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">דחיפות</label>
-              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.urgency} onChange={e => setNewTask(p => ({...p, urgency: e.target.value}))}>
-                {URGENCIES.map(u => <option key={u} value={u}>{u}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">סטטוס</label>
-              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.status} onChange={e => setNewTask(p => ({...p, status: e.target.value}))}>
-                {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">תאריך יעד</label>
-              <input type="date" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={newTask.date} onChange={e => setNewTask(p => ({...p, date: e.target.value}))} />
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-2 mt-5 justify-end">
-          <button onClick={() => { setShowTaskModal(false); setShowTemplateDropdown(false); }} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">ביטול</button>
-          <button onClick={addTask} className="px-5 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-colors">הוסף משימה</button>
-        </div>
-      </div>
-    </div>
+    <TaskDetailModal
+      task={newTask}
+      clients={clients}
+      isNew={true}
+      templates={templates}
+      onApplyTemplate={(t) => setNewTask(p => ({ ...p, task: t.task, platform: t.platform, urgency: t.urgency, status: t.status, notes: t.notes || '' }))}
+      onClose={() => { setShowTaskModal(false); setNewTask(emptyTask); }}
+      onSave={async (form) => {
+        if (!form.task || !form.client) return;
+        const { id: _id, ...rest } = form;
+        const taskData = { ...rest, user_id: user?.id };
+        if (supabase) {
+          const { data, error } = await supabase.from("tasks").insert([taskData]).select().single();
+          if (!error && data) setTasks(prev => [...prev, data]);
+        } else {
+          setTasks(prev => [...prev, { ...rest, id: Date.now() }]);
+        }
+        setNewTask(emptyTask);
+        setShowTaskModal(false);
+      }}
+      onDelete={null}
+      onLinkToCalendar={(item) => setCalItems(prev => [...prev, item])}
+      onSaveTemplate={saveTemplate}
+      onFollowUp={null}
+    />
   );
 
   // ── Manage templates modal ──

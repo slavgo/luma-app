@@ -207,7 +207,7 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCal
   );
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-end sm:items-center justify-center z-50 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-end sm:items-center justify-center z-[200] sm:p-4" onClick={onClose}>
       <div className="modal-sheet bg-white rounded-t-3xl sm:rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col" dir="rtl" onClick={e => e.stopPropagation()}>
 
         {/* Header */}
@@ -557,7 +557,7 @@ const CalendarScreen = ({ calItems, onAddItem, onDeleteItem, clients }) => {
 
       {/* Day Modal */}
       {dayModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={() => { setDayModal(null); setAddForm(null); }}>
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[200]" onClick={() => { setDayModal(null); setAddForm(null); }}>
           <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md max-h-screen overflow-y-auto" dir="rtl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-gray-800">{dayModal.dateStr}</h3>
@@ -1597,7 +1597,7 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
 
 // ─── New Client Modal (shared) ────────────────────────────────────────────────
 const NewClientModal = ({ newClientForm, setNewClientForm, emptyClientForm, onClose, onAdd }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={onClose}>
+  <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[200]" onClick={onClose}>
     <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md" dir="rtl" onClick={e => e.stopPropagation()}>
       <h2 className="text-lg font-bold text-gray-800 mb-5">➕ הקמת לקוח חדש</h2>
       <div className="flex flex-col gap-4">
@@ -2450,7 +2450,7 @@ const AdminPanel = ({ currentUser, onClose }) => {
   const formatDate = (iso) => iso ? new Date(iso).toLocaleDateString("he-IL", { day:"2-digit", month:"2-digit", year:"2-digit" }) : "—";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" dir="rtl">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center" dir="rtl">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden flex flex-col" style={{ maxHeight: "90vh" }}>
 
@@ -3039,7 +3039,7 @@ const TaskManager = () => {
 
   // ── Manage templates modal ──
   const manageTemplatesModal = showManageTemplates && (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50" onClick={() => setShowManageTemplates(false)}>
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[200]" onClick={() => setShowManageTemplates(false)}>
       <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm" dir="rtl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-bold text-gray-800">📋 תבניות משמורות</h2>

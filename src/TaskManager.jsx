@@ -448,6 +448,7 @@ const HEBREW_DAYS = ["א׳","ב׳","ג׳","ד׳","ה׳","ו׳","ש׳"];
 const HEBREW_MONTHS = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
 
 const CalendarScreen = ({ calItems, onAddItem, onDeleteItem, clients }) => {
+  const mobile = useMobile();
   const now = new Date(TODAY);
   const [viewYear,  setViewYear]  = useState(now.getFullYear());
   const [viewMonth, setViewMonth] = useState(now.getMonth()); // 0-based
@@ -486,22 +487,24 @@ const CalendarScreen = ({ calItems, onAddItem, onDeleteItem, clients }) => {
   };
 
   return (
-    <div className="p-6 min-h-screen" style={{ background: '#f5f6fa' }} dir="rtl">
+    <div className={mobile ? "p-3 min-h-screen" : "p-6 min-h-screen"} style={{ background: '#f5f6fa' }} dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-full border text-lg" style={{ background: '#ffffff', borderColor: '#e8eaf0', color: '#475569' }}>‹</button>
           <h2 className="text-xl font-bold min-w-32 text-center" style={{ color: '#0f172a' }}>{HEBREW_MONTHS[viewMonth]} {viewYear}</h2>
           <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-full border text-lg" style={{ background: '#ffffff', borderColor: '#e8eaf0', color: '#475569' }}>›</button>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {/* Legend */}
-          <div className="flex gap-3 text-xs text-gray-500">
-            {Object.entries(CAL_ITEM_COLORS).map(([key, c]) => (
-              <span key={key} className="flex items-center gap-1"><span className={`w-2 h-2 rounded-full ${c.dot}`}></span>{c.label}</span>
-            ))}
-          </div>
-          <button onClick={() => { setDayModal({ dateStr: TODAY, items: calItems.filter(i => i.date === TODAY) }); setAddForm({...emptyForm}); }} className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
+          {!mobile && (
+            <div className="flex gap-3 text-xs text-gray-500">
+              {Object.entries(CAL_ITEM_COLORS).map(([key, c]) => (
+                <span key={key} className="flex items-center gap-1"><span className={`w-2 h-2 rounded-full ${c.dot}`}></span>{c.label}</span>
+              ))}
+            </div>
+          )}
+          <button onClick={() => { setDayModal({ dateStr: TODAY, items: calItems.filter(i => i.date === TODAY) }); setAddForm({...emptyForm}); }} className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
             + הוסף תוכן
           </button>
         </div>
@@ -3080,7 +3083,6 @@ const TaskManager = () => {
           onAddTask={() => {
             setNewTask({ ...emptyTask, client: selectedClient });
             setShowTaskModal(true);
-            setSelectedClient(null);
           }}
         />
       );
@@ -3100,7 +3102,6 @@ const TaskManager = () => {
             onTaskClick={setSelectedTask}
             onCreateTemplate={saveTemplate}
           />
-          {newTaskModal}
         </>
       );
     }
@@ -3331,7 +3332,6 @@ const TaskManager = () => {
         מעוצב לשימוש אישי כאיש שיווק דיגיטלי • 2026
       </footer>
 
-      {newTaskModal}
       {showClientModal && <NewClientModal
         newClientForm={newClientForm}
         setNewClientForm={setNewClientForm}
@@ -3355,6 +3355,7 @@ const TaskManager = () => {
     >
       {taskDetailModal}
       {manageTemplatesModal}
+      {newTaskModal}
       {renderContent()}
       {/* ─── Claude AI Chat (floating, all screens) ─── */}
       <ClaudeChat

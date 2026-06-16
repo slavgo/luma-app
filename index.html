@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
     <title>LUMA — ניהול משימות</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -45,6 +45,12 @@
       /* Subtle animation for badges */
       @keyframes pulse-soft { 0%,100%{opacity:1} 50%{opacity:.7} }
       .pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+
+      /* Modal sheet — dvh keeps the footer visible above the mobile keyboard */
+      .modal-sheet { max-height: 93vh; }
+      @supports (max-height: 93dvh) {
+        .modal-sheet { max-height: 93dvh; }
+      }
     </style>
   </head>
   <body>

@@ -176,6 +176,7 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCal
   const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const [templateName, setTemplateName] = useState(task.task || '');
   const [templateSaved, setTemplateSaved] = useState(false);
+  const mobile = useMobile();
 
   const handleSave = () => { onSave(form); onClose(); };
 
@@ -207,7 +208,7 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCal
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-end sm:items-center justify-center z-50 sm:p-4" onClick={onClose}>
-      <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col" style={{ maxHeight: '93vh' }} dir="rtl" onClick={e => e.stopPropagation()}>
+      <div className="modal-sheet bg-white rounded-t-3xl sm:rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col" dir="rtl" onClick={e => e.stopPropagation()}>
 
         {/* Header */}
         <div className={`px-6 pt-5 pb-4 border-b border-gray-50 flex-shrink-0 ${isNew ? 'bg-indigo-50' : task.urgency === 'גבוהה' ? 'bg-red-50' : task.urgency === 'בינונית' ? 'bg-orange-50' : 'bg-blue-50'}`}>
@@ -231,7 +232,7 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCal
                 value={form.task}
                 onChange={e => setForm(f => ({...f, task: e.target.value}))}
                 placeholder="שם המשימה"
-                autoFocus={isNew}
+                autoFocus={isNew && !mobile}
               />
             </div>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl flex-shrink-0 mt-1">×</button>

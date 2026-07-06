@@ -168,6 +168,14 @@ const TaskRow = ({ task, onToggleDone, onClientClick, onTaskClick, showClient = 
   </tr>
 );
 
+// ─── Shared field wrapper (must be defined outside TaskDetailModal to avoid focus loss on re-render) ───
+const Field = ({ label, children }) => (
+  <div>
+    <label className="text-xs text-gray-400 mb-1 block">{label}</label>
+    {children}
+  </div>
+);
+
 // ─── Task Detail Modal ───────────────────────────────────────────────────────
 const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onStopRecurring, onLinkToCalendar, onSaveTemplate, onFollowUp, isNew = false, templates = [], onApplyTemplate }) => {
   const [form, setForm] = useState({ ...task });
@@ -199,12 +207,6 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onStopRecur
     setLinkedToCalendar(true);
   };
 
-  const Field = ({ label, children }) => (
-    <div>
-      <label className="text-xs text-gray-400 mb-1 block">{label}</label>
-      {children}
-    </div>
-  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-end sm:items-center justify-center z-[200] sm:p-4" onClick={onClose}>

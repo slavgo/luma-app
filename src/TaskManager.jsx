@@ -169,7 +169,7 @@ const TaskRow = ({ task, onToggleDone, onClientClick, onTaskClick, showClient = 
 );
 
 // ─── Task Detail Modal ───────────────────────────────────────────────────────
-const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCalendar, onSaveTemplate, onFollowUp, isNew = false, templates = [], onApplyTemplate }) => {
+const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onStopRecurring, onLinkToCalendar, onSaveTemplate, onFollowUp, isNew = false, templates = [], onApplyTemplate }) => {
   const [form, setForm] = useState({ ...task });
   const [linkedToCalendar, setLinkedToCalendar] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -406,10 +406,23 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onLinkToCal
 
           <div className="flex items-center justify-between">
             {!isNew && (confirmDelete ? (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-red-500">בטוח?</span>
-                <button onClick={() => { onDelete(task.id); onClose(); }} className="px-3 py-1.5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600">מחק</button>
-                <button onClick={() => setConfirmDelete(false)} className="px-3 py-1.5 text-gray-500 text-xs hover:text-gray-700">ביטול</button>
+              <div className="flex flex-col gap-2">
+                {task.recurrence && task.recurrence !== 'none' && onStopRecurring ? (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => { onStopRecurring(task.task, task.client); onClose(); }} className="px-3 py-1.5 bg-red-600 text-white rounded-full text-xs hover:bg-red-700">🛑 עצור כל החזרות</button>
+                      <button onClick={() => { onDelete(task.id); onClose(); }} className="px-3 py-1.5 bg-red-100 text-red-600 rounded-full text-xs hover:bg-red-200">מחק רק זו</button>
+                      <button onClick={() => setConfirmDelete(false)} className="px-3 py-1.5 text-gray-500 text-xs hover:text-gray-700">ביטול</button>
+                    </div>
+                    <p className="text-xs text-red-400">"עצור כל החזרות" ימחק את כל ההופעות הפתוחות ויעצור את המחזור</p>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-red-500">בטוח?</span>
+                    <button onClick={() => { onDelete(task.id); onClose(); }} className="px-3 py-1.5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600">מחק</button>
+                    <button onClick={() => setConfirmDelete(false)} className="px-3 py-1.5 text-gray-500 text-xs hover:text-gray-700">ביטול</button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex items-center gap-3">
@@ -2856,6 +2869,21 @@ const TaskManager = () => {
     if (supabase) await supabase.from("tasks").delete().eq("id", id);
   };
 
+  const stopRecurring = async (taskName, client) => {
+    // Delete all open (undone) instances of this recurring task
+    const toDelete = tasks.filter(t => t.task === taskName && t.client === client && !t.done && t.recurrence && t.recurrence !== 'none');
+    // Neutralize recurrence on all done instances so they stop spawning new ones
+    const toNeutralize = tasks.filter(t => t.task === taskName && t.client === client && t.done && t.recurrence && t.recurrence !== 'none');
+    setTasks(prev => prev
+      .filter(t => !toDelete.some(d => d.id === t.id))
+      .map(t => toNeutralize.some(n => n.id === t.id) ? { ...t, recurrence: 'none' } : t)
+    );
+    if (supabase) {
+      for (const t of toDelete) await supabase.from("tasks").delete().eq("id", t.id);
+      for (const t of toNeutralize) await supabase.from("tasks").update({ recurrence: 'none' }).eq("id", t.id);
+    }
+  };
+
   const addTask = async () => {
     if (!newTask.task || !newTask.client) return;
     const taskData = { ...newTask, user_id: user?.id };
@@ -3001,6 +3029,7 @@ const TaskManager = () => {
       onClose={() => setSelectedTask(null)}
       onSave={(updated) => { updateTask(updated); setSelectedTask(null); }}
       onDelete={(id) => { deleteTask(id); setSelectedTask(null); }}
+      onStopRecurring={(taskName, client) => { stopRecurring(taskName, client); setSelectedTask(null); }}
       onLinkToCalendar={(item) => setCalItems(prev => [...prev, item])}
       onSaveTemplate={saveTemplate}
       onFollowUp={({ client, platform }) => {

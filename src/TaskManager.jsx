@@ -2702,6 +2702,10 @@ const KanbanBoard = ({ tasks, onDropTask, onToggleDone, onClientClick, onTaskCli
   const handleDrop = (e, colKey) => {
     e.preventDefault();
     setDragOverCol(null);
+    // Clear here rather than relying on onDragEnd — if the drop moves the card to a
+    // different column, React can unmount the source element before the browser
+    // fires 'dragend' on it, leaving the drag-opacity stuck on permanently.
+    setDraggingId(null);
     const id = e.dataTransfer.getData('text/plain');
     const task = tasks.find(t => String(t.id) === id);
     if (task) onDropTask(task, colKey);

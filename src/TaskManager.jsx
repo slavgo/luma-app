@@ -2685,6 +2685,77 @@ const TaskCard = ({ task, onToggleDone, onClientClick, onTaskClick }) => {
   );
 };
 
+// ─── Kanban Board ────────────────────────────────────────────────────────────
+const KANBAN_COLUMNS = [
+  { key: 'לביצוע', label: 'לביצוע', color: '#94a3b8' },
+  { key: 'בביצוע', label: 'בביצוע', color: '#3b82f6' },
+  { key: 'ממתין לאישור', label: 'ממתין לאישור', color: '#f59e0b' },
+  { key: 'בוצע', label: 'בוצע', color: '#10b981' },
+];
+
+const KanbanBoard = ({ tasks, onDropTask, onToggleDone, onClientClick, onTaskClick, mobile }) => {
+  const [dragOverCol, setDragOverCol] = useState(null);
+  const [draggingId, setDraggingId] = useState(null);
+
+  const colTasks = (key) => key === 'בוצע' ? tasks.filter(t => t.done) : tasks.filter(t => !t.done && t.status === key);
+
+  const handleDrop = (e, colKey) => {
+    e.preventDefault();
+    setDragOverCol(null);
+    const id = e.dataTransfer.getData('text/plain');
+    const task = tasks.find(t => String(t.id) === id);
+    if (task) onDropTask(task, colKey);
+  };
+
+  return (
+    <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8, alignItems: 'flex-start' }}>
+      {KANBAN_COLUMNS.map(col => {
+        const items = colTasks(col.key);
+        const isOver = dragOverCol === col.key;
+        return (
+          <div
+            key={col.key}
+            onDragOver={e => { e.preventDefault(); if (dragOverCol !== col.key) setDragOverCol(col.key); }}
+            onDragLeave={() => setDragOverCol(prev => prev === col.key ? null : prev)}
+            onDrop={e => handleDrop(e, col.key)}
+            style={{
+              flex: mobile ? '0 0 78vw' : '1 1 260px',
+              minWidth: mobile ? '78vw' : 260,
+              background: isOver ? '#eef2ff' : '#f8fafc',
+              border: `1px dashed ${isOver ? '#a5b4fc' : '#e2e8f0'}`,
+              borderRadius: 16,
+              padding: 10,
+              transition: 'background 0.15s, border-color 0.15s',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px 10px' }}>
+              <span style={{ width: 8, height: 8, borderRadius: 99, background: col.color, flexShrink: 0 }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>{col.label}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', background: '#fff', border: '1px solid #e8eaf0', borderRadius: 99, padding: '1px 8px', marginRight: 'auto' }}>{items.length}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 40 }}>
+              {items.map(task => (
+                <div
+                  key={task.id}
+                  draggable
+                  onDragStart={e => { e.dataTransfer.setData('text/plain', String(task.id)); setDraggingId(task.id); }}
+                  onDragEnd={() => setDraggingId(null)}
+                  style={{ opacity: draggingId === task.id ? 0.4 : 1, cursor: 'grab' }}
+                >
+                  <TaskCard task={task} onToggleDone={onToggleDone} onClientClick={onClientClick} onTaskClick={onTaskClick} />
+                </div>
+              ))}
+              {items.length === 0 && (
+                <p style={{ textAlign: 'center', color: '#cbd5e1', fontSize: 12, fontStyle: 'italic', padding: '16px 0' }}>ריק</p>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 // ─── Main Task Manager ───────────────────────────────────────────────────────
 const HOLIDAYS = [
   { id: "h1", date: "2026-03-29", type: "holiday", title: "פסח (ערב חג)", client: "", platform: "", status: "" },
@@ -2714,6 +2785,7 @@ const TaskManager = () => {
   const [chatOpen, setChatOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("כל הלקוחות");
   const [statusFilter, setStatusFilter] = useState(null); // null | { type: 'urgency'|'status', value: string }
+  const [taskView, setTaskView] = useState('table'); // 'table' | 'kanban'
   const [selectedClient, setSelectedClient] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -2863,6 +2935,16 @@ const TaskManager = () => {
     if (supabase) {
       const { id, ...rest } = updated;
       await supabase.from("tasks").update(rest).eq("id", id);
+    }
+  };
+
+  const onDropTask = async (task, targetStatus) => {
+    if (targetStatus === 'בוצע') {
+      if (!task.done) await toggleDone(task.id);
+    } else if (task.done) {
+      await updateTask({ id: task.id, done: false, status: targetStatus });
+    } else if (task.status !== targetStatus) {
+      await updateTask({ id: task.id, status: targetStatus });
     }
   };
 
@@ -3019,6 +3101,8 @@ const TaskManager = () => {
   });
   const activeFiltered = lookaheadFiltered.filter(t => !t.done);
   const doneFiltered = lookaheadFiltered.filter(t => t.done);
+  // Kanban ignores the status/urgency pill filter (columns already split by status) but keeps the client filter
+  const kanbanTasks = baseFiltered.filter(t => t.done || !t.recurrence || t.recurrence === 'none' || !t.date || t.date <= lookaheadDate);
 
 
   const COL_HEADERS = ["", "לקוח", "משימה", "פלטפורמה", "דחיפות", "סטטוס", "תאריך יעד"];
@@ -3253,6 +3337,24 @@ const TaskManager = () => {
         )}
       </header>
 
+      {/* View toggle — table / kanban */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 12, background: '#f1f5f9', borderRadius: 12, padding: 4, width: 'fit-content' }}>
+        {[['table', '📋 טבלה'], ['kanban', '🗂 קאנבן']].map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setTaskView(key)}
+            style={{
+              padding: '6px 16px', borderRadius: 9, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+              background: taskView === key ? '#ffffff' : 'transparent',
+              color: taskView === key ? '#4f46e5' : '#64748b',
+              boxShadow: taskView === key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       {/* Filters — לקוח */}
       <div className="flex gap-2 mb-3 overflow-x-auto pb-1 flex-wrap">
         {['כל הלקוחות', ...clients].map(client => (
@@ -3271,36 +3373,51 @@ const TaskManager = () => {
         ))}
       </div>
 
-      {/* Filters — סטטוס/דחיפות */}
-      <div className="flex gap-2 mb-5 overflow-x-auto pb-1 flex-wrap">
-        {[
-          { label: 'הכל', filter: null },
-          { label: '⚡ דחוף ומיידי', filter: { type: 'urgency', value: 'גבוהה' } },
-          { label: '⏳ ממתין לאישור', filter: { type: 'status', value: 'ממתין לאישור' } },
-          { label: '🔵 בביצוע', filter: { type: 'status', value: 'בביצוע' } },
-          { label: 'לביצוע', filter: { type: 'status', value: 'לביצוע' } },
-          { label: '🔁 חוזרות', filter: { type: 'recurrence', value: true } },
-        ].map(({ label, filter, activeClass }) => {
-          const isActive = !filter ? !statusFilter : (statusFilter?.type === filter.type && statusFilter?.value === filter.value);
-          return (
-            <button
-              key={label}
-              onClick={() => setStatusFilter(filter)}
-              style={{
-                padding: '5px 14px', borderRadius: 99, fontSize: 12, fontWeight: 500, border: '1px solid', whiteSpace: 'nowrap', transition: 'all 0.15s', cursor: 'pointer',
-                background: isActive ? '#eef2ff' : '#ffffff',
-                borderColor: isActive ? '#c7d2fe' : '#e2e8f0',
-                color: isActive ? '#4f46e5' : '#64748b',
-              }}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
+      {/* Filters — סטטוס/דחיפות (טבלה בלבד — בקאנבן העמודות כבר מפרידות לפי סטטוס) */}
+      {taskView === 'table' && (
+        <div className="flex gap-2 mb-5 overflow-x-auto pb-1 flex-wrap">
+          {[
+            { label: 'הכל', filter: null },
+            { label: '⚡ דחוף ומיידי', filter: { type: 'urgency', value: 'גבוהה' } },
+            { label: '⏳ ממתין לאישור', filter: { type: 'status', value: 'ממתין לאישור' } },
+            { label: '🔵 בביצוע', filter: { type: 'status', value: 'בביצוע' } },
+            { label: 'לביצוע', filter: { type: 'status', value: 'לביצוע' } },
+            { label: '🔁 חוזרות', filter: { type: 'recurrence', value: true } },
+          ].map(({ label, filter, activeClass }) => {
+            const isActive = !filter ? !statusFilter : (statusFilter?.type === filter.type && statusFilter?.value === filter.value);
+            return (
+              <button
+                key={label}
+                onClick={() => setStatusFilter(filter)}
+                style={{
+                  padding: '5px 14px', borderRadius: 99, fontSize: 12, fontWeight: 500, border: '1px solid', whiteSpace: 'nowrap', transition: 'all 0.15s', cursor: 'pointer',
+                  background: isActive ? '#eef2ff' : '#ffffff',
+                  borderColor: isActive ? '#c7d2fe' : '#e2e8f0',
+                  color: isActive ? '#4f46e5' : '#64748b',
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {taskView === 'kanban' && (
+        <div style={{ marginBottom: 12 }}>
+          <KanbanBoard
+            tasks={kanbanTasks}
+            onDropTask={onDropTask}
+            onToggleDone={toggleDone}
+            onClientClick={setSelectedClient}
+            onTaskClick={setSelectedTask}
+            mobile={mobile}
+          />
+        </div>
+      )}
 
       {/* Task Table / Cards */}
-      {mobile ? (
+      {taskView === 'kanban' ? null : mobile ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {activeFiltered.map(task => (
             <TaskCard key={task.id} task={task} onToggleDone={toggleDone} onClientClick={setSelectedClient} onTaskClick={setSelectedTask} />

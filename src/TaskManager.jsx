@@ -676,52 +676,18 @@ const CalendarScreen = ({ calItems, onAddItem, onDeleteItem, clients }) => {
 // ─── LUMA Logo ───────────────────────────────────────────────────────────────
 const LumaLogo = ({ showTagline = false }) => (
   <div className="flex flex-col items-start leading-none gap-0.5 select-none">
-    {/* Wordmark */}
-    <svg
-      viewBox="0 0 108 36"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ height: showTagline ? 32 : 22, width: 'auto', display: 'block' }}
-      aria-label="LUMA"
+    <span
+      style={{
+        fontFamily: "'Helvetica Neue',Helvetica,Arial,sans-serif",
+        fontWeight: 900,
+        fontSize: showTagline ? 28 : 20,
+        letterSpacing: '-0.02em',
+        color: '#111',
+        lineHeight: 1,
+      }}
     >
-      <defs>
-        {/* Crystalline gradient matching the actual logo: cyan→blue→purple */}
-        <linearGradient id="lumaAGrad" x1="100%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%"   stopColor="#22d3ee" />
-          <stop offset="40%"  stopColor="#6366f1" />
-          <stop offset="100%" stopColor="#a855f7" />
-        </linearGradient>
-        {/* Geometric line texture inside the A */}
-        <clipPath id="lumaAClip">
-          <text x="78" y="32" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="36">A</text>
-        </clipPath>
-      </defs>
-      {/* LUM in black */}
-      <text
-        x="0" y="32"
-        fontFamily="'Helvetica Neue',Helvetica,Arial,sans-serif"
-        fontWeight="900"
-        fontSize="36"
-        letterSpacing="-1"
-        fill="#111"
-      >LUM</text>
-      {/* A base with gradient */}
-      <text
-        x="78" y="32"
-        fontFamily="'Helvetica Neue',Helvetica,Arial,sans-serif"
-        fontWeight="900"
-        fontSize="36"
-        letterSpacing="-1"
-        fill="url(#lumaAGrad)"
-      >A</text>
-      {/* Geometric crystalline lines clipped to the A shape */}
-      <g clipPath="url(#lumaAClip)" opacity="0.35">
-        <line x1="78" y1="32" x2="108" y2="0"  stroke="white" strokeWidth="1"/>
-        <line x1="84" y1="32" x2="108" y2="8"  stroke="white" strokeWidth="0.8"/>
-        <line x1="90" y1="32" x2="108" y2="16" stroke="white" strokeWidth="0.8"/>
-        <line x1="96" y1="0"  x2="78"  y2="24" stroke="white" strokeWidth="0.7"/>
-        <line x1="108" y1="4" x2="82"  y2="32" stroke="white" strokeWidth="0.7"/>
-      </g>
-    </svg>
+      LUMA
+    </span>
     {showTagline && (
       <span
         style={{
@@ -817,7 +783,7 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
         borderBottom: '1px solid rgba(255,255,255,0.06)',
         display: 'flex', alignItems: 'center',
       }}>
-        <img src="/luma-light.png" alt="LUMA" style={{ height: 52, width: 'auto', display: 'block', userSelect: 'none' }} />
+        <span style={{ fontFamily: "'Helvetica Neue',Helvetica,Arial,sans-serif", fontWeight: 900, fontSize: 24, letterSpacing: '-0.02em', color: '#fff', lineHeight: 1, userSelect: 'none' }}>LUMA</span>
       </div>
 
       {/* Nav items */}
@@ -1054,7 +1020,7 @@ const MobileHeader = ({ screen, user }) => {
       boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
     }}>
       {/* LUMA logo */}
-      <img src="/luma-light.png" alt="LUMA" style={{ height: 30, width: 'auto', userSelect: 'none' }} />
+      <span style={{ fontFamily: "'Helvetica Neue',Helvetica,Arial,sans-serif", fontWeight: 900, fontSize: 20, letterSpacing: '-0.02em', color: '#fff', lineHeight: 1, userSelect: 'none' }}>LUMA</span>
 
       {/* Page label */}
       <span style={{ fontSize: 13, fontWeight: 700, color: colors.from }}>{SCREEN_LABELS[screen] || ''}</span>

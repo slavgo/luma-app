@@ -4,8 +4,8 @@ import { supabase } from "./supabase.js";
 const TODAY = new Date().toISOString().slice(0, 10);
 const PLATFORMS = ["גוגל אדס", "מטא - ממומן", "סושיאל", "גרפיקה/וידאו", "כללי"];
 const URGENCIES = ["גבוהה", "בינונית", "נמוכה"];
-const STATUSES = ["לביצוע", "בביצוע", "ממתין לאישור"];
-const emptyTask = { client: "", platform: PLATFORMS[0], task: "", urgency: "בינונית", status: "לביצוע", date: "", done: false, notes: "", follow_up_date: "", recurrence: "none" };
+const STATUSES = ["לביצוע", "בביצוע", "ממתין לאישור", "בתיקונים", "ממתין לחומרים"];
+const emptyTask = { client: "", platform: PLATFORMS[0], task: "", urgency: "בינונית", status: "לביצוע", date: "", done: false, notes: "", link: "", follow_up_date: "", recurrence: "none" };
 
 const RECURRENCE_LABELS = { none: 'ללא', daily: 'יומי', weekly: 'שבועי', monthly: 'חודשי', custom: 'ימים קבועים' };
 const HEBREW_WEEKDAYS = ['א׳ (ראשון)','ב׳ (שני)','ג׳ (שלישי)','ד׳ (רביעי)','ה׳ (חמישי)','ו׳ (שישי)','ש׳ (שבת)'];
@@ -77,6 +77,8 @@ const getStatusStyle = (status) => {
   switch (status) {
     case 'בביצוע': return 'text-blue-600';
     case 'ממתין לאישור': return 'text-orange-500';
+    case 'בתיקונים': return 'text-red-500';
+    case 'ממתין לחומרים': return 'text-purple-500';
     default: return 'text-gray-500';
   }
 };
@@ -130,6 +132,9 @@ const TaskRow = ({ task, onToggleDone, onClientClick, onTaskClick, showClient = 
           {task.task}
         </span>
         {task.notes && <span className="text-slate-300 text-xs flex-shrink-0">📝</span>}
+        {task.link && !task.done && (
+          <a href={task.link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-xs flex-shrink-0 text-blue-400 hover:text-blue-600" title="פתח קישור">🔗</a>
+        )}
         {task.recurrence && task.recurrence !== 'none' && !task.done && (
           <span className="text-xs flex-shrink-0 text-indigo-400" title={`חוזרת: ${RECURRENCE_LABELS[task.recurrence] || 'ימים קבועים'}`}>🔁</span>
         )}
@@ -154,6 +159,14 @@ const TaskRow = ({ task, onToggleDone, onClientClick, onTaskClick, showClient = 
         task.status === 'בביצוע' ? (
           <span className="flex items-center gap-1.5 text-xs font-medium text-blue-600">
             <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>בביצוע
+          </span>
+        ) : task.status === 'בתיקונים' ? (
+          <span className="flex items-center gap-1.5 text-xs font-medium text-red-500">
+            <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse"></span>בתיקונים
+          </span>
+        ) : task.status === 'ממתין לחומרים' ? (
+          <span className="flex items-center gap-1.5 text-xs font-medium text-purple-500">
+            <span className="w-1.5 h-1.5 bg-purple-400 rounded-full"></span>ממתין לחומרים
           </span>
         ) : (
           <span className={`text-xs font-medium ${getStatusStyle(task.status)}`}>{task.status}</span>
@@ -284,6 +297,19 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onStopRecur
               placeholder="פרטים נוספים, לינקים, הנחיות..."
               value={form.notes || ""}
               onChange={e => setForm(f => ({...f, notes: e.target.value}))}
+            />
+          </Field>
+
+          {/* Link */}
+          <Field label="🔗 קישור">
+            <input
+              type="url"
+              dir="ltr"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+              style={{ textAlign: 'left' }}
+              placeholder="https://..."
+              value={form.link || ""}
+              onChange={e => setForm(f => ({...f, link: e.target.value}))}
             />
           </Field>
 
@@ -1710,6 +1736,16 @@ const ClientsListScreen = ({ clientsData, tasks, onSelectClient, onAddClient }) 
                   )}
                 </div>
 
+                {/* Financial info */}
+                {(data.type || data.amount || data.contract) && (
+                  <div className="flex gap-2 flex-wrap mb-3">
+                    {data.type && <span className="text-xs bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full font-medium">{data.type}</span>}
+                    {data.amount && <span className="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-medium">₪{data.amount}</span>}
+                    {data.contract === 'חתום' && <span className="text-xs bg-green-50 text-green-600 px-2.5 py-1 rounded-full font-medium">✓ חוזה חתום</span>}
+                    {data.contract === 'ממתין' && <span className="text-xs bg-orange-50 text-orange-500 px-2.5 py-1 rounded-full font-medium">⏳ ממתין לחתימה</span>}
+                  </div>
+                )}
+
                 {/* Notes preview */}
                 {data.notes && (
                   <p className="text-xs text-gray-400 italic mb-4 line-clamp-1 border-r-2 border-gray-100 pr-2">
@@ -1938,7 +1974,7 @@ const ClientBriefTab = ({ brief = {}, onSave }) => {
 // ─── Client Detail Screen ────────────────────────────────────────────────────
 const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onToggleDone, onSaveClientData, onTaskClick }) => {
   const [editMode, setEditMode] = useState(false);
-  const [editForm, setEditForm] = useState({ name: clientName, ...clientData });
+  const [editForm, setEditForm] = useState({ name: clientName, type: '', amount: '', contract: '', ...clientData });
   const [activeTab, setActiveTab] = useState('details');
 
   const handleBriefSave = (briefData) => {
@@ -2047,6 +2083,46 @@ const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onTogg
                   )}
                 </div>
               ))}
+            </div>
+
+            {/* Financial fields */}
+            <div className="mt-4 pt-4 border-t border-gray-50 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-xs text-gray-400 mb-1">💼 סוג התקשרות</p>
+                {editMode ? (
+                  <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={editForm.type || ''} onChange={e => setEditForm(f => ({ ...f, type: e.target.value }))}>
+                    <option value="">בחר...</option>
+                    <option value="ריטיינר">ריטיינר</option>
+                    <option value="חד״פ">חד״פ</option>
+                    <option value="פרויקט">פרויקט</option>
+                  </select>
+                ) : (
+                  <p className={`text-sm ${data.type ? 'text-gray-700' : 'text-gray-300 italic'}`}>{data.type || "לא הוזן"}</p>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-1">₪ סכום</p>
+                {editMode ? (
+                  <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="למשל: 4,500" value={editForm.amount || ''} onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))} />
+                ) : (
+                  <p className={`text-sm ${data.amount ? 'text-gray-700 font-medium' : 'text-gray-300 italic'}`}>{data.amount ? `₪${data.amount}` : "לא הוזן"}</p>
+                )}
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-1">📄 חוזה</p>
+                {editMode ? (
+                  <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={editForm.contract || ''} onChange={e => setEditForm(f => ({ ...f, contract: e.target.value }))}>
+                    <option value="">בחר...</option>
+                    <option value="חתום">חתום</option>
+                    <option value="ממתין">ממתין לחתימה</option>
+                    <option value="אין">ללא חוזה</option>
+                  </select>
+                ) : (
+                  <p className={`text-sm ${data.contract ? (data.contract === 'חתום' ? 'text-green-600 font-medium' : data.contract === 'ממתין' ? 'text-orange-500' : 'text-gray-500') : 'text-gray-300 italic'}`}>
+                    {data.contract === 'חתום' ? '✓ חתום' : data.contract === 'ממתין' ? '⏳ ממתין לחתימה' : data.contract === 'אין' ? 'ללא חוזה' : 'לא הוזן'}
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Notes */}
@@ -2798,7 +2874,7 @@ const TaskManager = () => {
   const [showManageTemplates, setShowManageTemplates] = useState(false);
   const [newTask, setNewTask] = useState(emptyTask);
 
-  const emptyClientForm = { name: "", phone: "", email: "", website: "", notes: "" };
+  const emptyClientForm = { name: "", phone: "", email: "", website: "", notes: "", type: "", amount: "", contract: "" };
   const [newClientForm, setNewClientForm] = useState(emptyClientForm);
 
   const currentUser = user ? {
@@ -2851,7 +2927,7 @@ const TaskManager = () => {
     const { data } = await supabase.from("clients").select("*").order("name");
     if (data) {
       const map = {};
-      data.forEach(c => { map[c.name] = { phone: c.phone, email: c.email, website: c.website, notes: c.notes, brief: c.brief || {}, _id: c.id }; });
+      data.forEach(c => { map[c.name] = { phone: c.phone, email: c.email, website: c.website, notes: c.notes, brief: c.brief || {}, type: c.type || '', amount: c.amount || '', contract: c.contract || '', _id: c.id }; });
       setClientsData(map);
     }
   };

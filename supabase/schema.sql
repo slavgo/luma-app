@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   date        TEXT DEFAULT '',
   done           BOOLEAN NOT NULL DEFAULT false,
   notes          TEXT DEFAULT '',
+  link           TEXT DEFAULT '',
   follow_up_date TEXT DEFAULT '',
   recurrence     TEXT DEFAULT 'none',
   created_at     TIMESTAMPTZ DEFAULT NOW()
@@ -23,6 +24,7 @@ CREATE TABLE IF NOT EXISTS tasks (
 -- הוסף לטבלה קיימת:
 -- ALTER TABLE tasks ADD COLUMN IF NOT EXISTS follow_up_date TEXT DEFAULT '';
 -- ALTER TABLE tasks ADD COLUMN IF NOT EXISTS recurrence TEXT DEFAULT 'none';
+-- ALTER TABLE tasks ADD COLUMN IF NOT EXISTS link TEXT DEFAULT '';
 -- recurrence values: 'none' | 'daily' | 'weekly' | 'monthly' | '0,2,4' (ימי שבוע: 0=א 1=ב...6=ש)
 
 -- ── CLIENTS ──────────────────────────────────────────────
@@ -34,9 +36,18 @@ CREATE TABLE IF NOT EXISTS clients (
   email       TEXT DEFAULT '',
   website     TEXT DEFAULT '',
   notes       TEXT DEFAULT '',
+  type        TEXT DEFAULT '',   -- 'ריטיינר' | 'חד״פ' | 'פרויקט'
+  amount      TEXT DEFAULT '',   -- סכום ₪
+  contract    TEXT DEFAULT '',   -- 'חתום' | 'ממתין' | 'אין'
+  brief       JSONB DEFAULT '{}',
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id, name)
 );
+-- הוסף לטבלה קיימת:
+-- ALTER TABLE clients ADD COLUMN IF NOT EXISTS type TEXT DEFAULT '';
+-- ALTER TABLE clients ADD COLUMN IF NOT EXISTS amount TEXT DEFAULT '';
+-- ALTER TABLE clients ADD COLUMN IF NOT EXISTS contract TEXT DEFAULT '';
+-- ALTER TABLE clients ADD COLUMN IF NOT EXISTS brief JSONB DEFAULT '{}';
 
 -- ── CALENDAR ITEMS ───────────────────────────────────────
 CREATE TABLE IF NOT EXISTS cal_items (

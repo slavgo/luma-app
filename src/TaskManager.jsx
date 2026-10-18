@@ -1374,64 +1374,62 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
     <div
       onClick={onClick}
       style={{
-        background: gradient,
-        borderRadius: 16,
-        padding: mobile ? '16px 18px' : '20px 22px',
-        boxShadow: `0 4px 24px ${glow}`,
+        background: gradient || 'var(--bg-surface)',
+        borderRadius: 12,
+        padding: mobile ? '14px 16px' : '18px 20px',
+        border: '1px solid var(--border)',
         position: 'relative', overflow: 'hidden',
         cursor: onClick ? 'pointer' : 'default',
-        transition: 'transform 0.18s, box-shadow 0.18s',
+        transition: 'background 0.15s',
       }}
-      onMouseEnter={e => { if (onClick) { e.currentTarget.style.transform = 'translateY(-3px) scale(1.01)'; e.currentTarget.style.boxShadow = `0 10px 32px ${glow}`; } }}
-      onMouseLeave={e => { if (onClick) { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = `0 4px 24px ${glow}`; } }}
+      onMouseEnter={e => { if (onClick) e.currentTarget.style.background = (gradient || 'var(--bg-hover)'); }}
+      onMouseLeave={e => { if (onClick) e.currentTarget.style.background = (gradient || 'var(--bg-surface)'); }}
     >
-      {/* Decorative circle */}
-      <div style={{ position: 'absolute', top: -18, left: -18, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <p style={{ fontSize: mobile ? 10 : 11, color: 'rgba(255,255,255,0.75)', fontWeight: 600, marginBottom: 6, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{label}</p>
-          <p style={{ fontSize: mobile ? 30 : 36, fontWeight: 900, color: '#ffffff', lineHeight: 1, letterSpacing: '-1px' }}>{value}</p>
-          {sub && !mobile && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 6 }}>{sub}</p>}
+          <p style={{ fontSize: mobile ? 10 : 11, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 6, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{label}</p>
+          <p style={{ fontSize: mobile ? 28 : 34, fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-1px' }}>{value}</p>
+          {sub && !mobile && <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>{sub}</p>}
         </div>
         <div style={{
-          width: 40, height: 40, borderRadius: 12, flexShrink: 0,
-          background: 'rgba(255,255,255,0.18)',
+          width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+          background: 'var(--bg-elevated)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 18,
+          fontSize: 16,
         }}>{icon}</div>
       </div>
     </div>
   );
 
   return (
-    <div style={{ background: 'linear-gradient(160deg,#f0f1ff 0%,#f4f5f9 40%,#f9f5ff 100%)', minHeight: '100%' }} dir="rtl">
+    <div style={{ background: 'var(--bg-base)', minHeight: '100%' }} dir="rtl">
 
       {/* Hero Header */}
       <div style={{
-        background: 'linear-gradient(135deg,#0c1122 0%,#1a0f3a 50%,#0d1f3a 100%)',
+        background: 'var(--bg-surface)',
+        borderBottom: '1px solid var(--border)',
         padding: mobile ? '20px 18px 24px' : '28px 36px 32px',
         position: 'relative', overflow: 'hidden',
       }}>
         {/* decorative blobs */}
-        <div style={{ position:'absolute',top:-40,right:-40,width:180,height:180,borderRadius:'50%',background:'radial-gradient(circle,rgba(99,102,241,0.25) 0%,transparent 70%)',pointerEvents:'none' }}/>
-        <div style={{ position:'absolute',bottom:-50,left:60,width:220,height:220,borderRadius:'50%',background:'radial-gradient(circle,rgba(168,85,247,0.18) 0%,transparent 70%)',pointerEvents:'none' }}/>
+        <div style={{ position:'absolute',top:-40,right:-40,width:180,height:180,borderRadius:'50%',background:'radial-gradient(circle,rgba(124,110,245,0.12) 0%,transparent 70%)',pointerEvents:'none' }}/>
+        <div style={{ position:'absolute',bottom:-50,left:60,width:220,height:220,borderRadius:'50%',background:'radial-gradient(circle,rgba(124,110,245,0.07) 0%,transparent 70%)',pointerEvents:'none' }}/>
         <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',position:'relative' }}>
           <div>
-            <p style={{ fontSize: mobile ? 12 : 13, color:'rgba(255,255,255,0.45)', margin:'0 0 4px', letterSpacing:'0.04em' }}>יום {dayName} · {d}/{m}/{y}</p>
-            <h1 style={{ fontSize: mobile ? 22 : 28, fontWeight: 900, color:'#ffffff', margin: 0, letterSpacing:'-0.5px' }}>
+            <p style={{ fontSize: mobile ? 12 : 13, color:'var(--text-muted)', margin:'0 0 4px', letterSpacing:'0.04em' }}>יום {dayName} · {d}/{m}/{y}</p>
+            <h1 style={{ fontSize: mobile ? 22 : 28, fontWeight: 900, color:'var(--text-primary)', margin: 0, letterSpacing:'-0.5px' }}>
               שלום, {user?.name?.split(' ')[0] || 'Slav'} 👋
             </h1>
-            <p style={{ fontSize: mobile ? 12 : 13, color:'rgba(255,255,255,0.45)', marginTop: 6 }}>
-              {activeTasks.length} משימות פתוחות · {overdue.length > 0 ? <span style={{color:'#fb923c'}}>⚠ {overdue.length} באיחור</span> : '✓ הכל בזמן'}
+            <p style={{ fontSize: mobile ? 12 : 13, color:'var(--text-muted)', marginTop: 6 }}>
+              {activeTasks.length} משימות פתוחות · {overdue.length > 0 ? <span style={{color:'var(--red)'}}>⚠ {overdue.length} באיחור</span> : <span style={{color:'var(--green)'}}>✓ הכל בזמן</span>}
             </p>
           </div>
           <button onClick={onAddTask} style={{
             display:'flex',alignItems:'center',gap:8,
             padding: mobile ? '10px 16px' : '12px 22px',
-            background:'linear-gradient(135deg,#6366f1,#a855f7)',
-            color:'white',borderRadius:14,border:'none',cursor:'pointer',
+            background:'var(--accent)',
+            color:'white',borderRadius:10,border:'none',cursor:'pointer',
             fontSize: mobile ? 13 : 14,fontWeight:700,
-            boxShadow:'0 4px 20px rgba(99,102,241,0.5)',
             flexShrink:0,
           }}>
             <span style={{fontSize:18,lineHeight:1}}>+</span>
@@ -1444,32 +1442,32 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: mobile ? 10 : 14, marginBottom: mobile ? 14 : 24 }}>
-        <KpiCard label="משימות פתוחות" value={activeTasks.length} sub={`${overdue.length} באיחור`} gradient="linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%)" glow="rgba(99,102,241,0.35)" icon="📋" onClick={onNavigateWithFilter ? () => onNavigateWithFilter(null) : undefined} />
-        <KpiCard label="דחוף ומיידי" value={highUrgency.length} sub="דורש טיפול עכשיו" gradient="linear-gradient(135deg,#ef4444 0%,#f97316 100%)" glow="rgba(239,68,68,0.35)" icon="⚡" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'urgency', value: 'גבוהה' }) : undefined} />
-        <KpiCard label="ממתין לאישור" value={waiting.length} sub="לקוחות ממתינים" gradient="linear-gradient(135deg,#f59e0b 0%,#fb923c 100%)" glow="rgba(245,158,11,0.35)" icon="⏳" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'status', value: 'ממתין לאישור' }) : undefined} />
-        <KpiCard label="פולו-אפ ממתין" value={activeTasks.filter(t => t.follow_up_date && t.follow_up_date <= TODAY).length} sub={`${activeTasks.filter(t => t.follow_up_date === TODAY).length} להיום`} gradient="linear-gradient(135deg,#10b981 0%,#34d399 100%)" glow="rgba(16,185,129,0.35)" icon="🔔" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'followup', value: true }) : undefined} />
+        <KpiCard label="משימות פתוחות" value={activeTasks.length} sub={`${overdue.length} באיחור`} gradient="linear-gradient(135deg,rgba(124,110,245,0.25) 0%,rgba(124,110,245,0.1) 100%)" glow="rgba(124,110,245,0.15)" icon="📋" onClick={onNavigateWithFilter ? () => onNavigateWithFilter(null) : undefined} />
+        <KpiCard label="דחוף ומיידי" value={highUrgency.length} sub="דורש טיפול עכשיו" gradient="linear-gradient(135deg,rgba(239,68,68,0.25) 0%,rgba(239,68,68,0.1) 100%)" glow="rgba(239,68,68,0.15)" icon="⚡" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'urgency', value: 'גבוהה' }) : undefined} />
+        <KpiCard label="ממתין לאישור" value={waiting.length} sub="לקוחות ממתינים" gradient="linear-gradient(135deg,rgba(245,158,11,0.25) 0%,rgba(245,158,11,0.1) 100%)" glow="rgba(245,158,11,0.15)" icon="⏳" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'status', value: 'ממתין לאישור' }) : undefined} />
+        <KpiCard label="פולו-אפ ממתין" value={activeTasks.filter(t => t.follow_up_date && t.follow_up_date <= TODAY).length} sub={`${activeTasks.filter(t => t.follow_up_date === TODAY).length} להיום`} gradient="linear-gradient(135deg,rgba(34,197,94,0.25) 0%,rgba(34,197,94,0.1) 100%)" glow="rgba(34,197,94,0.15)" icon="🔔" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'followup', value: true }) : undefined} />
       </div>
 
       {/* Progress bar */}
       {tasks.length > 0 && (
-        <div style={{ background: '#ffffff', borderRadius: 12, padding: mobile ? '12px 16px' : '16px 20px', border: '1px solid #e8eaf0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: mobile ? 14 : 24 }}>
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: mobile ? '12px 16px' : '16px 20px', border: '1px solid var(--border)', marginBottom: mobile ? 14 : 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>התקדמות כוללת</span>
-            <span style={{ fontSize: 13, color: '#6366f1', fontWeight: 700 }}>{doneRate}%</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>התקדמות כוללת</span>
+            <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 700 }}>{doneRate}%</span>
           </div>
-          <div style={{ height: 6, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${doneRate}%`, background: 'linear-gradient(90deg, #6366f1, #a855f7)', borderRadius: 99, transition: 'width 0.6s ease' }} />
+          <div style={{ height: 6, background: 'var(--bg-elevated)', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${doneRate}%`, background: 'var(--accent)', borderRadius: 99, transition: 'width 0.6s ease' }} />
           </div>
           <div style={{ display: 'flex', gap: 20, marginTop: 10 }}>
             {[
-              { label: 'לביצוע', count: activeTasks.filter(t=>t.status==='לביצוע').length, color: '#cbd5e1' },
-              { label: 'בביצוע', count: activeTasks.filter(t=>t.status==='בביצוע').length, color: '#6366f1' },
+              { label: 'לביצוע', count: activeTasks.filter(t=>t.status==='לביצוע').length, color: 'var(--text-muted)' },
+              { label: 'בביצוע', count: activeTasks.filter(t=>t.status==='בביצוע').length, color: 'var(--accent)' },
               { label: 'ממתין', count: waiting.length, color: '#f59e0b' },
-              { label: 'בוצע', count: doneTasks.length, color: '#10b981' },
+              { label: 'בוצע', count: doneTasks.length, color: 'var(--green)' },
             ].map(s => (
               <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: s.color, display: 'inline-block' }}></span>
-                <span style={{ fontSize: 11, color: '#94a3b8' }}>{s.label} <strong style={{ color: '#475569' }}>{s.count}</strong></span>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{s.label} <strong style={{ color: 'var(--text-secondary)' }}>{s.count}</strong></span>
               </div>
             ))}
           </div>
@@ -1480,53 +1478,53 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
       <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: mobile ? 12 : 18, marginBottom: mobile ? 12 : 18 }}>
 
         {/* Urgent tasks */}
-        <div style={{ background: '#ffffff', borderRadius: 12, border: '1px solid #e8eaf0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #f8fafc' }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#334155', margin: 0 }}>🔥 דחוף ומיידי</h3>
-            <button onClick={onGoToTasks} style={{ fontSize: 11, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>כל המשימות ←</button>
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 12, border: '1px solid var(--border)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>🔥 דחוף ומיידי</h3>
+            <button onClick={onGoToTasks} style={{ fontSize: 11, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>כל המשימות ←</button>
           </div>
           {[...todayTasks, ...highUrgency.filter(t => !todayTasks.includes(t))].slice(0, 5).length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: '24px 0', fontStyle: 'italic' }}>אין משימות דחופות 🎉</p>
+            <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, padding: '24px 0', fontStyle: 'italic' }}>אין משימות דחופות 🎉</p>
           ) : (
             <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
               {[...todayTasks, ...highUrgency.filter(t => !todayTasks.includes(t))].slice(0, 5).map(task => (
-                <li key={task.id} onClick={() => onTaskClick && onTaskClick(task)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid #f1f5f9', gap: 12, cursor: 'pointer', transition: 'background 0.12s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                <li key={task.id} onClick={() => onTaskClick && onTaskClick(task)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid var(--border)', gap: 12, cursor: 'pointer', transition: 'background 0.12s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
                   onMouseLeave={e => e.currentTarget.style.background = ''}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: '#334155', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.task}</p>
-                    <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{task.client} · {task.platform}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.task}</p>
+                    <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{task.client} · {task.platform}</p>
                   </div>
-                  <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: task.urgency === 'גבוהה' ? '#fee2e2' : '#ffedd5', color: task.urgency === 'גבוהה' ? '#dc2626' : '#ea580c', fontWeight: 600, flexShrink: 0 }}>{task.urgency}</span>
+                  <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: task.urgency === 'גבוהה' ? 'rgba(239,68,68,0.15)' : 'rgba(249,115,22,0.15)', color: task.urgency === 'גבוהה' ? 'var(--red)' : '#f97316', fontWeight: 600, flexShrink: 0 }}>{task.urgency}</span>
                 </li>
               ))}
             </ul>
           )}
-          <div style={{ padding: '10px 20px', borderTop: '1px solid #f1f5f9' }}>
-            <button onClick={onAddTask} style={{ fontSize: 12, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>+ הוסף משימה</button>
+          <div style={{ padding: '10px 20px', borderTop: '1px solid var(--border)' }}>
+            <button onClick={onAddTask} style={{ fontSize: 12, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>+ הוסף משימה</button>
           </div>
         </div>
 
         {/* Upcoming deadlines */}
-        <div style={{ background: '#ffffff', borderRadius: 12, border: '1px solid #e8eaf0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #f8fafc' }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#334155', margin: 0 }}>📅 דדליינים קרובים</h3>
-            <span style={{ fontSize: 11, color: '#94a3b8' }}>7 ימים קדימה</span>
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 12, border: '1px solid var(--border)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>📅 דדליינים קרובים</h3>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>7 ימים קדימה</span>
           </div>
           {upcoming.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: '24px 0', fontStyle: 'italic' }}>אין דדליינים קרובים</p>
+            <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, padding: '24px 0', fontStyle: 'italic' }}>אין דדליינים קרובים</p>
           ) : (
             <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
               {upcoming.map(task => {
                 const daysLeft = Math.ceil((new Date(task.date) - new Date(TODAY)) / 86400000);
-                const chip = daysLeft === 0 ? { bg: '#f3e8ff', c: '#7c3aed', t: 'היום' } : daysLeft === 1 ? { bg: '#fee2e2', c: '#dc2626', t: 'מחר' } : daysLeft <= 3 ? { bg: '#ffedd5', c: '#ea580c', t: `${daysLeft} ימים` } : { bg: '#f1f5f9', c: '#64748b', t: `${daysLeft} ימים` };
+                const chip = daysLeft === 0 ? { bg: 'var(--accent-dim)', c: 'var(--accent)', t: 'היום' } : daysLeft === 1 ? { bg: 'rgba(239,68,68,0.15)', c: 'var(--red)', t: 'מחר' } : daysLeft <= 3 ? { bg: 'rgba(249,115,22,0.15)', c: '#f97316', t: `${daysLeft} ימים` } : { bg: 'var(--bg-elevated)', c: 'var(--text-secondary)', t: `${daysLeft} ימים` };
                 return (
-                  <li key={task.id} onClick={() => onTaskClick && onTaskClick(task)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid #f1f5f9', gap: 12, cursor: 'pointer', transition: 'background 0.12s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                  <li key={task.id} onClick={() => onTaskClick && onTaskClick(task)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid var(--border)', gap: 12, cursor: 'pointer', transition: 'background 0.12s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
                     onMouseLeave={e => e.currentTarget.style.background = ''}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: '#334155', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.task}</p>
-                      <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{task.client}</p>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.task}</p>
+                      <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{task.client}</p>
                     </div>
                     <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: chip.bg, color: chip.c, fontWeight: 700, flexShrink: 0 }}>{chip.t}</span>
                   </li>
@@ -1542,23 +1540,23 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
         const followUps = activeTasks.filter(t => t.follow_up_date === TODAY);
         if (followUps.length === 0) return null;
         return (
-          <div style={{ background: 'linear-gradient(135deg, #fffbeb, #fef3c7)', border: '1px solid #fcd34d', borderRadius: 12, padding: '14px 20px', marginBottom: mobile ? 12 : 18 }}>
+          <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 12, padding: '14px 20px', marginBottom: mobile ? 12 : 18 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <span style={{ fontSize: 16 }}>🔔</span>
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#92400e', margin: 0 }}>פולו-אפ להיום — {followUps.length} משימ{followUps.length > 1 ? 'ות' : 'ה'}</h3>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b', margin: 0 }}>פולו-אפ להיום — {followUps.length} משימ{followUps.length > 1 ? 'ות' : 'ה'}</h3>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {followUps.map(task => (
                 <div key={task.id} onClick={() => onTaskClick && onTaskClick(task)}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.7)', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', gap: 10 }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.95)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.7)'}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-elevated)', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', gap: 10, transition: 'background 0.12s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elevated)'}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: '#78350f', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.task}</p>
-                    <p style={{ fontSize: 11, color: '#a16207', marginTop: 2 }}>{task.client} · {task.platform}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.task}</p>
+                    <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{task.client} · {task.platform}</p>
                   </div>
-                  <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: '#fef08a', color: '#854d0e', fontWeight: 700, flexShrink: 0 }}>{task.status}</span>
+                  <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: 'rgba(245,158,11,0.2)', color: '#f59e0b', fontWeight: 700, flexShrink: 0 }}>{task.status}</span>
                 </div>
               ))}
             </div>
@@ -1570,31 +1568,31 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
       <div style={{ display: 'grid', gridTemplateColumns: mobile ? '1fr' : '1fr 1fr', gap: mobile ? 12 : 18 }}>
 
         {/* Client workload */}
-        <div style={{ background: '#ffffff', borderRadius: 12, border: '1px solid #e8eaf0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid #f8fafc' }}>
-            <h3 style={{ fontSize: 13, fontWeight: 700, color: '#334155', margin: 0 }}>👥 עומס לפי לקוח</h3>
-            <button onClick={onGoToClients} style={{ fontSize: 11, color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>כל הלקוחות ←</button>
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 12, border: '1px solid var(--border)', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>👥 עומס לפי לקוח</h3>
+            <button onClick={onGoToClients} style={{ fontSize: 11, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>כל הלקוחות ←</button>
           </div>
           {clientLoad.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: '24px 0', fontStyle: 'italic' }}>אין משימות פעילות</p>
+            <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, padding: '24px 0', fontStyle: 'italic' }}>אין משימות פעילות</p>
           ) : (
             <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
               {clientLoad.map(({ name, count, urgent }) => {
                 const pct = Math.round((count / clientLoad[0].count) * 100);
                 return (
-                  <li key={name} style={{ padding: '10px 20px', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', transition: 'background 0.12s' }}
+                  <li key={name} style={{ padding: '10px 20px', borderBottom: '1px solid var(--border)', cursor: 'pointer', transition: 'background 0.12s' }}
                   onClick={() => onSelectClient(name)}
-                  onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
                   onMouseLeave={e => e.currentTarget.style.background = ''}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#334155' }}>{name}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{name}</span>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        {urgent > 0 && <span style={{ fontSize: 11, color: '#ef4444', fontWeight: 700 }}>⚡ {urgent}</span>}
-                        <span style={{ fontSize: 11, color: '#94a3b8' }}>{count} משימות</span>
+                        {urgent > 0 && <span style={{ fontSize: 11, color: 'var(--red)', fontWeight: 700 }}>⚡ {urgent}</span>}
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{count} משימות</span>
                       </div>
                     </div>
-                    <div style={{ height: 4, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${pct}%`, background: urgent > 0 ? 'linear-gradient(90deg, #f87171, #ef4444)' : 'linear-gradient(90deg, #818cf8, #6366f1)', borderRadius: 99 }} />
+                    <div style={{ height: 4, background: 'var(--bg-elevated)', borderRadius: 99, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: urgent > 0 ? 'var(--red)' : 'var(--accent)', borderRadius: 99 }} />
                     </div>
                   </li>
                 );

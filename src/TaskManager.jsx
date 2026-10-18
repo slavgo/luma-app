@@ -1610,41 +1610,74 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
 };
 
 // ─── New Client Modal (shared) ────────────────────────────────────────────────
-const NewClientModal = ({ newClientForm, setNewClientForm, emptyClientForm, onClose, onAdd }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[200]" onClick={onClose}>
-    <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md" dir="rtl" onClick={e => e.stopPropagation()}>
-      <h2 className="text-lg font-bold text-gray-800 mb-5">➕ הקמת לקוח חדש</h2>
-      <div className="flex flex-col gap-4">
+const NewClientModal = ({ newClientForm, setNewClientForm, emptyClientForm, onClose, onAdd }) => {
+  const inputStyle = {
+    width: '100%', background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+    borderRadius: 8, padding: '8px 12px', fontSize: 13, color: 'var(--text-primary)',
+    outline: 'none', boxSizing: 'border-box',
+  };
+  const labelStyle = { fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, display: 'block', fontWeight: 600 };
+  return (
+  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }} onClick={onClose}>
+    <div style={{ background: 'var(--bg-surface)', borderRadius: 16, border: '1px solid var(--border)', padding: 24, width: '100%', maxWidth: 440 }} dir="rtl" onClick={e => e.stopPropagation()}>
+      <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 20 }}>➕ הקמת לקוח חדש</h2>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div>
-          <label className="text-xs text-gray-500 mb-1 block">שם הלקוח <span className="text-red-400">*</span></label>
-          <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="שם הלקוח" value={newClientForm.name} onChange={e => setNewClientForm(f => ({ ...f, name: e.target.value }))} autoFocus />
+          <label style={labelStyle}>שם הלקוח <span style={{ color: 'var(--red)' }}>*</span></label>
+          <input style={inputStyle} placeholder="שם הלקוח" value={newClientForm.name} onChange={e => setNewClientForm(f => ({ ...f, name: e.target.value }))} autoFocus />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">📞 טלפון</label>
-            <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="05X-XXXXXXX" value={newClientForm.phone} onChange={e => setNewClientForm(f => ({ ...f, phone: e.target.value }))} />
+            <label style={labelStyle}>📞 טלפון</label>
+            <input style={inputStyle} placeholder="05X-XXXXXXX" value={newClientForm.phone} onChange={e => setNewClientForm(f => ({ ...f, phone: e.target.value }))} />
           </div>
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">✉️ דוא"ל</label>
-            <input type="email" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="email@example.com" value={newClientForm.email} onChange={e => setNewClientForm(f => ({ ...f, email: e.target.value }))} />
+            <label style={labelStyle}>✉️ דוא"ל</label>
+            <input type="email" style={inputStyle} placeholder="email@example.com" value={newClientForm.email} onChange={e => setNewClientForm(f => ({ ...f, email: e.target.value }))} />
           </div>
         </div>
         <div>
-          <label className="text-xs text-gray-500 mb-1 block">🌐 אתר</label>
-          <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="www.example.com" value={newClientForm.website} onChange={e => setNewClientForm(f => ({ ...f, website: e.target.value }))} />
+          <label style={labelStyle}>🌐 אתר</label>
+          <input style={inputStyle} placeholder="www.example.com" value={newClientForm.website} onChange={e => setNewClientForm(f => ({ ...f, website: e.target.value }))} />
+        </div>
+        {/* Financial fields */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+          <div>
+            <label style={labelStyle}>💼 סוג התקשרות</label>
+            <select style={{ ...inputStyle, cursor: 'pointer' }} value={newClientForm.type || ''} onChange={e => setNewClientForm(f => ({ ...f, type: e.target.value }))}>
+              <option value="">בחר...</option>
+              <option value="ריטיינר">ריטיינר</option>
+              <option value="חד״פ">חד״פ</option>
+              <option value="פרויקט">פרויקט</option>
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>₪ סכום</label>
+            <input style={inputStyle} placeholder="4,500" value={newClientForm.amount || ''} onChange={e => setNewClientForm(f => ({ ...f, amount: e.target.value }))} />
+          </div>
+          <div>
+            <label style={labelStyle}>📄 חוזה</label>
+            <select style={{ ...inputStyle, cursor: 'pointer' }} value={newClientForm.contract || ''} onChange={e => setNewClientForm(f => ({ ...f, contract: e.target.value }))}>
+              <option value="">בחר...</option>
+              <option value="חתום">חתום ✓</option>
+              <option value="ממתין">ממתין ⏳</option>
+              <option value="אין">ללא חוזה</option>
+            </select>
+          </div>
         </div>
         <div>
-          <label className="text-xs text-gray-500 mb-1 block">📝 הערות</label>
-          <textarea className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none" rows={3} placeholder="פרטים נוספים על הלקוח..." value={newClientForm.notes} onChange={e => setNewClientForm(f => ({ ...f, notes: e.target.value }))} />
+          <label style={labelStyle}>📝 הערות</label>
+          <textarea style={{ ...inputStyle, resize: 'none' }} rows={2} placeholder="פרטים נוספים על הלקוח..." value={newClientForm.notes} onChange={e => setNewClientForm(f => ({ ...f, notes: e.target.value }))} />
         </div>
       </div>
-      <div className="flex gap-2 mt-5 justify-end">
-        <button onClick={onClose} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">ביטול</button>
-        <button onClick={onAdd} disabled={!newClientForm.name.trim()} className="px-5 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">הוסף לקוח</button>
+      <div style={{ display: 'flex', gap: 8, marginTop: 20, justifyContent: 'flex-end' }}>
+        <button onClick={onClose} style={{ padding: '8px 16px', fontSize: 13, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>ביטול</button>
+        <button onClick={onAdd} disabled={!newClientForm.name.trim()} style={{ padding: '8px 20px', background: 'var(--accent)', color: 'white', borderRadius: 8, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', opacity: newClientForm.name.trim() ? 1 : 0.4 }}>הוסף לקוח</button>
       </div>
     </div>
   </div>
-);
+  );
+};
 
 // ─── Clients List Screen ─────────────────────────────────────────────────────
 const ClientsListScreen = ({ clientsData, tasks, onSelectClient, onAddClient }) => {
@@ -1677,69 +1710,72 @@ const ClientsListScreen = ({ clientsData, tasks, onSelectClient, onAddClient }) 
               <div
                 key={name}
                 onClick={() => onSelectClient(name)}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 cursor-pointer hover:shadow-md hover:border-blue-100 transition-all group"
+                style={{ background: 'var(--bg-surface)', borderRadius: 16, border: '1px solid var(--border)', padding: 20, cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.borderColor = 'var(--border-strong)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
               >
                 {/* Card header */}
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 18, fontWeight: 900, flexShrink: 0 }}>
                     {name.charAt(0)}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-gray-800 group-hover:text-blue-600 transition-colors">{name}</h3>
-                    <div className="flex gap-1 mt-1 flex-wrap">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h3 style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 15, marginBottom: 4 }}>{name}</h3>
+                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                       {activePlatforms.slice(0, 3).map(p => (
-                        <span key={p} className="text-xs text-gray-400">{PLATFORM_ICONS[p]}</span>
+                        <span key={p} style={{ fontSize: 13 }}>{PLATFORM_ICONS[p]}</span>
                       ))}
-                      {activePlatforms.length === 0 && <span className="text-xs text-gray-300 italic">אין פלטפורמות</span>}
+                      {activePlatforms.length === 0 && <span style={{ fontSize: 11, color: 'var(--text-muted)', fontStyle: 'italic' }}>אין פלטפורמות</span>}
                     </div>
                   </div>
-                  <span className="text-gray-300 group-hover:text-blue-400 transition-colors text-xl">←</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: 18 }}>←</span>
                 </div>
 
                 {/* Contact info */}
-                <div className="flex flex-col gap-1 mb-4 text-xs text-gray-400">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 12, fontSize: 12, color: 'var(--text-secondary)' }}>
                   {data.phone && <span>📞 {data.phone}</span>}
                   {data.email && <span>✉️ {data.email}</span>}
                   {data.website && <span>🌐 {data.website}</span>}
                   {!data.phone && !data.email && !data.website && (
-                    <span className="italic text-gray-300">אין פרטי קשר</span>
+                    <span style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>אין פרטי קשר</span>
                   )}
                 </div>
 
-                {/* Financial info */}
+                {/* Financial chips */}
                 {(data.type || data.amount || data.contract) && (
-                  <div className="flex gap-2 flex-wrap mb-3">
-                    {data.type && <span className="text-xs bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full font-medium">{data.type}</span>}
-                    {data.amount && <span className="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-medium">₪{data.amount}</span>}
-                    {data.contract === 'חתום' && <span className="text-xs bg-green-50 text-green-600 px-2.5 py-1 rounded-full font-medium">✓ חוזה חתום</span>}
-                    {data.contract === 'ממתין' && <span className="text-xs bg-orange-50 text-orange-500 px-2.5 py-1 rounded-full font-medium">⏳ ממתין לחתימה</span>}
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                    {data.type && <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 99, background: 'var(--accent-dim)', color: 'var(--accent)', fontWeight: 700 }}>{data.type}</span>}
+                    {data.amount && <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 99, background: 'rgba(34,197,94,0.15)', color: 'var(--green)', fontWeight: 700 }}>₪{data.amount}</span>}
+                    {data.contract === 'חתום' && <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 99, background: 'rgba(34,197,94,0.15)', color: 'var(--green)', fontWeight: 700 }}>✓ חתום</span>}
+                    {data.contract === 'ממתין' && <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 99, background: 'rgba(245,158,11,0.15)', color: '#f59e0b', fontWeight: 700 }}>⏳ ממתין</span>}
+                    {data.contract === 'אין' && <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 99, background: 'rgba(139,139,153,0.15)', color: 'var(--text-muted)', fontWeight: 700 }}>ללא חוזה</span>}
                   </div>
                 )}
 
                 {/* Notes preview */}
                 {data.notes && (
-                  <p className="text-xs text-gray-400 italic mb-4 line-clamp-1 border-r-2 border-gray-100 pr-2">
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: 12, borderRight: '2px solid var(--border)', paddingRight: 8, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
                     {data.notes}
                   </p>
                 )}
 
                 {/* Stats chips */}
-                <div className="flex gap-2 flex-wrap border-t border-gray-50 pt-3">
-                  <span className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full font-medium">
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+                  <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 99, background: 'var(--accent-dim)', color: 'var(--accent)', fontWeight: 700 }}>
                     {clientTasks.length} משימות פתוחות
                   </span>
                   {highUrgency > 0 && (
-                    <span className="text-xs bg-red-50 text-red-500 px-2.5 py-1 rounded-full font-medium">
+                    <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 99, background: 'rgba(239,68,68,0.15)', color: 'var(--red)', fontWeight: 700 }}>
                       {highUrgency} דחוף
                     </span>
                   )}
                   {waiting > 0 && (
-                    <span className="text-xs bg-orange-50 text-orange-500 px-2.5 py-1 rounded-full font-medium">
+                    <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 99, background: 'rgba(245,158,11,0.15)', color: '#f59e0b', fontWeight: 700 }}>
                       {waiting} ממתין לאישור
                     </span>
                   )}
                   {clientTasks.length === 0 && (
-                    <span className="text-xs bg-green-50 text-green-500 px-2.5 py-1 rounded-full font-medium">✓ נקי</span>
+                    <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 99, background: 'rgba(34,197,94,0.15)', color: 'var(--green)', fontWeight: 700 }}>✓ נקי</span>
                   )}
                 </div>
               </div>
@@ -2033,62 +2069,63 @@ const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onTogg
         {activeTab === 'details' && (
           <>
             {/* Contact fields */}
-            <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
               {[
                 { icon: "📞", label: "טלפון", key: "phone" },
                 { icon: "✉️", label: 'דוא"ל', key: "email" },
                 { icon: "🌐", label: "אתר", key: "website" },
               ].map(({ icon, label, key }) => (
                 <div key={key}>
-                  <p className="text-xs text-gray-400 mb-1">{icon} {label}</p>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, fontWeight: 600 }}>{icon} {label}</p>
                   {editMode ? (
                     <input
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                      style={{ width: '100%', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 10px', fontSize: 13, color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box' }}
                       value={editForm[key]}
                       onChange={e => setEditForm(f => ({ ...f, [key]: e.target.value }))}
                       placeholder={`הזן ${label}`}
                     />
                   ) : (
-                    <p className={`text-sm ${data[key] ? 'text-gray-700' : 'text-gray-300 italic'}`}>{data[key] || "לא הוזן"}</p>
+                    <p style={{ fontSize: 13, color: data[key] ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: data[key] ? 'normal' : 'italic' }}>{data[key] || "לא הוזן"}</p>
                   )}
                 </div>
               ))}
             </div>
 
             {/* Financial fields */}
-            <div className="mt-4 pt-4 border-t border-gray-50 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
               <div>
-                <p className="text-xs text-gray-400 mb-1">💼 סוג התקשרות</p>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, fontWeight: 600 }}>💼 סוג התקשרות</p>
                 {editMode ? (
-                  <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={editForm.type || ''} onChange={e => setEditForm(f => ({ ...f, type: e.target.value }))}>
+                  <select style={{ width: '100%', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 10px', fontSize: 13, color: 'var(--text-primary)', outline: 'none', cursor: 'pointer' }} value={editForm.type || ''} onChange={e => setEditForm(f => ({ ...f, type: e.target.value }))}>
                     <option value="">בחר...</option>
                     <option value="ריטיינר">ריטיינר</option>
                     <option value="חד״פ">חד״פ</option>
                     <option value="פרויקט">פרויקט</option>
                   </select>
                 ) : (
-                  <p className={`text-sm ${data.type ? 'text-gray-700' : 'text-gray-300 italic'}`}>{data.type || "לא הוזן"}</p>
+                  <p style={{ fontSize: 13, color: data.type ? 'var(--text-primary)' : 'var(--text-muted)', fontStyle: data.type ? 'normal' : 'italic' }}>{data.type || "לא הוזן"}</p>
                 )}
               </div>
               <div>
-                <p className="text-xs text-gray-400 mb-1">₪ סכום</p>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, fontWeight: 600 }}>₪ סכום</p>
                 {editMode ? (
-                  <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="למשל: 4,500" value={editForm.amount || ''} onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))} />
+                  <input style={{ width: '100%', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 10px', fontSize: 13, color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box' }} placeholder="למשל: 4,500" value={editForm.amount || ''} onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))} />
                 ) : (
-                  <p className={`text-sm ${data.amount ? 'text-gray-700 font-medium' : 'text-gray-300 italic'}`}>{data.amount ? `₪${data.amount}` : "לא הוזן"}</p>
+                  <p style={{ fontSize: 13, color: data.amount ? 'var(--green)' : 'var(--text-muted)', fontStyle: data.amount ? 'normal' : 'italic', fontWeight: data.amount ? 700 : 400 }}>{data.amount ? `₪${data.amount}` : "לא הוזן"}</p>
                 )}
               </div>
               <div>
-                <p className="text-xs text-gray-400 mb-1">📄 חוזה</p>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, fontWeight: 600 }}>📄 חוזה</p>
                 {editMode ? (
-                  <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={editForm.contract || ''} onChange={e => setEditForm(f => ({ ...f, contract: e.target.value }))}>
+                  <select style={{ width: '100%', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 10px', fontSize: 13, color: 'var(--text-primary)', outline: 'none', cursor: 'pointer' }} value={editForm.contract || ''} onChange={e => setEditForm(f => ({ ...f, contract: e.target.value }))}>
                     <option value="">בחר...</option>
-                    <option value="חתום">חתום</option>
-                    <option value="ממתין">ממתין לחתימה</option>
+                    <option value="חתום">חתום ✓</option>
+                    <option value="ממתין">ממתין לחתימה ⏳</option>
                     <option value="אין">ללא חוזה</option>
                   </select>
                 ) : (
-                  <p className={`text-sm ${data.contract ? (data.contract === 'חתום' ? 'text-green-600 font-medium' : data.contract === 'ממתין' ? 'text-orange-500' : 'text-gray-500') : 'text-gray-300 italic'}`}>
+                  <p style={{ fontSize: 13, fontWeight: data.contract ? 600 : 400, fontStyle: data.contract ? 'normal' : 'italic',
+                    color: data.contract === 'חתום' ? 'var(--green)' : data.contract === 'ממתין' ? '#f59e0b' : data.contract === 'אין' ? 'var(--text-secondary)' : 'var(--text-muted)' }}>
                     {data.contract === 'חתום' ? '✓ חתום' : data.contract === 'ממתין' ? '⏳ ממתין לחתימה' : data.contract === 'אין' ? 'ללא חוזה' : 'לא הוזן'}
                   </p>
                 )}
@@ -2096,18 +2133,18 @@ const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onTogg
             </div>
 
             {/* Notes */}
-            <div className="mt-4 pt-4 border-t border-gray-50">
-              <p className="text-xs text-gray-400 mb-1">📝 הערות</p>
+            <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, fontWeight: 600 }}>📝 הערות</p>
               {editMode ? (
                 <textarea
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none"
+                  style={{ width: '100%', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 10px', fontSize: 13, color: 'var(--text-primary)', outline: 'none', resize: 'none', boxSizing: 'border-box' }}
                   rows={3}
                   value={editForm.notes}
                   onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))}
                   placeholder="הוסף הערות על הלקוח..."
                 />
               ) : (
-                <p className={`text-sm ${data.notes ? 'text-gray-500' : 'text-gray-300 italic'}`}>{data.notes || "אין הערות"}</p>
+                <p style={{ fontSize: 13, color: data.notes ? 'var(--text-secondary)' : 'var(--text-muted)', fontStyle: data.notes ? 'normal' : 'italic' }}>{data.notes || "אין הערות"}</p>
               )}
             </div>
           </>

@@ -87,14 +87,14 @@ const getStatusStyle = (status) => {
 const DoneCheckbox = ({ done, onToggle }) => (
   <button
     onClick={onToggle}
-    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-      done
-        ? 'bg-green-500 border-green-500 text-white'
-        : 'border-gray-300 hover:border-green-400 bg-white'
-    }`}
+    style={{
+      width: 18, height: 18, borderRadius: '50%', border: `1.5px solid ${done ? 'var(--green)' : 'var(--border-strong)'}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+      background: done ? 'var(--green)' : 'transparent', cursor: 'pointer', transition: 'all 0.12s',
+    }}
   >
     {done && (
-      <svg viewBox="0 0 10 8" className="w-3 h-3 fill-none stroke-current stroke-2">
+      <svg viewBox="0 0 10 8" style={{ width: 10, height: 10, fill: 'none', stroke: '#fff', strokeWidth: 2 }}>
         <polyline points="1,4 4,7 9,1" />
       </svg>
     )}
@@ -102,80 +102,88 @@ const DoneCheckbox = ({ done, onToggle }) => (
 );
 
 // ─── Task Row ────────────────────────────────────────────────────────────────
-const ClientBadge = ({ name, onClick, done }) => {
-  const colors = ['bg-blue-100 text-blue-700','bg-violet-100 text-violet-700','bg-emerald-100 text-emerald-700','bg-amber-100 text-amber-700','bg-rose-100 text-rose-700','bg-cyan-100 text-cyan-700'];
-  const idx = name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % colors.length;
-  return (
-    <button onClick={onClick} className={`px-2.5 py-1 rounded-full text-xs font-semibold tracking-tight transition-opacity hover:opacity-75 ${colors[idx]} ${done ? 'opacity-40' : ''}`}>
-      {name}
-    </button>
-  );
-};
+const ClientBadge = ({ name, onClick, done }) => (
+  <button
+    onClick={onClick}
+    style={{
+      padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600,
+      background: 'var(--accent-dim)', color: 'var(--accent)',
+      border: 'none', cursor: 'pointer', opacity: done ? 0.5 : 1,
+      transition: 'opacity 0.1s',
+    }}
+  >
+    {name}
+  </button>
+);
 
 const URGENCY_BORDER = { 'גבוהה': '#ef4444', 'בינונית': '#f97316', 'נמוכה': '#6366f1' };
 
 const TaskRow = ({ task, onToggleDone, onClientClick, onTaskClick, showClient = true }) => (
-  <tr className={`border-b border-slate-50 transition-all duration-150 group ${
-    task.done ? 'opacity-40' : task.date < TODAY ? 'bg-red-50/60 hover:bg-red-50' : 'hover:bg-slate-50/80'
-  }`} style={{ borderRight: `3px solid ${task.done ? '#e2e8f0' : (URGENCY_BORDER[task.urgency] || '#6366f1')}` }}>
-    <td className="pl-5 pr-3 py-3.5">
+  <tr style={{
+    borderBottom: '1px solid var(--border)',
+    opacity: task.done ? 0.4 : 1,
+    borderRight: `3px solid ${task.done ? 'var(--border)' : (URGENCY_BORDER[task.urgency] || 'var(--accent)')}`,
+    transition: 'background 0.1s',
+  }}
+    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+    className="group"
+  >
+    <td className="pl-5 pr-3 py-3">
       <DoneCheckbox done={task.done} onToggle={() => onToggleDone(task.id)} />
     </td>
     {showClient && (
-      <td className="px-3 py-3.5">
+      <td className="px-3 py-3">
         <ClientBadge name={task.client} onClick={() => onClientClick(task.client)} done={task.done} />
       </td>
     )}
-    <td className="px-3 py-3.5 cursor-pointer" onClick={() => onTaskClick && onTaskClick(task)}>
+    <td className="px-3 py-3 cursor-pointer" onClick={() => onTaskClick && onTaskClick(task)}>
       <div className="flex items-center gap-2">
-        <span className={`text-sm text-slate-700 leading-snug ${task.done ? 'line-through text-slate-300' : ''}`}>
+        <span style={{ fontSize: 13, color: task.done ? 'var(--text-muted)' : 'var(--text-primary)', textDecoration: task.done ? 'line-through' : 'none', lineHeight: 1.4 }}>
           {task.task}
         </span>
-        {task.notes && <span className="text-slate-300 text-xs flex-shrink-0">📝</span>}
+        {task.notes && <span style={{ fontSize: 11, color: 'var(--text-muted)', flexShrink: 0 }}>📝</span>}
         {task.link && !task.done && (
-          <a href={task.link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-xs flex-shrink-0 text-blue-400 hover:text-blue-600" title="פתח קישור">🔗</a>
+          <a href={task.link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 11, flexShrink: 0, color: 'var(--blue)' }} title="פתח קישור">🔗</a>
         )}
         {task.recurrence && task.recurrence !== 'none' && !task.done && (
-          <span className="text-xs flex-shrink-0 text-indigo-400" title={`חוזרת: ${RECURRENCE_LABELS[task.recurrence] || 'ימים קבועים'}`}>🔁</span>
+          <span style={{ fontSize: 11, flexShrink: 0, color: 'var(--accent)' }} title={`חוזרת: ${RECURRENCE_LABELS[task.recurrence] || 'ימים קבועים'}`}>🔁</span>
         )}
         {task.follow_up_date && !task.done && (
-          <span className={`text-xs flex-shrink-0 ${task.follow_up_date === TODAY ? 'text-amber-500 pulse-soft' : task.follow_up_date < TODAY ? 'text-red-400' : 'text-slate-300'}`} title={`פולו-אפ: ${task.follow_up_date}`}>🔔</span>
+          <span style={{ fontSize: 11, flexShrink: 0, color: task.follow_up_date <= TODAY ? '#f59e0b' : 'var(--text-muted)' }} title={`פולו-אפ: ${task.follow_up_date}`}>🔔</span>
         )}
-        <span className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 text-xs flex-shrink-0">✏</span>
       </div>
     </td>
-    <td className="px-3 py-3.5">
-      <span className="text-xs text-slate-400">{PLATFORM_ICONS[task.platform]} {task.platform}</span>
+    <td className="px-3 py-3">
+      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{PLATFORM_ICONS[task.platform]} {task.platform}</span>
     </td>
-    <td className="px-3 py-3.5">
+    <td className="px-3 py-3">
       {!task.done && (
-        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getUrgencyColor(task.urgency)}`}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: task.urgency === 'גבוהה' ? 'var(--red)' : task.urgency === 'בינונית' ? 'var(--text-secondary)' : 'var(--text-muted)' }}>
           {task.urgency}
         </span>
       )}
     </td>
-    <td className="px-3 py-3.5">
+    <td className="px-3 py-3">
       {!task.done && (
         task.status === 'בביצוע' ? (
-          <span className="flex items-center gap-1.5 text-xs font-medium text-blue-600">
-            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>בביצוע
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: '#60a5fa' }}>
+            <span style={{ width: 6, height: 6, background: '#3b82f6', borderRadius: '50%' }} className="animate-pulse" />בביצוע
           </span>
         ) : task.status === 'בתיקונים' ? (
-          <span className="flex items-center gap-1.5 text-xs font-medium text-red-500">
-            <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse"></span>בתיקונים
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: '#f87171' }}>
+            <span style={{ width: 6, height: 6, background: '#dc2626', borderRadius: '50%' }} className="animate-pulse" />בתיקונים
           </span>
         ) : task.status === 'ממתין לחומרים' ? (
-          <span className="flex items-center gap-1.5 text-xs font-medium text-purple-500">
-            <span className="w-1.5 h-1.5 bg-purple-400 rounded-full"></span>ממתין לחומרים
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: '#c084fc' }}>
+            <span style={{ width: 6, height: 6, background: '#9333ea', borderRadius: '50%' }} />ממתין לחומרים
           </span>
         ) : (
-          <span className={`text-xs font-medium ${getStatusStyle(task.status)}`}>{task.status}</span>
+          <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-secondary)' }}>{task.status}</span>
         )
       )}
     </td>
-    <td className={`px-3 py-3.5 text-xs font-mono ${
-      task.done ? 'text-slate-300 line-through' : task.date < TODAY ? 'text-red-500 font-bold' : 'text-slate-400'
-    }`}>
+    <td style={{ padding: '0 12px', fontSize: 11, fontFamily: 'Inter, monospace', color: task.done ? 'var(--text-muted)' : task.date < TODAY ? 'var(--red)' : 'var(--text-secondary)', textDecoration: task.done ? 'line-through' : 'none', fontWeight: task.date < TODAY && !task.done ? 600 : 400 }}>
       {task.date}
     </td>
   </tr>
@@ -944,43 +952,38 @@ const BottomNav = ({ screen, setScreen, user, onSignOut, onOpenAdmin }) => {
   return (
     <nav dir="rtl" style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
-      background: 'linear-gradient(180deg, #0f0d2a 0%, #0c1122 100%)',
-      borderTop: '1px solid rgba(255,255,255,0.06)',
-      display: 'flex', alignItems: 'center',
-      padding: '0 8px',
-      height: 64,
+      background: 'var(--bg-surface)',
+      borderTop: '1px solid var(--border)',
+      display: 'flex', alignItems: 'stretch',
+      height: 56,
       paddingBottom: 'env(safe-area-inset-bottom)',
-      boxShadow: '0 -8px 32px rgba(0,0,0,0.25)',
     }}>
       {NAV_ITEMS.map(item => {
         const active = screen === item.id;
-        const colors = NAV_COLORS[item.id] || NAV_COLORS.home;
         return (
           <button
             key={item.id}
             onClick={() => setScreen(item.id)}
             style={{
               flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-              gap: 4, padding: '8px 0', border: 'none',
-              background: active ? `linear-gradient(135deg,${colors.from}22,${colors.to}18)` : 'transparent',
-              borderRadius: 12, margin: '0 2px',
-              cursor: 'pointer', transition: 'all 0.18s',
-              color: active ? colors.from : 'rgba(255,255,255,0.35)',
+              justifyContent: 'center', gap: 3, padding: '8px 0', border: 'none',
+              background: 'transparent', cursor: 'pointer', transition: 'color 0.12s',
+              color: active ? 'var(--accent)' : 'var(--text-muted)',
             }}
           >
-            <span style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', filter: active ? `drop-shadow(0 0 6px ${colors.from})` : 'none' }}>{item.icon}</span>
-            <span style={{ fontSize: 10, fontWeight: active ? 700 : 400, letterSpacing: '0.01em' }}>{item.label}</span>
+            <span style={{ width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</span>
+            <span style={{ fontSize: 10, fontWeight: active ? 600 : 400, letterSpacing: '0.02em' }}>{item.label}</span>
           </button>
         );
       })}
-      {/* Admin + sign-out for mobile */}
       {isAdmin && (
         <button
           onClick={onOpenAdmin}
           style={{
             flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-            gap: 3, padding: '6px 0', border: 'none', background: 'transparent',
-            cursor: 'pointer', color: '#94a3b8',
+            justifyContent: 'center', gap: 3, padding: '8px 0', border: 'none',
+            background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)',
+            transition: 'color 0.12s',
           }}
         >
           <svg viewBox="0 0 20 20" fill="currentColor" style={{ width: 20, height: 20 }}>
@@ -993,11 +996,14 @@ const BottomNav = ({ screen, setScreen, user, onSignOut, onOpenAdmin }) => {
         onClick={onSignOut}
         style={{
           flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-          gap: 3, padding: '6px 0', border: 'none', background: 'transparent',
-          cursor: 'pointer', color: '#94a3b8',
+          justifyContent: 'center', gap: 3, padding: '8px 0', border: 'none',
+          background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)',
+          transition: 'color 0.12s',
         }}
       >
-        <span style={{ fontSize: 20, lineHeight: 1 }}>↩</span>
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 20, height: 20 }}>
+          <path d="M13 3h4a1 1 0 011 1v12a1 1 0 01-1 1h-4M9 14l-4-4 4-4M5 10h9" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
         <span style={{ fontSize: 10 }}>יציאה</span>
       </button>
     </nav>
@@ -1013,24 +1019,24 @@ const MobileHeader = ({ screen, user }) => {
   return (
     <header dir="rtl" style={{
       position: 'sticky', top: 0, zIndex: 90,
-      background: 'linear-gradient(180deg, #0c1122 0%, #0f0d2a 100%)',
-      borderBottom: '1px solid rgba(255,255,255,0.06)',
+      background: 'var(--bg-surface)',
+      borderBottom: '1px solid var(--border)',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '0 16px', height: 56,
-      boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+      padding: '0 16px', height: 52,
     }}>
       {/* LUMA logo */}
-      <span style={{ fontFamily: "'Helvetica Neue',Helvetica,Arial,sans-serif", fontWeight: 900, fontSize: 20, letterSpacing: '-0.02em', color: '#fff', lineHeight: 1, userSelect: 'none' }}>LUMA</span>
+      <span style={{ fontFamily: "'Helvetica Neue',Helvetica,Arial,sans-serif", fontWeight: 900, fontSize: 18, letterSpacing: '-0.03em', color: 'var(--text-primary)', lineHeight: 1, userSelect: 'none' }}>LUMA</span>
 
       {/* Page label */}
-      <span style={{ fontSize: 13, fontWeight: 700, color: colors.from }}>{SCREEN_LABELS[screen] || ''}</span>
+      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>{SCREEN_LABELS[screen] || ''}</span>
 
       {/* User avatar */}
       <div style={{
-        width: 32, height: 32, borderRadius: '50%',
-        background: `linear-gradient(135deg, ${colors.from}, ${colors.to})`,
+        width: 30, height: 30, borderRadius: '50%',
+        background: 'var(--accent-dim)',
+        border: '1px solid rgba(124,110,245,0.3)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: 'white', fontWeight: 700, fontSize: 13,
+        color: 'var(--accent)', fontWeight: 700, fontSize: 12,
       }}>
         {initials}
       </div>
@@ -1042,10 +1048,10 @@ const MobileHeader = ({ screen, user }) => {
 const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks, children }) => {
   const mobile = useMobile();
   return (
-    <div style={{ display: 'flex', flexDirection: 'row-reverse', height: '100vh', overflow: 'hidden', background: '#f5f6fa' }}>
+    <div style={{ display: 'flex', flexDirection: 'row-reverse', height: '100vh', overflow: 'hidden', background: 'var(--bg-base)' }}>
       <main dir="rtl" style={{
-        flex: 1, overflowY: 'auto', overflowX: 'hidden', background: '#f5f6fa',
-        paddingBottom: mobile ? 64 : 0,
+        flex: 1, overflowY: 'auto', overflowX: 'hidden', background: 'var(--bg-base)',
+        paddingBottom: mobile ? 56 : 0,
       }}>
         {mobile && <MobileHeader screen={screen} user={user} />}
         {children}
@@ -2672,15 +2678,14 @@ const TaskCard = ({ task, onToggleDone, onClientClick, onTaskClick }) => {
     <div
       onClick={() => onTaskClick && onTaskClick(task)}
       style={{
-        background: '#ffffff',
-        borderRadius: 16,
-        padding: '14px 16px',
-        border: '1px solid #eef0f6',
-        borderRight: `4px solid ${task.done ? '#e2e8f0' : uc.border}`,
-        boxShadow: isOverdue ? '0 2px 12px rgba(239,68,68,0.10)' : '0 2px 8px rgba(0,0,0,0.05)',
-        opacity: task.done ? 0.45 : 1,
+        background: 'var(--bg-surface)',
+        borderRadius: 12,
+        padding: '12px 14px',
+        border: '1px solid var(--border)',
+        borderRight: `3px solid ${task.done ? 'var(--border)' : uc.border}`,
+        opacity: task.done ? 0.4 : 1,
         cursor: 'pointer',
-        transition: 'box-shadow 0.15s',
+        transition: 'background 0.12s',
       }}
     >
       {/* Row 1: checkbox + title + urgency */}
@@ -2689,37 +2694,37 @@ const TaskCard = ({ task, onToggleDone, onClientClick, onTaskClick }) => {
           <DoneCheckbox done={task.done} onToggle={() => {}} />
         </div>
         <p style={{
-          flex: 1, fontSize: 15, fontWeight: 700, color: '#1e293b', margin: 0,
+          flex: 1, fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', margin: 0,
           textDecoration: task.done ? 'line-through' : 'none',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>{task.task}</p>
         {!task.done && (
           <span style={{
-            fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 99,
+            fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4,
             background: uc.badge, color: 'white', flexShrink: 0,
           }}>{uc.label}</span>
         )}
       </div>
 
       {/* Row 2: client + platform + date + status */}
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginTop: 8, paddingRight: 30 }}>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginTop: 8, paddingRight: 28 }}>
         <button
           onClick={e => { e.stopPropagation(); onClientClick(task.client); }}
-          style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, background: '#ede9fe', color: '#6d28d9', fontWeight: 700, border: 'none', cursor: 'pointer' }}
+          style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: 'var(--accent-dim)', color: 'var(--accent)', fontWeight: 600, border: 'none', cursor: 'pointer' }}
         >{task.client}</button>
-        <span style={{ fontSize: 11, color: '#94a3b8' }}>{PLATFORM_ICONS[task.platform]} {task.platform}</span>
+        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{PLATFORM_ICONS[task.platform]} {task.platform}</span>
         {task.date && (
-          <span style={{ fontSize: 11, fontWeight: 600, color: isOverdue ? '#ef4444' : '#94a3b8' }}>
+          <span style={{ fontSize: 11, fontWeight: 500, color: isOverdue ? 'var(--red)' : 'var(--text-muted)' }}>
             {isOverdue ? '⚠️' : '📅'} {task.date}
           </span>
         )}
         {!task.done && task.status !== 'לביצוע' && (
-          <span style={{ fontSize: 11, fontWeight: 600, color: STATUS_COLORS[task.status] || '#94a3b8' }}>
+          <span style={{ fontSize: 11, fontWeight: 500, color: STATUS_COLORS[task.status] || 'var(--text-muted)' }}>
             {task.status === 'בביצוע' ? '🔵' : '🟡'} {task.status}
           </span>
         )}
         {task.recurrence && task.recurrence !== 'none' && !task.done && (
-          <span style={{ fontSize: 11, color: '#6366f1' }}>🔁 חוזרת</span>
+          <span style={{ fontSize: 11, color: 'var(--accent)' }}>🔁 חוזרת</span>
         )}
         {hasFollowUp && <span style={{ fontSize: 11, color: '#f59e0b' }}>🔔 פולו-אפ</span>}
       </div>
@@ -3321,61 +3326,55 @@ const TaskManager = () => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ display: 'flex', gap: 6 }}>
               {overdue.length > 0 && (
-                <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 99, background: '#fee2e2', color: '#dc2626', fontWeight: 700 }}>⚠️ {overdue.length} באיחור</span>
+                <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 5, background: 'rgba(239,68,68,0.12)', color: 'var(--red)', fontWeight: 600 }}>⚠️ {overdue.length} באיחור</span>
               )}
-              <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 99, background: '#ede9fe', color: '#6d28d9', fontWeight: 700 }}>{activeTasks.length} פתוחות</span>
+              <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 5, background: 'var(--accent-dim)', color: 'var(--accent)', fontWeight: 600 }}>{activeTasks.length} פתוחות</span>
             </div>
             <button onClick={() => setShowTaskModal(true)} style={{
-              display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px',
-              background: 'linear-gradient(135deg,#6366f1,#a855f7)', color: 'white',
-              borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
-              boxShadow: '0 4px 14px rgba(99,102,241,0.4)',
+              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
+              background: 'var(--accent)', color: 'white',
+              borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
             }}>
-              <span style={{ fontSize: 18, lineHeight: 1 }}>+</span> משימה
+              <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> משימה
             </button>
           </div>
         ) : (
           /* Desktop: stats + buttons */
           <>
-            <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
-              <div />
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 text-sm">
-                  <span className="text-gray-400">משימות פתוחות</span>
-                  <span className="font-bold text-blue-600">{activeTasks.length}</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 text-sm">
-                  <span className="text-gray-400">דחיפות גבוהה</span>
-                  <span className="font-bold text-red-500">{activeTasks.filter(t => t.urgency === 'גבוהה').length}</span>
-                </div>
-                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 text-sm">
-                  <span className="text-gray-400">ממתין לאישור</span>
-                  <span className="font-bold text-orange-500">{pipeline.waiting}</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center gap-1.5 bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-lg text-xs text-blue-700">
-                  <span>📅</span><span><strong>{thisWeek.length}</strong> משימות השבוע</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 10 }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-elevated)', border: '1px solid var(--border)', padding: '5px 12px', borderRadius: 8, fontSize: 12 }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>פתוחות</span>
+                  <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{activeTasks.length}</span>
                 </div>
                 {overdue.length > 0 && (
-                  <div className="flex items-center gap-1.5 bg-red-50 border border-red-100 px-3 py-1.5 rounded-lg text-xs text-red-700">
-                    <span>⚠️</span><span><strong>{overdue.length}</strong> משימות פג תוקף</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', padding: '5px 12px', borderRadius: 8, fontSize: 12 }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>⚠️ באיחור</span>
+                    <span style={{ fontWeight: 700, color: 'var(--red)' }}>{overdue.length}</span>
                   </div>
                 )}
-                <div className="flex items-center gap-2 bg-white border border-gray-100 px-3 py-1.5 rounded-lg text-xs shadow-sm">
-                  <span className="text-blue-500">בביצוע <strong>{pipeline.doing}</strong></span>
-                  <span className="text-gray-300">|</span>
-                  <span className="text-orange-500">ממתין <strong>{pipeline.waiting}</strong></span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-elevated)', border: '1px solid var(--border)', padding: '5px 12px', borderRadius: 8, fontSize: 12 }}>
+                  <span style={{ color: 'var(--text-secondary)' }}>בביצוע</span>
+                  <span style={{ fontWeight: 700, color: '#60a5fa' }}>{pipeline.doing}</span>
+                  <span style={{ color: 'var(--border-strong)' }}>·</span>
+                  <span style={{ color: 'var(--text-secondary)' }}>ממתין</span>
+                  <span style={{ fontWeight: 700, color: '#fbbf24' }}>{pipeline.waiting}</span>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <button onClick={() => setShowClientModal(true)} className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-full text-sm font-medium shadow-sm hover:bg-gray-50 transition-colors">
-                  <span className="text-lg leading-none">+</span> לקוח חדש
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => setShowClientModal(true)} style={{
+                  display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px',
+                  background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+                  color: 'var(--text-secondary)', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                }}>
+                  <span style={{ fontSize: 15, lineHeight: 1 }}>+</span> לקוח חדש
                 </button>
-                <button onClick={() => setShowTaskModal(true)} className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium shadow-sm hover:bg-blue-700 transition-colors">
-                  <span className="text-lg leading-none">+</span> משימה חדשה
+                <button onClick={() => setShowTaskModal(true)} style={{
+                  display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px',
+                  background: 'var(--accent)', color: 'white',
+                  borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                }}>
+                  <span style={{ fontSize: 15, lineHeight: 1 }}>+</span> משימה חדשה
                 </button>
               </div>
             </div>
@@ -3384,16 +3383,15 @@ const TaskManager = () => {
       </header>
 
       {/* View toggle — table / kanban */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 12, background: '#f1f5f9', borderRadius: 12, padding: 4, width: 'fit-content' }}>
+      <div style={{ display: 'flex', gap: 2, marginBottom: 12, background: 'var(--bg-elevated)', borderRadius: 8, padding: 3, width: 'fit-content' }}>
         {[['table', '📋 טבלה'], ['kanban', '🗂 קאנבן']].map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTaskView(key)}
             style={{
-              padding: '6px 16px', borderRadius: 9, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', transition: 'all 0.15s',
-              background: taskView === key ? '#ffffff' : 'transparent',
-              color: taskView === key ? '#4f46e5' : '#64748b',
-              boxShadow: taskView === key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+              padding: '5px 14px', borderRadius: 6, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.12s',
+              background: taskView === key ? 'var(--bg-active)' : 'transparent',
+              color: taskView === key ? 'var(--text-primary)' : 'var(--text-muted)',
             }}
           >
             {label}
@@ -3402,16 +3400,16 @@ const TaskManager = () => {
       </div>
 
       {/* Filters — לקוח */}
-      <div className="flex gap-2 mb-3 overflow-x-auto pb-1 flex-wrap">
+      <div className="flex gap-2 mb-3 overflow-x-auto pb-1" style={{ flexWrap: 'nowrap' }}>
         {['כל הלקוחות', ...clients].map(client => (
           <button
             key={client}
             onClick={() => setActiveFilter(client)}
             style={{
-              padding: '5px 14px', borderRadius: 99, fontSize: 12, fontWeight: 500, border: '1px solid', whiteSpace: 'nowrap', transition: 'all 0.15s', cursor: 'pointer',
-              background: activeFilter === client ? '#eef2ff' : '#ffffff',
-              borderColor: activeFilter === client ? '#c7d2fe' : '#e2e8f0',
-              color: activeFilter === client ? '#4f46e5' : '#64748b',
+              padding: '4px 12px', borderRadius: 6, fontSize: 12, fontWeight: 500, border: '1px solid', whiteSpace: 'nowrap', transition: 'all 0.12s', cursor: 'pointer', flexShrink: 0,
+              background: activeFilter === client ? 'var(--accent-dim)' : 'var(--bg-elevated)',
+              borderColor: activeFilter === client ? 'rgba(124,110,245,0.3)' : 'var(--border)',
+              color: activeFilter === client ? 'var(--accent)' : 'var(--text-secondary)',
             }}
           >
             {client}
@@ -3419,27 +3417,27 @@ const TaskManager = () => {
         ))}
       </div>
 
-      {/* Filters — סטטוס/דחיפות (טבלה בלבד — בקאנבן העמודות כבר מפרידות לפי סטטוס) */}
+      {/* Filters — סטטוס/דחיפות */}
       {taskView === 'table' && (
-        <div className="flex gap-2 mb-5 overflow-x-auto pb-1 flex-wrap">
+        <div className="flex gap-2 mb-5 overflow-x-auto pb-1" style={{ flexWrap: 'nowrap' }}>
           {[
             { label: 'הכל', filter: null },
-            { label: '⚡ דחוף ומיידי', filter: { type: 'urgency', value: 'גבוהה' } },
-            { label: '⏳ ממתין לאישור', filter: { type: 'status', value: 'ממתין לאישור' } },
+            { label: '⚡ דחוף', filter: { type: 'urgency', value: 'גבוהה' } },
+            { label: '⏳ ממתין', filter: { type: 'status', value: 'ממתין לאישור' } },
             { label: '🔵 בביצוע', filter: { type: 'status', value: 'בביצוע' } },
             { label: 'לביצוע', filter: { type: 'status', value: 'לביצוע' } },
             { label: '🔁 חוזרות', filter: { type: 'recurrence', value: true } },
-          ].map(({ label, filter, activeClass }) => {
+          ].map(({ label, filter }) => {
             const isActive = !filter ? !statusFilter : (statusFilter?.type === filter.type && statusFilter?.value === filter.value);
             return (
               <button
                 key={label}
                 onClick={() => setStatusFilter(filter)}
                 style={{
-                  padding: '5px 14px', borderRadius: 99, fontSize: 12, fontWeight: 500, border: '1px solid', whiteSpace: 'nowrap', transition: 'all 0.15s', cursor: 'pointer',
-                  background: isActive ? '#eef2ff' : '#ffffff',
-                  borderColor: isActive ? '#c7d2fe' : '#e2e8f0',
-                  color: isActive ? '#4f46e5' : '#64748b',
+                  padding: '4px 12px', borderRadius: 6, fontSize: 12, fontWeight: 500, border: '1px solid', whiteSpace: 'nowrap', transition: 'all 0.12s', cursor: 'pointer', flexShrink: 0,
+                  background: isActive ? 'var(--accent-dim)' : 'var(--bg-elevated)',
+                  borderColor: isActive ? 'rgba(124,110,245,0.3)' : 'var(--border)',
+                  color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
                 }}
               >
                 {label}
@@ -3470,7 +3468,7 @@ const TaskManager = () => {
           ))}
           {doneFiltered.length > 0 && (
             <>
-              <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', padding: '8px 4px 2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', padding: '8px 4px 2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 ✓ בוצעו ({doneFiltered.length})
               </p>
               {doneFiltered.map(task => (
@@ -3479,16 +3477,16 @@ const TaskManager = () => {
             </>
           )}
           {activeFiltered.length === 0 && doneFiltered.length === 0 && (
-            <p style={{ textAlign: 'center', color: '#cbd5e1', fontSize: 14, padding: '32px 0', fontStyle: 'italic' }}>אין משימות להצגה</p>
+            <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 14, padding: '32px 0' }}>אין משימות להצגה</p>
           )}
         </div>
       ) : (
-        <div className="rounded-2xl overflow-hidden" style={{ background: '#ffffff', border: '1px solid #e8eaf0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
           <table className="w-full text-right border-collapse">
             <thead>
-              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e8eaf0' }}>
+              <tr style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
                 {COL_HEADERS.map((h, i) => (
-                  <th key={i} className="px-3 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">{h}</th>
+                  <th key={i} className="px-3 py-3 text-right" style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -3500,8 +3498,8 @@ const TaskManager = () => {
               {doneFiltered.length > 0 && (
                 <>
                   <tr>
-                    <td colSpan={7} style={{ padding: '16px 20px 8px', borderTop: '1px solid #f1f5f9', background: '#fafbfc' }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    <td colSpan={7} style={{ padding: '12px 16px 6px', borderTop: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                         ✓ משימות שבוצעו ({doneFiltered.length})
                       </span>
                     </td>
@@ -3514,7 +3512,7 @@ const TaskManager = () => {
 
               {activeFiltered.length === 0 && doneFiltered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-10 text-center text-gray-400 text-sm">אין משימות להצגה</td>
+                  <td colSpan={7} style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>אין משימות להצגה</td>
                 </tr>
               )}
             </tbody>
@@ -3522,7 +3520,7 @@ const TaskManager = () => {
         </div>
       )}
 
-      <footer className="mt-6 text-center text-sm pb-6" style={{ color: '#cbd5e1' }}>
+      <footer className="mt-6 text-center text-sm pb-6" style={{ color: 'var(--text-muted)' }}>
         מעוצב לשימוש אישי כאיש שיווק דיגיטלי • 2026
       </footer>
 

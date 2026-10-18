@@ -42,9 +42,88 @@
       }
       .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.10); }
 
+      /* ── LUMA Dark Design Tokens ──────────────────────────── */
+      :root {
+        --bg-base:       #0d0d10;
+        --bg-surface:    #141418;
+        --bg-elevated:   #1a1a1f;
+        --bg-hover:      #202028;
+        --bg-active:     #26262f;
+        --border:        rgba(255,255,255,0.07);
+        --border-strong: rgba(255,255,255,0.12);
+        --text-primary:  #f0f0f2;
+        --text-secondary:#8b8b99;
+        --text-muted:    #555560;
+        --accent:        #7c6ef5;
+        --accent-dim:    rgba(124,110,245,0.15);
+        --red:   #ef4444;
+        --green: #22c55e;
+        --blue:  #3b82f6;
+      }
+
+      /* Global dark base */
+      body { margin: 0; background: var(--bg-base); color: var(--text-primary); }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar { width: 4px; height: 4px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+      /* Focus ring */
+      input:focus, textarea:focus, select:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(124,110,245,0.35);
+        border-color: var(--accent) !important;
+      }
+
+      /* ── Status badges ─────────────────────────────────────── */
+      .luma-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 3px 9px; border-radius: 5px;
+        font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+        white-space: nowrap;
+      }
+      .badge-todo     { background: rgba(74,74,86,0.3);    color: #8b8b99; }
+      .badge-doing    { background: rgba(37,99,235,0.15);  color: #60a5fa; }
+      .badge-waiting  { background: rgba(234,179,8,0.12);  color: #fbbf24; }
+      .badge-fix      { background: rgba(220,38,38,0.15);  color: #f87171; }
+      .badge-material { background: rgba(147,51,234,0.15); color: #c084fc; }
+      .badge-done     { background: rgba(22,163,74,0.12);  color: #4ade80; }
+
+      .status-dot {
+        width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+      }
+      .dot-todo     { background: #4a4a56; }
+      .dot-doing    { background: #3b82f6; }
+      .dot-waiting  { background: #f59e0b; }
+      .dot-fix      { background: #dc2626; animation: pulse-red 1.2s ease-in-out infinite; }
+      .dot-material { background: #9333ea; }
+      .dot-done     { background: #22c55e; }
+
+      /* ── Priority chips ────────────────────────────────────── */
+      .luma-priority {
+        font-size: 11px; font-weight: 600;
+      }
+      .priority-high   { color: #f87171; }
+      .priority-medium { color: var(--text-secondary); }
+      .priority-low    { color: var(--text-muted); }
+
+      /* ── Client tag ────────────────────────────────────────── */
+      .luma-client-tag {
+        font-size: 11px; font-weight: 500; color: var(--text-secondary);
+        background: var(--bg-elevated); border-radius: 4px;
+        padding: 2px 6px;
+      }
+
       /* Subtle animation for badges */
       @keyframes pulse-soft { 0%,100%{opacity:1} 50%{opacity:.7} }
       .pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+
+      @keyframes pulse-red {
+        0%,100% { opacity:1; box-shadow: 0 0 0 0 rgba(220,38,38,0.5); }
+        50%      { opacity:.7; box-shadow: 0 0 0 3px rgba(220,38,38,0); }
+      }
 
       /* Modal sheet — dvh keeps the footer visible above the mobile keyboard */
       .modal-sheet { max-height: 93vh; }

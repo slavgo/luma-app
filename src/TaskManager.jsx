@@ -2929,6 +2929,24 @@ const TaskManager = () => {
     Promise.all([loadTasks(), loadClients(), loadCalItems(), loadTemplates()]).finally(() => setDbLoading(false));
   }, [user]);
 
+  // ── Realtime sync ──
+  useEffect(() => {
+    if (!user || !supabase) return;
+    const channel = supabase
+      .channel('tasks-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tasks' }, ({ new: newRow }) => {
+        setTasks(prev => prev.some(t => t.id === newRow.id) ? prev : [...prev, newRow]);
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks' }, ({ new: newRow }) => {
+        setTasks(prev => prev.map(t => t.id === newRow.id ? newRow : t));
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'tasks' }, ({ old: oldRow }) => {
+        setTasks(prev => prev.filter(t => t.id !== oldRow.id));
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
   const loadTasks = async () => {
     const { data } = await supabase.from("tasks").select("*").order("created_at");
     if (data) {

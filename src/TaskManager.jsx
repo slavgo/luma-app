@@ -955,66 +955,135 @@ const useMobile = () => {
 };
 
 // ── Bottom Navigation (mobile) ───────────────────────────────────────────────
-const BottomNav = ({ screen, setScreen, user, onSignOut, onOpenAdmin }) => {
+const BottomNav = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => {
   const isAdmin = user?.role === "admin" || user?.provider === "google";
+  const activeTasks = (tasks || []).filter(t => !t.done);
+  const overdueCount = activeTasks.filter(t => t.date && t.date < TODAY).length;
+  const NAV_BADGES = { tasks: overdueCount > 0 ? overdueCount : null };
+
   return (
     <nav dir="rtl" style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
-      background: 'var(--bg-surface)',
+      background: 'rgba(20,20,24,0.85)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
       borderTop: '1px solid var(--border)',
       display: 'flex', alignItems: 'stretch',
-      height: 56,
+      height: 60,
       paddingBottom: 'env(safe-area-inset-bottom)',
     }}>
       {NAV_ITEMS.map(item => {
         const active = screen === item.id;
+        const colors = NAV_COLORS[item.id] || NAV_COLORS.home;
+        const badge = NAV_BADGES[item.id];
         return (
           <button
             key={item.id}
             onClick={() => setScreen(item.id)}
             style={{
               flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-              justifyContent: 'center', gap: 3, padding: '8px 0', border: 'none',
-              background: 'transparent', cursor: 'pointer', transition: 'color 0.12s',
-              color: active ? 'var(--accent)' : 'var(--text-muted)',
+              justifyContent: 'center', gap: 4, padding: '6px 0', border: 'none',
+              background: 'transparent', cursor: 'pointer',
+              transition: 'color 0.15s',
+              color: active ? colors.from : 'var(--text-muted)',
+              position: 'relative',
             }}
           >
-            <span style={{ width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</span>
-            <span style={{ fontSize: 10, fontWeight: active ? 600 : 400, letterSpacing: '0.02em' }}>{item.label}</span>
+            {/* Active pill background */}
+            {active && (
+              <span style={{
+                position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)',
+                width: 40, height: 28, borderRadius: 10,
+                background: `linear-gradient(135deg, ${colors.from}22, ${colors.to}18)`,
+                boxShadow: `0 0 12px ${colors.glow}`,
+              }} />
+            )}
+            {/* Icon + badge */}
+            <span style={{ position: 'relative', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}>
+              {item.icon}
+              {badge && (
+                <span style={{
+                  position: 'absolute', top: -5, left: -5,
+                  fontSize: 9, fontWeight: 700, minWidth: 16, height: 16, borderRadius: 99,
+                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                  color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '0 3px', boxShadow: '0 2px 6px rgba(239,68,68,0.4)',
+                }}>
+                  {badge}
+                </span>
+              )}
+            </span>
+            <span style={{ fontSize: 10, fontWeight: active ? 700 : 400, letterSpacing: '0.02em', zIndex: 1 }}>{item.label}</span>
           </button>
         );
       })}
-      {isAdmin && (
-        <button
-          onClick={onOpenAdmin}
-          style={{
-            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-            justifyContent: 'center', gap: 3, padding: '8px 0', border: 'none',
-            background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)',
-            transition: 'color 0.12s',
-          }}
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" style={{ width: 20, height: 20 }}>
-            <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/>
-          </svg>
-          <span style={{ fontSize: 10 }}>ניהול</span>
-        </button>
-      )}
+      {/* More menu — admin + sign out collapsed into one button */}
+      <BottomNavMore isAdmin={isAdmin} onOpenAdmin={onOpenAdmin} onSignOut={onSignOut} />
+    </nav>
+  );
+};
+
+const BottomNavMore = ({ isAdmin, onOpenAdmin, onSignOut }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <button
-        onClick={onSignOut}
+        onClick={() => setOpen(o => !o)}
         style={{
-          flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-          justifyContent: 'center', gap: 3, padding: '8px 0', border: 'none',
-          background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)',
-          transition: 'color 0.12s',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+          padding: '6px 0', border: 'none', background: 'transparent', cursor: 'pointer',
+          color: open ? 'var(--accent)' : 'var(--text-muted)', width: '100%',
+          transition: 'color 0.15s',
         }}
       >
-        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 20, height: 20 }}>
-          <path d="M13 3h4a1 1 0 011 1v12a1 1 0 01-1 1h-4M9 14l-4-4 4-4M5 10h9" strokeLinecap="round" strokeLinejoin="round"/>
+        <svg viewBox="0 0 20 20" fill="currentColor" style={{ width: 20, height: 20 }}>
+          <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zm6 0a2 2 0 11-4 0 2 2 0 014 0zm6 0a2 2 0 11-4 0 2 2 0 014 0z"/>
         </svg>
-        <span style={{ fontSize: 10 }}>יציאה</span>
+        <span style={{ fontSize: 10, fontWeight: 400 }}>עוד</span>
       </button>
-    </nav>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <div style={{ position: 'fixed', inset: 0, zIndex: 98 }} onClick={() => setOpen(false)} />
+          {/* Popup */}
+          <div style={{
+            position: 'absolute', bottom: 68, left: '50%', transform: 'translateX(-50%)',
+            background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+            borderRadius: 14, padding: 8, minWidth: 140, zIndex: 99,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+          }} dir="rtl">
+            {isAdmin && (
+              <button
+                onClick={() => { onOpenAdmin(); setOpen(false); }}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 14px', borderRadius: 10, border: 'none', background: 'transparent',
+                  cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500,
+                }}
+              >
+                <svg viewBox="0 0 20 20" fill="currentColor" style={{ width: 16, height: 16, flexShrink: 0 }}>
+                  <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd"/>
+                </svg>
+                ניהול מערכת
+              </button>
+            )}
+            <button
+              onClick={() => { onSignOut(); setOpen(false); }}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 14px', borderRadius: 10, border: 'none', background: 'transparent',
+                cursor: 'pointer', color: 'var(--red)', fontSize: 13, fontWeight: 500,
+              }}
+            >
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 16, height: 16, flexShrink: 0 }}>
+                <path d="M13 3h4a1 1 0 011 1v12a1 1 0 01-1 1h-4M9 14l-4-4 4-4M5 10h9" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              יציאה
+            </button>
+          </div>
+        </>
+      )}
+    </div>
   );
 };
 
@@ -1065,7 +1134,7 @@ const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks, childr
         {children}
       </main>
       {mobile
-        ? <BottomNav screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} />
+        ? <BottomNav screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} tasks={tasks} />
         : <Sidebar screen={screen} setScreen={setScreen} user={user} onSignOut={onSignOut} onOpenAdmin={onOpenAdmin} tasks={tasks} />
       }
     </div>

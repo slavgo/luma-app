@@ -780,13 +780,15 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
       style={{
         width: 220,
         minWidth: 220,
-        background: 'linear-gradient(180deg, #0c1122 0%, #0f0d2a 60%, #130d24 100%)',
+        background: 'rgba(13,13,16,0.72)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
         display: 'flex',
         flexDirection: 'column',
         height: '100vh',
         position: 'sticky',
         top: 0,
-        borderLeft: '1px solid rgba(255,255,255,0.05)',
+        borderLeft: '1px solid rgba(255,255,255,0.07)',
         paddingBottom: 16,
         zIndex: 10,
       }}

@@ -65,21 +65,21 @@ const PLATFORM_ICONS = {
   "כללי": "📋",
 };
 
-const getUrgencyColor = (urgency) => {
+const getUrgencyStyle = (urgency) => {
   switch (urgency) {
-    case 'גבוהה': return 'bg-red-100 text-red-700 border-red-200';
-    case 'בינונית': return 'bg-orange-100 text-orange-700 border-orange-200';
-    default: return 'bg-blue-100 text-blue-700 border-blue-200';
+    case 'גבוהה': return { background: 'rgba(239,68,68,0.1)', color: 'var(--red)', border: '1px solid rgba(239,68,68,0.25)' };
+    case 'בינונית': return { background: 'rgba(245,158,11,0.1)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)' };
+    default: return { background: 'rgba(59,130,246,0.1)', color: 'var(--blue)', border: '1px solid rgba(59,130,246,0.25)' };
   }
 };
 
-const getStatusStyle = (status) => {
+const getStatusColor = (status) => {
   switch (status) {
-    case 'בביצוע': return 'text-blue-600';
-    case 'ממתין לאישור': return 'text-orange-500';
-    case 'בתיקונים': return 'text-red-500';
-    case 'ממתין לחומרים': return 'text-purple-500';
-    default: return 'text-gray-500';
+    case 'בביצוע': return 'var(--blue)';
+    case 'ממתין לאישור': return '#f59e0b';
+    case 'בתיקונים': return 'var(--red)';
+    case 'ממתין לחומרים': return '#a855f7';
+    default: return 'var(--text-muted)';
   }
 };
 
@@ -2249,37 +2249,37 @@ const SetNewPasswordScreen = ({ onDone }) => {
     setTimeout(onDone, 1500);
   };
 
+  const authInput = { width: '100%', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 12, padding: '10px 14px', fontSize: 13, color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box' };
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" dir="rtl"
-      style={{ background: "radial-gradient(ellipse at 70% 20%, rgba(139,92,246,0.12) 0%, transparent 60%), #f8fafc" }}>
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-8">
-        <h2 className="text-xl font-bold text-slate-800 mb-1">סיסמה חדשה</h2>
-        <p className="text-sm text-slate-400 mb-6">בחר סיסמה חדשה לחשבון שלך</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'var(--bg-base)' }} dir="rtl">
+      <div style={{ width: '100%', maxWidth: 380, background: 'var(--bg-surface)', borderRadius: 20, border: '1px solid var(--border)', padding: 32 }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px' }}>סיסמה חדשה</h2>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 20px' }}>בחר סיסמה חדשה לחשבון שלך</p>
         {success ? (
-          <div className="text-center text-green-600 font-medium">✅ הסיסמה עודכנה! מתחבר...</div>
+          <div style={{ textAlign: 'center', color: 'var(--green)', fontWeight: 600 }}>✅ הסיסמה עודכנה! מתחבר...</div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <input
               type="password"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+              style={authInput}
               placeholder="סיסמה חדשה (לפחות 6 תווים)"
               value={password}
               onChange={e => setPassword(e.target.value)}
             />
             <input
               type="password"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+              style={authInput}
               placeholder="אימות סיסמה"
               value={confirm}
               onChange={e => setConfirm(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSubmit()}
             />
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {error && <p style={{ color: 'var(--red)', fontSize: 12, margin: 0 }}>{error}</p>}
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full py-3 rounded-xl text-white font-semibold text-sm transition-all"
-              style={{ background: loading ? '#94a3b8' : 'linear-gradient(135deg,#6366f1,#a855f7)' }}
+              style={{ width: '100%', padding: '11px 0', borderRadius: 12, color: 'white', fontWeight: 700, fontSize: 13, border: 'none', cursor: loading ? 'default' : 'pointer', background: loading ? 'var(--text-muted)' : 'linear-gradient(135deg,#6366f1,#a855f7)' }}
             >
               {loading ? "⏳ שומר..." : "עדכן סיסמה"}
             </button>
@@ -2336,18 +2336,20 @@ const LoginScreen = ({ accessBlocked }) => {
 
   const switchMode = (m) => { setMode(m); setError(""); setSuccess(""); };
 
+  const authInput = { width: '100%', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 12, padding: '10px 14px', fontSize: 13, color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box' };
+
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
       dir="rtl"
       style={{
-        background: "radial-gradient(ellipse at 70% 20%, rgba(139,92,246,0.12) 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(34,211,238,0.10) 0%, transparent 55%), #f8fafc"
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+        background: 'radial-gradient(ellipse at 70% 20%, rgba(124,110,245,0.15) 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(34,211,238,0.08) 0%, transparent 55%), var(--bg-base)'
       }}
     >
-      <div className="w-full max-w-sm">
+      <div style={{ width: '100%', maxWidth: 380 }}>
 
         {/* Logo */}
-        <div className="flex flex-col items-center mb-8 gap-2">
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32, gap: 8 }}>
           <svg viewBox="0 0 160 54" xmlns="http://www.w3.org/2000/svg" style={{ height: 48, width: 'auto' }} aria-label="LUMA">
             <defs>
               <linearGradient id="loginAGrad" x1="100%" y1="0%" x2="0%" y2="100%">
@@ -2359,7 +2361,7 @@ const LoginScreen = ({ accessBlocked }) => {
                 <text x="116" y="48" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="54">A</text>
               </clipPath>
             </defs>
-            <text x="0" y="48" fontFamily="'Helvetica Neue',Helvetica,Arial,sans-serif" fontWeight="900" fontSize="54" letterSpacing="-1.5" fill="#0f172a">LUM</text>
+            <text x="0" y="48" fontFamily="'Helvetica Neue',Helvetica,Arial,sans-serif" fontWeight="900" fontSize="54" letterSpacing="-1.5" fill="var(--text-primary)">LUM</text>
             <text x="116" y="48" fontFamily="'Helvetica Neue',Helvetica,Arial,sans-serif" fontWeight="900" fontSize="54" letterSpacing="-1.5" fill="url(#loginAGrad)">A</text>
             <g clipPath="url(#loginAClip)" opacity="0.3">
               <line x1="116" y1="48" x2="160" y2="0"  stroke="white" strokeWidth="1.5"/>
@@ -2368,39 +2370,37 @@ const LoginScreen = ({ accessBlocked }) => {
               <line x1="145" y1="0"  x2="116" y2="36" stroke="white" strokeWidth="1"/>
             </g>
           </svg>
-          <p className="text-xs tracking-widest text-slate-400 uppercase font-medium">Make Digital Brighter</p>
+          <p style={{ fontSize: 10, letterSpacing: '0.15em', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 500, margin: 0 }}>Make Digital Brighter</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-7" style={{ boxShadow: '0 8px 40px rgba(99,102,241,0.10), 0 1px 3px rgba(0,0,0,0.06)' }}>
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 24, border: '1px solid var(--border)', padding: 28, boxShadow: '0 8px 40px rgba(0,0,0,0.3)' }}>
 
           {mode === "reset" ? (
             /* ── Reset password view ── */
             <>
-              <div className="text-center mb-5">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3"
-                  style={{ background: 'linear-gradient(135deg,#6366f120,#a855f720)' }}>🔑</div>
-                <h2 className="font-bold text-slate-800 text-base">איפוס סיסמה</h2>
-                <p className="text-xs text-slate-400 mt-1">נשלח אליך קישור לאיפוס במייל</p>
+              <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, margin: '0 auto 12px', background: 'var(--accent-dim)' }}>🔑</div>
+                <h2 style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 15, margin: '0 0 4px' }}>איפוס סיסמה</h2>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>נשלח אליך קישור לאיפוס במייל</p>
               </div>
-              <div className="flex flex-col gap-3">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <input
                   type="email"
-                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400 transition-all"
+                  style={authInput}
                   placeholder="your@email.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && handleEmailLogin()}
                   autoComplete="email"
                 />
-                {error && <div className="flex items-center gap-2 text-red-500 text-xs bg-red-50 border border-red-100 px-3 py-2 rounded-xl"><span>⚠</span><span>{error}</span></div>}
-                {success && <div className="flex items-center gap-2 text-green-600 text-xs bg-green-50 border border-green-100 px-3 py-2 rounded-xl"><span>✅</span><span>{success}</span></div>}
+                {error && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--red)', fontSize: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', padding: '8px 12px', borderRadius: 10 }}><span>⚠</span><span>{error}</span></div>}
+                {success && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--green)', fontSize: 12, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', padding: '8px 12px', borderRadius: 10 }}><span>✅</span><span>{success}</span></div>}
                 <button onClick={handleEmailLogin} disabled={loading}
-                  className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60"
-                  style={{ background: 'linear-gradient(135deg,#6366f1,#a855f7)', boxShadow: '0 4px 14px rgba(139,92,246,0.35)' }}>
+                  style={{ width: '100%', padding: '10px 0', borderRadius: 12, fontSize: 13, fontWeight: 700, color: 'white', border: 'none', cursor: loading ? 'default' : 'pointer', background: 'linear-gradient(135deg,#6366f1,#a855f7)', boxShadow: '0 4px 14px rgba(139,92,246,0.35)', opacity: loading ? 0.6 : 1 }}>
                   {loading ? "⏳ שולח..." : "שלח קישור לאיפוס"}
                 </button>
-                <button onClick={() => switchMode("login")} className="text-xs text-slate-400 hover:text-slate-600 text-center mt-1">
+                <button onClick={() => switchMode("login")} style={{ background: 'none', border: 'none', fontSize: 12, color: 'var(--text-muted)', cursor: 'pointer', textAlign: 'center', marginTop: 4 }}>
                   ← חזרה לכניסה
                 </button>
               </div>
@@ -2409,66 +2409,62 @@ const LoginScreen = ({ accessBlocked }) => {
             /* ── Login / Register view ── */
             <>
               {/* Mode toggle */}
-              <div className="flex bg-slate-50 rounded-2xl p-1 mb-6 border border-slate-100">
+              <div style={{ display: 'flex', background: 'var(--bg-elevated)', borderRadius: 16, padding: 4, marginBottom: 24, border: '1px solid var(--border)' }}>
                 <button onClick={() => switchMode("login")}
-                  className={`flex-1 py-2 text-sm font-semibold rounded-xl transition-all ${mode === "login" ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600"}`}
+                  style={{ flex: 1, padding: '8px 0', fontSize: 13, fontWeight: 600, borderRadius: 12, border: 'none', cursor: 'pointer', background: mode === "login" ? 'var(--bg-surface)' : 'transparent', color: mode === "login" ? 'var(--text-primary)' : 'var(--text-muted)', boxShadow: mode === "login" ? '0 1px 4px rgba(0,0,0,0.2)' : 'none' }}
                 >כניסה</button>
                 <button onClick={() => switchMode("register")}
-                  className={`flex-1 py-2 text-sm font-semibold rounded-xl transition-all ${mode === "register" ? "bg-white shadow-sm text-slate-800" : "text-slate-400 hover:text-slate-600"}`}
+                  style={{ flex: 1, padding: '8px 0', fontSize: 13, fontWeight: 600, borderRadius: 12, border: 'none', cursor: 'pointer', background: mode === "register" ? 'var(--bg-surface)' : 'transparent', color: mode === "register" ? 'var(--text-primary)' : 'var(--text-muted)', boxShadow: mode === "register" ? '0 1px 4px rgba(0,0,0,0.2)' : 'none' }}
                 >הרשמה</button>
               </div>
 
               {/* Google */}
               <button onClick={handleGoogle} disabled={loading}
-                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all text-sm font-medium text-slate-700 shadow-sm disabled:opacity-50 mb-4"
-                style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '10px 16px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg-elevated)', fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', cursor: 'pointer', marginBottom: 16, opacity: loading ? 0.5 : 1, boxSizing: 'border-box' }}>
                 <GoogleIcon />
                 {mode === "login" ? "כניסה עם Google" : "הרשמה עם Google"}
               </button>
 
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex-1 h-px bg-slate-100"></div>
-                <span className="text-xs text-slate-400 font-medium">או</span>
-                <div className="flex-1 h-px bg-slate-100"></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }}></div>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>או</span>
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }}></div>
               </div>
 
-              <div className="flex flex-col gap-3">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {mode === "register" && (
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 mb-1.5 block">שם מלא</label>
-                    <input className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400 transition-all"
+                    <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>שם מלא</label>
+                    <input style={authInput}
                       placeholder="Slav Gomelski" value={name} onChange={e => setName(e.target.value)} autoComplete="name" />
                   </div>
                 )}
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 mb-1.5 block">אימייל</label>
-                  <input type="email"
-                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400 transition-all"
+                  <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>אימייל</label>
+                  <input type="email" style={authInput}
                     placeholder="you@gmail.com" value={email} onChange={e => setEmail(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && handleEmailLogin()} autoComplete="email" />
                 </div>
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-slate-500">סיסמה</label>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>סיסמה</label>
                     {mode === "login" && (
                       <button onClick={() => switchMode("reset")}
-                        className="text-xs text-violet-500 hover:text-violet-700 font-medium transition-colors">
+                        style={{ background: 'none', border: 'none', fontSize: 11, color: 'var(--accent)', cursor: 'pointer', fontWeight: 500 }}>
                         שכחתי סיסמה
                       </button>
                     )}
                   </div>
-                  <input type="password"
-                    className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400 transition-all"
+                  <input type="password" style={authInput}
                     placeholder={mode === "register" ? "לפחות 6 תווים" : "••••••••"}
                     value={password} onChange={e => setPassword(e.target.value)}
                     onKeyDown={e => e.key === "Enter" && handleEmailLogin()}
                     autoComplete={mode === "register" ? "new-password" : "current-password"} />
                 </div>
-                {error && <div className="flex items-center gap-2 text-red-500 text-xs bg-red-50 border border-red-100 px-3 py-2 rounded-xl"><span>⚠</span><span>{error}</span></div>}
-                {success && <div className="flex items-center gap-2 text-green-600 text-xs bg-green-50 border border-green-100 px-3 py-2 rounded-xl"><span>✅</span><span>{success}</span></div>}
+                {error && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--red)', fontSize: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', padding: '8px 12px', borderRadius: 10 }}><span>⚠</span><span>{error}</span></div>}
+                {success && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--green)', fontSize: 12, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', padding: '8px 12px', borderRadius: 10 }}><span>✅</span><span>{success}</span></div>}
                 <button onClick={handleEmailLogin} disabled={loading}
-                  className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-60 mt-1"
-                  style={{ background: loading ? '#94a3b8' : 'linear-gradient(135deg,#6366f1,#a855f7)', boxShadow: loading ? 'none' : '0 4px 14px rgba(139,92,246,0.35)' }}>
+                  style={{ width: '100%', padding: '10px 0', borderRadius: 12, fontSize: 13, fontWeight: 700, color: 'white', border: 'none', cursor: loading ? 'default' : 'pointer', marginTop: 4, background: loading ? 'var(--text-muted)' : 'linear-gradient(135deg,#6366f1,#a855f7)', boxShadow: loading ? 'none' : '0 4px 14px rgba(139,92,246,0.35)', opacity: loading ? 0.6 : 1 }}>
                   {loading ? "⏳ מתחבר..." : mode === "login" ? "כניסה" : "יצירת חשבון"}
                 </button>
               </div>
@@ -2476,7 +2472,7 @@ const LoginScreen = ({ accessBlocked }) => {
           )}
         </div>
 
-        <p className="text-center text-xs text-slate-400 mt-5">LUMA © 2026 · Make Digital Brighter</p>
+        <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', marginTop: 20 }}>LUMA © 2026 · Make Digital Brighter</p>
       </div>
     </div>
   );
@@ -2484,9 +2480,9 @@ const LoginScreen = ({ accessBlocked }) => {
 
 // ─── Admin Panel ─────────────────────────────────────────────────────────────
 const ROLE_COLORS = {
-  admin:  "bg-violet-100 text-violet-700 border-violet-200",
-  user:   "bg-slate-100 text-slate-600 border-slate-200",
-  blocked:"bg-red-100 text-red-600 border-red-200",
+  admin:   { background: 'var(--accent-dim)', color: 'var(--accent)', border: '1px solid rgba(124,110,245,0.3)' },
+  user:    { background: 'var(--bg-active)', color: 'var(--text-secondary)', border: '1px solid var(--border)' },
+  blocked: { background: 'rgba(239,68,68,0.1)', color: 'var(--red)', border: '1px solid rgba(239,68,68,0.25)' },
 };
 const ROLE_LABELS = { admin: "אדמין", user: "משתמש", blocked: "חסום" };
 
@@ -2553,94 +2549,104 @@ const AdminPanel = ({ currentUser, onClose }) => {
   const formatDate = (iso) => iso ? new Date(iso).toLocaleDateString("he-IL", { day:"2-digit", month:"2-digit", year:"2-digit" }) : "—";
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center" dir="rtl">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden flex flex-col" style={{ maxHeight: "90vh" }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }} dir="rtl">
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)' }} onClick={onClose} />
+      <div style={{ position: 'relative', background: 'var(--bg-surface)', borderRadius: 20, border: '1px solid var(--border)', width: '100%', maxWidth: 640, margin: '0 16px', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-base"
-              style={{ background: "linear-gradient(135deg,#6366f1,#a855f7)" }}>⚙</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 15, background: 'var(--accent)', flexShrink: 0 }}>⚙</div>
             <div>
-              <h2 className="font-bold text-slate-800 text-base leading-tight">ניהול משתמשים</h2>
-              <p className="text-xs text-slate-400">LUMA Admin Panel · {users.length} משתמשים מורשים</p>
+              <h2 style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 15, margin: 0, lineHeight: 1.2 }}>ניהול משתמשים</h2>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>LUMA Admin Panel · {users.length} משתמשים מורשים</p>
             </div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors text-lg">✕</button>
+          <button onClick={onClose} style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', color: 'var(--text-muted)', fontSize: 18, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 px-6 pt-3 flex-shrink-0 border-b border-slate-100">
+        <div style={{ display: 'flex', gap: 4, padding: '12px 24px 0', flexShrink: 0, borderBottom: '1px solid var(--border)' }}>
           {[{ id:"users", label:`👥 משתמשים (${users.length})` }, { id:"invite", label:"➕ הוסף משתמש" }].map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`px-4 py-2 text-sm font-semibold rounded-t-xl border-b-2 transition-all ${tab===t.id ? "border-violet-500 text-violet-600" : "border-transparent text-slate-400 hover:text-slate-600"}`}>
+            <button key={t.id} onClick={() => setTab(t.id)} style={{
+              padding: '8px 16px', fontSize: 13, fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer', marginBottom: -1,
+              color: tab===t.id ? 'var(--accent)' : 'var(--text-muted)',
+              borderBottom: tab===t.id ? '2px solid var(--accent)' : '2px solid transparent',
+            }}>
               {t.label}
             </button>
           ))}
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-5">
+        <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
 
           {/* Users tab */}
           {tab === "users" && (
-            <div className="flex flex-col gap-2.5">
-              {loading && <div className="text-center text-slate-400 py-8 text-sm">⏳ טוען משתמשים...</div>}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {loading && <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '32px 0', fontSize: 13 }}>⏳ טוען משתמשים...</div>}
               {!loading && users.length === 0 && (
-                <div className="text-center text-slate-400 py-8">
-                  <p className="text-sm">אין משתמשים ברשימה.</p>
-                  <p className="text-xs mt-1">הוסף את עצמך דרך לשונית "הוסף משתמש"</p>
+                <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '32px 0' }}>
+                  <p style={{ fontSize: 13 }}>אין משתמשים ברשימה.</p>
+                  <p style={{ fontSize: 11, marginTop: 4 }}>הוסף את עצמך דרך לשונית "הוסף משתמש"</p>
                 </div>
               )}
               {users.map(u => (
-                <div key={u.id} className={`flex items-center gap-3 p-3.5 rounded-2xl border transition-all ${u.role==="blocked" ? "bg-red-50/50 border-red-100" : "bg-slate-50 border-slate-100 hover:border-slate-200"}`}>
+                <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 12, border: '1px solid', background: u.role==="blocked" ? 'rgba(239,68,68,0.07)' : 'var(--bg-elevated)', borderColor: u.role==="blocked" ? 'rgba(239,68,68,0.2)' : 'var(--border)' }}>
                   {/* Avatar */}
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                    style={{ background: u.role==="blocked" ? "#94a3b8" : "linear-gradient(135deg,#6366f1,#a855f7)" }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 13, flexShrink: 0, background: u.role==="blocked" ? 'var(--text-muted)' : 'var(--accent)' }}>
                     {(u.display_name || u.email).charAt(0).toUpperCase()}
                   </div>
                   {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-sm font-semibold ${u.role==="blocked" ? "text-slate-400 line-through" : "text-slate-800"}`}>{u.display_name || u.email.split("@")[0]}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${ROLE_COLORS[u.role]}`}>{ROLE_LABELS[u.role]}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: u.role==="blocked" ? 'var(--text-muted)' : 'var(--text-primary)', textDecoration: u.role==="blocked" ? 'line-through' : 'none' }}>{u.display_name || u.email.split("@")[0]}</span>
+                      <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 99, border: '1px solid', fontWeight: 700,
+                        background: u.role==="admin" ? 'var(--accent-dim)' : u.role==="blocked" ? 'rgba(239,68,68,0.1)' : 'var(--bg-active)',
+                        color: u.role==="admin" ? 'var(--accent)' : u.role==="blocked" ? 'var(--red)' : 'var(--text-secondary)',
+                        borderColor: u.role==="admin" ? 'var(--accent)' : u.role==="blocked" ? 'var(--red)' : 'var(--border)' }}>{ROLE_LABELS[u.role]}</span>
                     </div>
-                    <p className="text-xs text-slate-400 mt-0.5 truncate">{u.email}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-slate-300">הוזמן: {formatDate(u.invited_at)}</span>
-                      {u.last_seen && <><span className="text-slate-200">·</span><span className="text-xs text-slate-300">נראה: {formatDate(u.last_seen)}</span></>}
+                    <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                      <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>הוזמן: {formatDate(u.invited_at)}</span>
+                      {u.last_seen && <><span style={{ color: 'var(--border)' }}>·</span><span style={{ fontSize: 10, color: 'var(--text-muted)' }}>נראה: {formatDate(u.last_seen)}</span></>}
                     </div>
                   </div>
                   {/* Actions */}
                   {u.email !== currentUser?.email ? (
-                    <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                       {u.role !== "blocked" && (
                         <select value={u.role} onChange={e => changeRole(u.email, e.target.value)}
-                          className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-600 focus:outline-none cursor-pointer">
+                          style={{ fontSize: 11, border: '1px solid var(--border)', borderRadius: 8, padding: '5px 8px', background: 'var(--bg-surface)', color: 'var(--text-secondary)', outline: 'none', cursor: 'pointer' }}>
                           <option value="admin">אדמין</option>
                           <option value="user">משתמש</option>
                         </select>
                       )}
                       <button onClick={() => changeRole(u.email, u.role==="blocked" ? "user" : "blocked")}
-                        className={`text-xs px-2.5 py-1.5 rounded-lg font-medium border transition-colors ${u.role==="blocked" ? "bg-green-50 text-green-600 border-green-200 hover:bg-green-100" : "bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100"}`}>
+                        style={{ fontSize: 11, padding: '5px 10px', borderRadius: 8, fontWeight: 700, border: '1px solid', cursor: 'pointer',
+                          background: u.role==="blocked" ? 'rgba(34,197,94,0.1)' : 'rgba(245,158,11,0.1)',
+                          color: u.role==="blocked" ? 'var(--green)' : '#f59e0b',
+                          borderColor: u.role==="blocked" ? 'var(--green)' : '#f59e0b' }}>
                         {u.role==="blocked" ? "בטל חסימה" : "חסום"}
                       </button>
                       <button onClick={() => sendPasswordReset(u.email)} title="שלח מייל לאיפוס סיסמה"
-                        className={`text-xs px-2.5 py-1.5 rounded-lg font-medium border transition-colors ${resetMsg===u.email ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-blue-50 text-blue-500 border-blue-100 hover:bg-blue-100"}`}>
+                        style={{ fontSize: 11, padding: '5px 10px', borderRadius: 8, fontWeight: 700, border: '1px solid', cursor: 'pointer',
+                          background: resetMsg===u.email ? 'rgba(34,197,94,0.1)' : 'rgba(59,130,246,0.1)',
+                          color: resetMsg===u.email ? 'var(--green)' : 'var(--blue)',
+                          borderColor: resetMsg===u.email ? 'var(--green)' : 'var(--blue)' }}>
                         {resetMsg===u.email ? "✓ נשלח" : "🔑 איפוס"}
                       </button>
                       {confirmRemove === u.email ? (
-                        <div className="flex gap-1">
-                          <button onClick={() => removeUser(u.email)} className="text-xs px-2.5 py-1.5 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600">מחק ✓</button>
-                          <button onClick={() => setConfirmRemove(null)} className="text-xs px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-500">ביטול</button>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button onClick={() => removeUser(u.email)} style={{ fontSize: 11, padding: '5px 10px', borderRadius: 8, background: 'var(--red)', color: 'white', fontWeight: 700, border: 'none', cursor: 'pointer' }}>מחק ✓</button>
+                          <button onClick={() => setConfirmRemove(null)} style={{ fontSize: 11, padding: '5px 10px', borderRadius: 8, background: 'var(--bg-active)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}>ביטול</button>
                         </div>
                       ) : (
-                        <button onClick={() => setConfirmRemove(u.email)} className="text-xs px-2.5 py-1.5 rounded-lg bg-red-50 text-red-500 border border-red-100 hover:bg-red-100 font-medium">הסר</button>
+                        <button onClick={() => setConfirmRemove(u.email)} style={{ fontSize: 11, padding: '5px 10px', borderRadius: 8, background: 'rgba(239,68,68,0.1)', color: 'var(--red)', border: '1px solid var(--red)', cursor: 'pointer', fontWeight: 700 }}>הסר</button>
                       )}
                     </div>
                   ) : (
-                    <span className="text-xs text-slate-400 italic flex-shrink-0 bg-slate-100 px-2 py-1 rounded-lg">אתה</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)', fontStyle: 'italic', flexShrink: 0, background: 'var(--bg-elevated)', padding: '4px 8px', borderRadius: 8 }}>אתה</span>
                   )}
                 </div>
               ))}
@@ -2649,46 +2655,45 @@ const AdminPanel = ({ currentUser, onClose }) => {
 
           {/* Add user tab */}
           {tab === "invite" && (
-            <div className="max-w-md flex flex-col gap-4">
-              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-sm text-blue-700 leading-relaxed">
-                <p className="font-semibold mb-1">איך זה עובד?</p>
-                <p className="text-xs text-blue-600">הוסף אימייל לרשימה המורשית. המשתמש יוכל להירשם עם האימייל הזה ולהיכנס למערכת. אם תסיר אותו — הגישה שלו תיחסם אוטומטית.</p>
+            <div style={{ maxWidth: 440, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 12, padding: 16, fontSize: 13, color: 'var(--blue)' }}>
+                <p style={{ fontWeight: 700, marginBottom: 4 }}>איך זה עובד?</p>
+                <p style={{ fontSize: 11, opacity: 0.8 }}>הוסף אימייל לרשימה המורשית. המשתמש יוכל להירשם עם האימייל הזה ולהיכנס למערכת. אם תסיר אותו — הגישה שלו תיחסם אוטומטית.</p>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 mb-1.5 block">שם תצוגה</label>
-                  <input className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400"
-                    placeholder="שם מלא" value={inviteName} onChange={e => setInviteName(e.target.value)} />
+                  <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>שם תצוגה</label>
+                  <input style={fieldInput} placeholder="שם מלא" value={inviteName} onChange={e => setInviteName(e.target.value)} />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 mb-1.5 block">כתובת אימייל *</label>
-                  <input type="email"
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400/40 focus:border-violet-400"
-                    placeholder="user@email.com" value={inviteEmail}
-                    onChange={e => setInviteEmail(e.target.value)}
-                    onKeyDown={e => e.key==="Enter" && addToAllowlist()} />
+                  <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>כתובת אימייל *</label>
+                  <input type="email" style={fieldInput} placeholder="user@email.com" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} onKeyDown={e => e.key==="Enter" && addToAllowlist()} />
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-500 mb-1.5 block">תפקיד</label>
-                <div className="flex gap-2">
+                <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>תפקיד</label>
+                <div style={{ display: 'flex', gap: 8 }}>
                   {[{ v:"user", l:"משתמש", d:"גישה לנתונים שלו בלבד" }, { v:"admin", l:"אדמין", d:"גישה מלאה + ניהול" }].map(r => (
                     <button key={r.v} onClick={() => setInviteRole(r.v)}
-                      className={`flex-1 p-3 rounded-xl border-2 text-right transition-all ${inviteRole===r.v ? "border-violet-400 bg-violet-50" : "border-slate-100 bg-slate-50 hover:border-slate-200"}`}>
-                      <p className={`text-sm font-semibold ${inviteRole===r.v ? "text-violet-700" : "text-slate-700"}`}>{r.l}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">{r.d}</p>
+                      style={{ flex: 1, padding: 12, borderRadius: 12, border: '2px solid', textAlign: 'right', cursor: 'pointer',
+                        background: inviteRole===r.v ? 'var(--accent-dim)' : 'var(--bg-elevated)',
+                        borderColor: inviteRole===r.v ? 'var(--accent)' : 'var(--border)' }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: inviteRole===r.v ? 'var(--accent)' : 'var(--text-primary)', margin: 0 }}>{r.l}</p>
+                      <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{r.d}</p>
                     </button>
                   ))}
                 </div>
               </div>
               {inviteMsg && (
-                <div className={`flex items-center gap-2 text-sm px-4 py-3 rounded-xl border ${inviteMsg.startsWith("✓") ? "text-emerald-600 bg-emerald-50 border-emerald-200" : "text-orange-600 bg-orange-50 border-orange-200"}`}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, padding: '12px 16px', borderRadius: 12, border: '1px solid',
+                  background: inviteMsg.startsWith("✓") ? 'rgba(34,197,94,0.1)' : 'rgba(245,158,11,0.1)',
+                  color: inviteMsg.startsWith("✓") ? 'var(--green)' : '#f59e0b',
+                  borderColor: inviteMsg.startsWith("✓") ? 'var(--green)' : '#f59e0b' }}>
                   {inviteMsg}
                 </div>
               )}
               <button onClick={addToAllowlist} disabled={inviteLoading || !inviteEmail.includes("@")}
-                className="py-2.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
-                style={{ background:"linear-gradient(135deg,#6366f1,#a855f7)", boxShadow:"0 4px 14px rgba(139,92,246,0.3)" }}>
+                style={{ padding: '10px', borderRadius: 12, fontSize: 13, fontWeight: 700, color: 'white', border: 'none', cursor: 'pointer', background: 'var(--accent)', opacity: (inviteLoading || !inviteEmail.includes("@")) ? 0.5 : 1 }}>
                 {inviteLoading ? "⏳ מוסיף..." : "➕ הוסף לרשימה המורשית"}
               </button>
             </div>
@@ -3245,28 +3250,28 @@ const TaskManager = () => {
 
   // ── Manage templates modal ──
   const manageTemplatesModal = showManageTemplates && (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[200]" onClick={() => setShowManageTemplates(false)}>
-      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm" dir="rtl" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold text-gray-800">📋 תבניות משמורות</h2>
-          <button onClick={() => setShowManageTemplates(false)} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }} onClick={() => setShowManageTemplates(false)}>
+      <div style={{ background: 'var(--bg-surface)', borderRadius: 20, border: '1px solid var(--border)', padding: 24, width: '100%', maxWidth: 380, margin: '0 16px' }} dir="rtl" onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>📋 תבניות שמורות</h2>
+          <button onClick={() => setShowManageTemplates(false)} style={{ background: 'none', border: 'none', fontSize: 20, color: 'var(--text-muted)', cursor: 'pointer', lineHeight: 1 }}>×</button>
         </div>
         {templates.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-6 italic">אין תבניות שמורות</p>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '24px 0', fontStyle: 'italic', margin: 0 }}>אין תבניות שמורות</p>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {templates.map(t => (
-              <div key={t.id} className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-700 truncate">{t.name}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{PLATFORM_ICONS[t.platform]} {t.platform} · {t.urgency}</p>
+              <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 12, background: 'var(--bg-elevated)', borderRadius: 12, border: '1px solid var(--border)' }}>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</p>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, margin: '2px 0 0' }}>{PLATFORM_ICONS[t.platform]} {t.platform} · {t.urgency}</p>
                 </div>
-                <button onClick={() => deleteTemplate(t.id)} className="text-gray-300 hover:text-red-500 text-sm flex-shrink-0 transition-colors">🗑</button>
+                <button onClick={() => deleteTemplate(t.id)} style={{ background: 'none', border: 'none', fontSize: 14, color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0, padding: 4, borderRadius: 6 }}>🗑</button>
               </div>
             ))}
           </div>
         )}
-        <button onClick={() => setShowManageTemplates(false)} className="mt-4 w-full py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-xl">סגור</button>
+        <button onClick={() => setShowManageTemplates(false)} style={{ marginTop: 16, width: '100%', padding: '9px 0', fontSize: 13, color: 'var(--text-secondary)', background: 'none', border: '1px solid var(--border)', borderRadius: 12, cursor: 'pointer' }}>סגור</button>
       </div>
     </div>
   );

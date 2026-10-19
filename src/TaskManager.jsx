@@ -192,10 +192,11 @@ const TaskRow = ({ task, onToggleDone, onClientClick, onTaskClick, showClient = 
 // ─── Shared field wrapper (must be defined outside TaskDetailModal to avoid focus loss on re-render) ───
 const Field = ({ label, children }) => (
   <div>
-    <label className="text-xs text-gray-400 mb-1 block">{label}</label>
+    <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, display: 'block', fontWeight: 600 }}>{label}</label>
     {children}
   </div>
 );
+const fieldInput = { width: '100%', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 10px', fontSize: 13, color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box' };
 
 // ─── Task Detail Modal ───────────────────────────────────────────────────────
 const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onStopRecurring, onLinkToCalendar, onSaveTemplate, onFollowUp, isNew = false, templates = [], onApplyTemplate }) => {
@@ -230,18 +231,18 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onStopRecur
 
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-end sm:items-center justify-center z-[200] sm:p-4" onClick={onClose}>
-      <div className="modal-sheet bg-white rounded-t-3xl sm:rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col" dir="rtl" onClick={e => e.stopPropagation()}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 200, padding: '0 0 0 0' }} className="sm:items-center sm:p-4" onClick={onClose}>
+      <div className="modal-sheet" style={{ background: 'var(--bg-surface)', borderRadius: mobile ? '24px 24px 0 0' : 16, border: '1px solid var(--border)', width: '100%', maxWidth: 520, overflow: 'hidden', display: 'flex', flexDirection: 'column' }} dir="rtl" onClick={e => e.stopPropagation()}>
 
         {/* Header */}
-        <div className={`px-6 pt-5 pb-4 border-b border-gray-50 flex-shrink-0 ${isNew ? 'bg-indigo-50' : task.urgency === 'גבוהה' ? 'bg-red-50' : task.urgency === 'בינונית' ? 'bg-orange-50' : 'bg-blue-50'}`}>
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <p className="text-xs text-gray-400">{isNew ? '➕ משימה חדשה' : `${task.client} · ${PLATFORM_ICONS[task.platform]} ${task.platform}`}</p>
+        <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0, background: isNew ? 'var(--accent-dim)' : task.urgency === 'גבוהה' ? 'rgba(239,68,68,0.1)' : task.urgency === 'בינונית' ? 'rgba(245,158,11,0.1)' : 'var(--bg-elevated)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>{isNew ? '➕ משימה חדשה' : `${task.client} · ${PLATFORM_ICONS[task.platform]} ${task.platform}`}</p>
                 {isNew && templates.length > 0 && onApplyTemplate && (
                   <select
-                    className="text-xs border border-indigo-200 rounded-full px-2 py-0.5 bg-white text-indigo-600 focus:outline-none"
+                    style={{ fontSize: 11, border: '1px solid var(--border)', borderRadius: 99, padding: '2px 8px', background: 'var(--bg-elevated)', color: 'var(--accent)', outline: 'none', cursor: 'pointer' }}
                     defaultValue=""
                     onChange={e => { if (e.target.value) { onApplyTemplate(templates.find(t => String(t.id) === e.target.value)); e.target.value = ''; } }}
                   >
@@ -251,56 +252,56 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onStopRecur
                 )}
               </div>
               <input
-                className="text-lg font-bold text-gray-800 bg-transparent border-none outline-none w-full placeholder-gray-300"
+                style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', background: 'transparent', border: 'none', outline: 'none', width: '100%' }}
                 value={form.task}
                 onChange={e => setForm(f => ({...f, task: e.target.value}))}
                 placeholder="שם המשימה"
                 autoFocus={isNew && !mobile}
               />
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl flex-shrink-0 mt-1">×</button>
+            <button onClick={onClose} style={{ color: 'var(--text-muted)', fontSize: 22, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, marginTop: 2 }}>×</button>
           </div>
         </div>
 
         {/* Body — scrollable */}
-        <div className="px-6 py-5 flex flex-col gap-4 overflow-y-auto flex-1">
+        <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto', flex: 1 }}>
 
           {/* Row 1: client + platform */}
-          <div className="grid grid-cols-2 gap-3">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <Field label="לקוח">
-              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={form.client} onChange={e => setForm(f => ({...f, client: e.target.value}))}>
+              <select style={{ ...fieldInput, cursor: 'pointer' }} value={form.client} onChange={e => setForm(f => ({...f, client: e.target.value}))}>
                 <option value="">בחר לקוח</option>
                 {clients.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </Field>
             <Field label="פלטפורמה">
-              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={form.platform} onChange={e => setForm(f => ({...f, platform: e.target.value}))}>
+              <select style={{ ...fieldInput, cursor: 'pointer' }} value={form.platform} onChange={e => setForm(f => ({...f, platform: e.target.value}))}>
                 {PLATFORMS.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
             </Field>
           </div>
 
           {/* Row 2: urgency + status + date */}
-          <div className="grid grid-cols-3 gap-3">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
             <Field label="דחיפות">
-              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={form.urgency} onChange={e => setForm(f => ({...f, urgency: e.target.value}))}>
+              <select style={{ ...fieldInput, cursor: 'pointer' }} value={form.urgency} onChange={e => setForm(f => ({...f, urgency: e.target.value}))}>
                 {URGENCIES.map(u => <option key={u} value={u}>{u}</option>)}
               </select>
             </Field>
             <Field label="סטטוס">
-              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={form.status} onChange={e => setForm(f => ({...f, status: e.target.value}))}>
+              <select style={{ ...fieldInput, cursor: 'pointer' }} value={form.status} onChange={e => setForm(f => ({...f, status: e.target.value}))}>
                 {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </Field>
             <Field label="תאריך יעד">
-              <input type="date" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={form.date} onChange={e => setForm(f => ({...f, date: e.target.value}))} />
+              <input type="date" style={fieldInput} value={form.date} onChange={e => setForm(f => ({...f, date: e.target.value}))} />
             </Field>
           </div>
 
           {/* Notes */}
           <Field label="📝 הערות">
             <textarea
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none"
+              style={{ ...fieldInput, resize: 'none' }}
               rows={3}
               placeholder="פרטים נוספים, לינקים, הנחיות..."
               value={form.notes || ""}
@@ -313,8 +314,7 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onStopRecur
             <input
               type="url"
               dir="ltr"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-              style={{ textAlign: 'left' }}
+              style={{ ...fieldInput, textAlign: 'left' }}
               placeholder="https://..."
               value={form.link || ""}
               onChange={e => setForm(f => ({...f, link: e.target.value}))}
@@ -323,19 +323,19 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onStopRecur
 
           {/* Follow-up date */}
           <Field label="🔔 תזכורת פולו-אפ">
-            <div className="flex items-center gap-2">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input
                 type="date"
-                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                style={{ ...fieldInput, flex: 1 }}
                 value={form.follow_up_date || ""}
                 onChange={e => setForm(f => ({...f, follow_up_date: e.target.value}))}
               />
               {form.follow_up_date && (
-                <button onClick={() => setForm(f => ({...f, follow_up_date: ""}))} className="text-gray-300 hover:text-red-400 text-lg leading-none flex-shrink-0">×</button>
+                <button onClick={() => setForm(f => ({...f, follow_up_date: ""}))} style={{ color: 'var(--text-muted)', fontSize: 20, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>×</button>
               )}
             </div>
             {form.follow_up_date && (
-              <p className="text-xs text-amber-500 mt-1">
+              <p style={{ fontSize: 11, color: '#f59e0b', marginTop: 4 }}>
                 {form.follow_up_date === TODAY ? "⚡ תזכורת להיום" : form.follow_up_date < TODAY ? "⚠️ תזכורת בוטלה" : `תזכורת ב-${form.follow_up_date}`}
               </p>
             )}
@@ -363,7 +363,7 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onStopRecur
             return (
               <Field label="🔁 משימה חוזרת">
                 <select
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  style={{ ...fieldInput, cursor: 'pointer' }}
                   value={selectVal}
                   onChange={e => {
                     const v = e.target.value;
@@ -375,35 +375,38 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onStopRecur
                   {Object.entries(RECURRENCE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
                 {isCustom && (
-                  <div className="flex flex-wrap gap-1.5 mt-2">
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
                     {['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'].map((label, idx) => (
                       <button
                         key={idx}
                         type="button"
                         onClick={() => toggleDay(idx)}
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${customDays.includes(idx) ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-200 text-gray-500 hover:border-indigo-300'}`}
+                        style={{ padding: '4px 10px', borderRadius: 99, fontSize: 12, fontWeight: 600, border: '1px solid', cursor: 'pointer', transition: 'all 0.15s',
+                          background: customDays.includes(idx) ? 'var(--accent)' : 'var(--bg-elevated)',
+                          borderColor: customDays.includes(idx) ? 'var(--accent)' : 'var(--border)',
+                          color: customDays.includes(idx) ? 'white' : 'var(--text-secondary)' }}
                       >{label}</button>
                     ))}
                   </div>
                 )}
-                {nextDate && <p className="text-xs text-indigo-500 mt-1">המחזור הבא: {nextDate}</p>}
+                {nextDate && <p style={{ fontSize: 11, color: 'var(--accent)', marginTop: 4 }}>המחזור הבא: {nextDate}</p>}
               </Field>
             );
           })()}
 
           {/* Link to content calendar + Google Calendar */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className={`flex flex-col gap-1.5 p-3 rounded-xl border transition-colors ${linkedToCalendar ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-100'}`}>
-              <p className="text-xs font-medium text-gray-600">📅 לוח תוכן פנימי</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 12, borderRadius: 12, border: '1px solid', background: linkedToCalendar ? 'rgba(34,197,94,0.1)' : 'var(--bg-elevated)', borderColor: linkedToCalendar ? 'rgba(34,197,94,0.3)' : 'var(--border)' }}>
+              <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>📅 לוח תוכן פנימי</p>
               {!linkedToCalendar ? (
                 <button onClick={handleLinkCalendar} disabled={!form.date}
-                  className="px-2 py-1 bg-white border border-gray-200 text-gray-600 rounded-lg text-xs font-medium hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed">
+                  style={{ padding: '4px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)', borderRadius: 8, fontSize: 11, fontWeight: 600, cursor: 'pointer', opacity: form.date ? 1 : 0.4 }}>
                   {form.date ? "קשר ללוח" : "נדרש תאריך"}
                 </button>
-              ) : <span className="text-green-600 text-xs font-medium">✓ קושר</span>}
+              ) : <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--green)' }}>✓ קושר</span>}
             </div>
-            <div className="flex flex-col gap-1.5 p-3 rounded-xl border bg-gray-50 border-gray-100">
-              <p className="text-xs font-medium text-gray-600">🗓 Google Calendar</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 12, borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
+              <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>🗓 Google Calendar</p>
               <a
                 href={form.date ? (() => {
                   const d = form.date.replace(/-/g, '');
@@ -412,7 +415,7 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onStopRecur
                   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(form.task)}&dates=${d}/${d2}&details=${encodeURIComponent(`${form.client} · ${form.platform}${form.notes ? '\n' + form.notes : ''}`)}`;
                 })() : '#'}
                 target="_blank" rel="noopener noreferrer"
-                className={`px-2 py-1 bg-white border border-gray-200 text-gray-600 rounded-lg text-xs font-medium text-center hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-colors ${!form.date ? 'opacity-40 pointer-events-none' : ''}`}
+                style={{ padding: '4px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)', borderRadius: 8, fontSize: 11, fontWeight: 600, textAlign: 'center', textDecoration: 'none', opacity: form.date ? 1 : 0.4, pointerEvents: form.date ? 'auto' : 'none' }}
               >
                 {form.date ? "פתח בגוגל" : "נדרש תאריך"}
               </a>
@@ -421,61 +424,61 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onStopRecur
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-5 border-t border-gray-50 pt-4 flex-shrink-0">
+        <div style={{ padding: '16px 24px 20px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
           {/* Save as template row */}
           {!isNew && showSaveTemplate ? (
-            <div className="flex items-center gap-2 mb-3">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <input
-                className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                style={{ ...fieldInput, flex: 1 }}
                 placeholder="שם התבנית..."
                 value={templateName}
                 onChange={e => setTemplateName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSaveTemplate()}
                 autoFocus
               />
-              <button onClick={handleSaveTemplate} disabled={!templateName.trim()} className="px-3 py-1.5 bg-indigo-600 text-white rounded-full text-xs font-medium hover:bg-indigo-700 disabled:opacity-40">שמור</button>
-              <button onClick={() => setShowSaveTemplate(false)} className="px-3 py-1.5 text-gray-400 text-xs hover:text-gray-600">ביטול</button>
+              <button onClick={handleSaveTemplate} disabled={!templateName.trim()} style={{ padding: '6px 12px', background: 'var(--accent)', color: 'white', borderRadius: 8, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', opacity: templateName.trim() ? 1 : 0.4 }}>שמור</button>
+              <button onClick={() => setShowSaveTemplate(false)} style={{ padding: '6px 10px', color: 'var(--text-muted)', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer' }}>ביטול</button>
             </div>
           ) : !isNew && templateSaved ? (
-            <p className="text-xs text-green-600 mb-3">✓ נשמר כתבנית</p>
+            <p style={{ fontSize: 11, color: 'var(--green)', marginBottom: 12 }}>✓ נשמר כתבנית</p>
           ) : null}
 
-          <div className="flex items-center justify-between">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             {!isNew && (confirmDelete ? (
-              <div className="flex flex-col gap-2">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {task.recurrence && task.recurrence !== 'none' && onStopRecurring ? (
                   <>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => { onStopRecurring(task.task, task.client); onClose(); }} className="px-3 py-1.5 bg-red-600 text-white rounded-full text-xs hover:bg-red-700">🛑 עצור כל החזרות</button>
-                      <button onClick={() => { onDelete(task.id); onClose(); }} className="px-3 py-1.5 bg-red-100 text-red-600 rounded-full text-xs hover:bg-red-200">מחק רק זו</button>
-                      <button onClick={() => setConfirmDelete(false)} className="px-3 py-1.5 text-gray-500 text-xs hover:text-gray-700">ביטול</button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <button onClick={() => { onStopRecurring(task.task, task.client); onClose(); }} style={{ padding: '5px 12px', background: 'var(--red)', color: 'white', borderRadius: 8, fontSize: 12, border: 'none', cursor: 'pointer' }}>🛑 עצור כל החזרות</button>
+                      <button onClick={() => { onDelete(task.id); onClose(); }} style={{ padding: '5px 12px', background: 'rgba(239,68,68,0.15)', color: 'var(--red)', borderRadius: 8, fontSize: 12, border: 'none', cursor: 'pointer' }}>מחק רק זו</button>
+                      <button onClick={() => setConfirmDelete(false)} style={{ padding: '5px 10px', color: 'var(--text-muted)', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer' }}>ביטול</button>
                     </div>
-                    <p className="text-xs text-red-400">"עצור כל החזרות" ימחק את כל ההופעות הפתוחות ויעצור את המחזור</p>
+                    <p style={{ fontSize: 11, color: 'var(--red)', opacity: 0.7 }}>"עצור כל החזרות" ימחק את כל ההופעות הפתוחות ויעצור את המחזור</p>
                   </>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-red-500">בטוח?</span>
-                    <button onClick={() => { onDelete(task.id); onClose(); }} className="px-3 py-1.5 bg-red-500 text-white rounded-full text-xs hover:bg-red-600">מחק</button>
-                    <button onClick={() => setConfirmDelete(false)} className="px-3 py-1.5 text-gray-500 text-xs hover:text-gray-700">ביטול</button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 12, color: 'var(--red)' }}>בטוח?</span>
+                    <button onClick={() => { onDelete(task.id); onClose(); }} style={{ padding: '5px 12px', background: 'var(--red)', color: 'white', borderRadius: 8, fontSize: 12, border: 'none', cursor: 'pointer' }}>מחק</button>
+                    <button onClick={() => setConfirmDelete(false)} style={{ padding: '5px 10px', color: 'var(--text-muted)', fontSize: 12, background: 'none', border: 'none', cursor: 'pointer' }}>ביטול</button>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-3">
-                <button onClick={() => setConfirmDelete(true)} className="text-xs text-gray-400 hover:text-red-500 transition-colors">🗑 מחק</button>
-                {!templateSaved && onSaveTemplate && <button onClick={() => { setShowSaveTemplate(true); setTemplateName(form.task); }} className="text-xs text-indigo-400 hover:text-indigo-600 transition-colors">📌 שמור כתבנית</button>}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <button onClick={() => setConfirmDelete(true)} style={{ fontSize: 12, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>🗑 מחק</button>
+                {!templateSaved && onSaveTemplate && <button onClick={() => { setShowSaveTemplate(true); setTemplateName(form.task); }} style={{ fontSize: 12, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer' }}>📌 שמור כתבנית</button>}
                 {onFollowUp && (
                   <button
                     onClick={() => onFollowUp({ client: form.client, platform: form.platform })}
-                    className="text-xs text-emerald-600 hover:text-emerald-800 transition-colors font-medium"
+                    style={{ fontSize: 12, color: 'var(--green)', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}
                   >➕ המשימה הבאה</button>
                 )}
               </div>
             ))}
             {isNew && <div />}
-            <div className="flex gap-2">
-              <button onClick={onClose} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700">ביטול</button>
-              <button onClick={handleSave} className={`px-5 py-2 rounded-full text-sm font-medium transition-colors text-white ${isNew ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-blue-600 hover:bg-blue-700'}`}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={onClose} style={{ padding: '8px 16px', fontSize: 13, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>ביטול</button>
+              <button onClick={handleSave} style={{ padding: '8px 20px', background: 'var(--accent)', color: 'white', borderRadius: 8, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
                 {isNew ? 'הוסף משימה' : 'שמור'}
               </button>
             </div>

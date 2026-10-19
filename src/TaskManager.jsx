@@ -612,68 +612,71 @@ const CalendarScreen = ({ calItems, onAddItem, onDeleteItem, clients }) => {
 
       {/* Day Modal */}
       {dayModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[200]" onClick={() => { setDayModal(null); setAddForm(null); }}>
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md max-h-screen overflow-y-auto" dir="rtl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-gray-800">{dayModal.dateStr}</h3>
-              <button onClick={() => { setDayModal(null); setAddForm(null); }} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }} onClick={() => { setDayModal(null); setAddForm(null); }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 16, border: '1px solid var(--border)', padding: 24, width: '100%', maxWidth: 420, maxHeight: '90vh', overflowY: 'auto' }} dir="rtl" onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h3 style={{ fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{dayModal.dateStr}</h3>
+              <button onClick={() => { setDayModal(null); setAddForm(null); }} style={{ color: 'var(--text-muted)', fontSize: 22, background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
             </div>
 
             {/* Items list */}
             {dayModal.items.length === 0 && !addForm && (
-              <p className="text-sm text-gray-400 italic mb-4 text-center">אין תוכן מתוכנן ליום זה</p>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: 16, textAlign: 'center' }}>אין תוכן מתוכנן ליום זה</p>
             )}
             {dayModal.items.map(item => (
-              <div key={item.id} className={`flex items-start justify-between gap-2 p-3 rounded-xl mb-2 ${CAL_ITEM_COLORS[item.type]?.bg}`}>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium truncate ${CAL_ITEM_COLORS[item.type]?.text}`}>{item.title}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">
+              <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, padding: 12, borderRadius: 12, marginBottom: 8, background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</p>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
                     {CAL_ITEM_COLORS[item.type]?.label}
                     {item.client && ` · ${item.client}`}
                     {item.platform && ` · ${item.platform}`}
                     {item.status && ` · ${item.status}`}
                   </p>
                 </div>
-                <button onClick={() => { onDeleteItem(item.id); setDayModal(prev => ({ ...prev, items: prev.items.filter(i => i.id !== item.id) })); }} className="text-gray-400 hover:text-red-500 text-sm flex-shrink-0">✕</button>
+                <button onClick={() => { onDeleteItem(item.id); setDayModal(prev => ({ ...prev, items: prev.items.filter(i => i.id !== item.id) })); }} style={{ color: 'var(--text-muted)', fontSize: 13, background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>✕</button>
               </div>
             ))}
 
             {/* Add form */}
             {addForm ? (
-              <div className="border-t border-gray-100 pt-4 mt-2 flex flex-col gap-3">
-                <p className="text-xs font-semibold text-gray-600">הוספת תוכן</p>
-                <div className="flex gap-2">
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)' }}>הוספת תוכן</p>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {Object.entries(CAL_ITEM_COLORS).map(([key, c]) => (
                     <button key={key} onClick={() => setAddForm(f => ({...f, type: key}))}
-                      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${addForm.type === key ? `${c.bg} ${c.text} border-current` : 'bg-white text-gray-400 border-gray-200'}`}>
+                      style={{ padding: '4px 12px', borderRadius: 99, fontSize: 12, fontWeight: 600, border: '1px solid', cursor: 'pointer',
+                        background: addForm.type === key ? 'var(--accent-dim)' : 'var(--bg-elevated)',
+                        borderColor: addForm.type === key ? 'var(--accent)' : 'var(--border)',
+                        color: addForm.type === key ? 'var(--accent)' : 'var(--text-secondary)' }}>
                       {c.label}
                     </button>
                   ))}
                 </div>
-                <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="כותרת / תיאור" value={addForm.title} onChange={e => setAddForm(f => ({...f, title: e.target.value}))} autoFocus />
+                <input style={{ ...fieldInput }} placeholder="כותרת / תיאור" value={addForm.title} onChange={e => setAddForm(f => ({...f, title: e.target.value}))} autoFocus />
                 {addForm.type !== 'holiday' && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <select className="border border-gray-200 rounded-lg px-3 py-2 text-sm" value={addForm.client} onChange={e => setAddForm(f => ({...f, client: e.target.value}))}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <select style={{ ...fieldInput, cursor: 'pointer' }} value={addForm.client} onChange={e => setAddForm(f => ({...f, client: e.target.value}))}>
                       <option value="">לקוח (אופציונלי)</option>
                       {clients.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
-                    <select className="border border-gray-200 rounded-lg px-3 py-2 text-sm" value={addForm.platform} onChange={e => setAddForm(f => ({...f, platform: e.target.value}))}>
+                    <select style={{ ...fieldInput, cursor: 'pointer' }} value={addForm.platform} onChange={e => setAddForm(f => ({...f, platform: e.target.value}))}>
                       {PLATFORMS.map(p => <option key={p} value={p}>{p}</option>)}
                     </select>
                   </div>
                 )}
                 {addForm.type === 'post' && (
-                  <select className="border border-gray-200 rounded-lg px-3 py-2 text-sm" value={addForm.status} onChange={e => setAddForm(f => ({...f, status: e.target.value}))}>
+                  <select style={{ ...fieldInput, cursor: 'pointer' }} value={addForm.status} onChange={e => setAddForm(f => ({...f, status: e.target.value}))}>
                     {["טיוטה","ממתין לאישור","מאושר","פורסם"].map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 )}
-                <div className="flex gap-2 justify-end">
-                  <button onClick={() => setAddForm(null)} className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700">ביטול</button>
-                  <button onClick={submitAdd} disabled={!addForm.title.trim()} className="px-4 py-1.5 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 disabled:opacity-40">הוסף</button>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                  <button onClick={() => setAddForm(null)} style={{ padding: '6px 12px', fontSize: 13, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>ביטול</button>
+                  <button onClick={submitAdd} disabled={!addForm.title.trim()} style={{ padding: '6px 16px', background: 'var(--accent)', color: 'white', borderRadius: 8, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', opacity: addForm.title.trim() ? 1 : 0.4 }}>הוסף</button>
                 </div>
               </div>
             ) : (
-              <button onClick={() => setAddForm({...emptyForm})} className="w-full mt-3 py-2 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-colors">
+              <button onClick={() => setAddForm({...emptyForm})} style={{ width: '100%', marginTop: 12, padding: '10px', border: '2px dashed var(--border)', borderRadius: 12, fontSize: 13, color: 'var(--text-muted)', background: 'none', cursor: 'pointer' }}>
                 + הוסף תוכן ליום זה
               </button>
             )}
@@ -1246,8 +1249,7 @@ ${JSON.stringify(Object.entries(clientsData).map(([name, d]) => ({ name, ...d })
     return (
       <button
         onClick={onOpen}
-        style={{ position: 'fixed', bottom: chatBottom, left: 24, zIndex: 50 }}
-        className="bg-gradient-to-br from-purple-600 to-blue-500 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:scale-110 transition-transform text-2xl"
+        style={{ position: 'fixed', bottom: chatBottom, left: 24, zIndex: 50, background: 'var(--accent)', color: 'white', borderRadius: '50%', width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: 22, boxShadow: '0 4px 20px rgba(124,110,245,0.4)' }}
         title="שאל קלוד AI"
       >
         🤖
@@ -1256,66 +1258,68 @@ ${JSON.stringify(Object.entries(clientsData).map(([name, d]) => ({ name, ...d })
   }
 
   return (
-    <div style={{ position: 'fixed', bottom: chatBottom, left: 16, zIndex: 50, width: isMobile ? 'calc(100vw - 32px)' : 320, maxHeight: isMobile ? '70vh' : 520 }}
-      className="bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden" dir="rtl">
+    <div style={{ position: 'fixed', bottom: chatBottom, left: 16, zIndex: 50, width: isMobile ? 'calc(100vw - 32px)' : 320, maxHeight: isMobile ? '70vh' : 520, background: 'var(--bg-surface)', borderRadius: 16, border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 8px 40px rgba(0,0,0,0.4)' }} dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-500 flex-shrink-0">
-        <div className="flex items-center gap-2 text-white">
-          <span className="text-lg">🤖</span>
-          <span className="font-semibold text-sm">קלוד AI — עוזר שיווק</span>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'var(--accent)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'white' }}>
+          <span style={{ fontSize: 16 }}>🤖</span>
+          <span style={{ fontWeight: 700, fontSize: 13 }}>קלוד AI — עוזר שיווק</span>
         </div>
-        <button onClick={onClose} className="text-white/80 hover:text-white text-lg leading-none">✕</button>
+        <button onClick={onClose} style={{ color: 'rgba(255,255,255,0.8)', fontSize: 18, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
       </div>
 
       {!keyEntered ? (
-        <div className="p-4 flex flex-col gap-3">
-          <p className="text-sm text-gray-600 leading-relaxed">הכנס מפתח API של Anthropic כדי לשוחח עם קלוד על המשימות שלך:</p>
+        <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>הכנס מפתח API של Anthropic כדי לשוחח עם קלוד על המשימות שלך:</p>
           <input
             type="password"
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono"
+            style={{ ...fieldInput, fontFamily: 'monospace' }}
             placeholder="sk-ant-api03-..."
             value={apiKey}
             onChange={e => setApiKey(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && apiKey.startsWith('sk-') && setKeyEntered(true)}
           />
-          <p className="text-xs text-gray-400">המפתח נשמר בזיכרון הסשן בלבד ולא מועבר לשום מקום אחר</p>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>המפתח נשמר בזיכרון הסשן בלבד ולא מועבר לשום מקום אחר</p>
           <button
             onClick={() => setKeyEntered(true)}
             disabled={!apiKey.startsWith('sk-')}
-            className="bg-purple-600 text-white rounded-full py-2 text-sm font-medium disabled:opacity-40 hover:bg-purple-700 transition-colors"
+            style={{ padding: '8px', background: 'var(--accent)', color: 'white', borderRadius: 8, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', opacity: apiKey.startsWith('sk-') ? 1 : 0.4 }}
           >
             התחל שיחה
           </button>
         </div>
       ) : (
         <>
-          <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2" style={{ minHeight: '200px', maxHeight: '320px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 8, minHeight: 200, maxHeight: 320 }}>
             {messages.length === 0 && (
-              <div className="text-center text-gray-400 text-xs mt-3 flex flex-col items-center gap-2">
-                <div className="text-3xl">💡</div>
-                <p className="text-gray-500">שאל אותי על המשימות, הלקוחות, או תכנון השבוע</p>
-                <div className="flex flex-col gap-1 mt-1 w-full">
+              <div style={{ textAlign: 'center', marginTop: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                <div style={{ fontSize: 28 }}>💡</div>
+                <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>שאל אותי על המשימות, הלקוחות, או תכנון השבוע</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4, width: '100%' }}>
                   {QUICK_QUESTIONS.map(q => (
-                    <button key={q} onClick={() => setInput(q)} className="text-purple-500 text-xs hover:text-purple-700 hover:underline text-right">▶ {q}</button>
+                    <button key={q} onClick={() => setInput(q)} style={{ fontSize: 11, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right' }}>▶ {q}</button>
                   ))}
                 </div>
               </div>
             )}
             {messages.map((m, i) => (
-              <div key={i} className={`text-sm px-3 py-2 rounded-xl whitespace-pre-wrap leading-relaxed max-w-[92%] ${m.role === 'user' ? 'bg-purple-600 text-white self-start' : 'bg-gray-100 text-gray-800 self-end'}`}>
+              <div key={i} style={{ fontSize: 13, padding: '8px 12px', borderRadius: 12, whiteSpace: 'pre-wrap', lineHeight: 1.5, maxWidth: '92%',
+                background: m.role === 'user' ? 'var(--accent)' : 'var(--bg-elevated)',
+                color: m.role === 'user' ? 'white' : 'var(--text-primary)',
+                alignSelf: m.role === 'user' ? 'flex-start' : 'flex-end' }}>
                 {m.content}
               </div>
             ))}
             {loading && (
-              <div className="bg-gray-100 text-gray-500 text-xs px-3 py-2 rounded-xl self-end">⏳ קלוד חושב...</div>
+              <div style={{ fontSize: 11, padding: '8px 12px', borderRadius: 12, background: 'var(--bg-elevated)', color: 'var(--text-muted)', alignSelf: 'flex-end' }}>⏳ קלוד חושב...</div>
             )}
-            {error && <div className="text-red-500 text-xs px-2 py-1 bg-red-50 rounded-lg">{error}</div>}
+            {error && <div style={{ fontSize: 11, padding: '6px 8px', background: 'rgba(239,68,68,0.1)', color: 'var(--red)', borderRadius: 8 }}>{error}</div>}
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="border-t border-gray-100 p-2 flex gap-2 flex-shrink-0">
+          <div style={{ borderTop: '1px solid var(--border)', padding: 8, display: 'flex', gap: 8, flexShrink: 0 }}>
             <input
-              className="flex-1 border border-gray-200 rounded-full px-3 py-1.5 text-sm focus:outline-none focus:border-purple-400"
+              style={{ ...fieldInput, flex: 1, borderRadius: 99, padding: '6px 14px' }}
               placeholder="שאל שאלה..."
               value={input}
               onChange={e => setInput(e.target.value)}
@@ -1325,7 +1329,7 @@ ${JSON.stringify(Object.entries(clientsData).map(([name, d]) => ({ name, ...d })
             <button
               onClick={sendMessage}
               disabled={loading || !input.trim()}
-              className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center disabled:opacity-40 flex-shrink-0 hover:bg-purple-700 transition-colors text-sm"
+              style={{ background: 'var(--accent)', color: 'white', borderRadius: '50%', width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', flexShrink: 0, opacity: (loading || !input.trim()) ? 0.4 : 1 }}
             >
               ➤
             </button>
@@ -2007,32 +2011,32 @@ const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onTogg
   const data = editMode ? editForm : clientData;
 
   return (
-    <div className="p-6 min-h-screen" style={{ background: '#f5f6fa' }} dir="rtl">
-      <button onClick={onBack} className="flex items-center gap-2 text-sm mb-6 transition-colors" style={{ color: '#64748b', background: 'none', border: 'none', cursor: 'pointer' }}>
-        <span className="text-lg">→</span> חזרה לכל המשימות
+    <div style={{ padding: 24, minHeight: '100vh', background: 'var(--bg-base)' }} dir="rtl">
+      <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, marginBottom: 24, color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer' }}>
+        <span style={{ fontSize: 18 }}>→</span> חזרה לכל המשימות
       </button>
 
       {/* Client header card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold shadow-sm">
+      <div style={{ background: 'var(--bg-surface)', borderRadius: 16, border: '1px solid var(--border)', padding: 24, marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ width: 56, height: 56, borderRadius: 14, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 22, fontWeight: 700, flexShrink: 0 }}>
               {(editMode ? editForm.name : clientName).charAt(0)}
             </div>
             <div>
               {editMode ? (
                 <input
-                  className="text-2xl font-bold text-gray-800 border-b-2 border-blue-400 bg-transparent outline-none w-full mb-1"
+                  style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', borderBottom: '2px solid var(--accent)', background: 'transparent', outline: 'none', width: '100%', marginBottom: 4 }}
                   value={editForm.name}
                   onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="שם הלקוח"
                 />
               ) : (
-                <h2 className="text-2xl font-bold text-gray-800">{clientName}</h2>
+                <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{clientName}</h2>
               )}
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
                 {activePlatforms.map(p => (
-                  <span key={p} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                  <span key={p} style={{ fontSize: 11, background: 'var(--bg-elevated)', color: 'var(--text-secondary)', padding: '3px 8px', borderRadius: 99, border: '1px solid var(--border)' }}>
                     {PLATFORM_ICONS[p] || "📋"} {p}
                   </span>
                 ))}
@@ -2041,14 +2045,14 @@ const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onTogg
           </div>
 
           {/* Edit / Save buttons */}
-          <div className="flex gap-2">
+          <div style={{ display: 'flex', gap: 8 }}>
             {editMode ? (
               <>
-                <button onClick={() => { setEditMode(false); setEditForm({ ...clientData }); }} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-full bg-white">ביטול</button>
-                <button onClick={handleSave} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors">שמור</button>
+                <button onClick={() => { setEditMode(false); setEditForm({ ...clientData }); }} style={{ padding: '7px 16px', fontSize: 13, color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-elevated)', cursor: 'pointer' }}>ביטול</button>
+                <button onClick={handleSave} style={{ padding: '7px 16px', fontSize: 13, background: 'var(--accent)', color: 'white', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700 }}>שמור</button>
               </>
             ) : (
-              <button onClick={() => setEditMode(true)} className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-full bg-white hover:bg-gray-50 transition-colors">
+              <button onClick={() => setEditMode(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', fontSize: 13, color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-elevated)', cursor: 'pointer' }}>
                 ✏️ עריכת פרטים
               </button>
             )}
@@ -2056,13 +2060,13 @@ const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onTogg
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 0, marginTop: 20, borderBottom: '1px solid #f1f5f9' }}>
+        <div style={{ display: 'flex', gap: 0, marginTop: 20, borderBottom: '1px solid var(--border)' }}>
           {[['details', '📋 פרטים'], ['brief', '📝 אפיון']].map(([tab, label]) => (
             <button key={tab} onClick={() => setActiveTab(tab)} style={{
               padding: '8px 18px', fontSize: 13, fontWeight: activeTab === tab ? 700 : 500,
-              color: activeTab === tab ? '#6366f1' : '#94a3b8',
+              color: activeTab === tab ? 'var(--accent)' : 'var(--text-muted)',
               background: 'none', border: 'none', cursor: 'pointer',
-              borderBottom: activeTab === tab ? '2px solid #6366f1' : '2px solid transparent',
+              borderBottom: activeTab === tab ? '2px solid var(--accent)' : '2px solid transparent',
               marginBottom: -1, transition: 'all 0.15s',
             }}>{label}</button>
           ))}
@@ -2160,41 +2164,36 @@ const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onTogg
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 text-center">
-          <p className="text-2xl font-bold text-blue-600">{activeTasks.length}</p>
-          <p className="text-xs text-gray-400 mt-1">משימות פתוחות</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 text-center">
-          <p className="text-2xl font-bold text-red-500">{activeTasks.filter(t => t.urgency === 'גבוהה').length}</p>
-          <p className="text-xs text-gray-400 mt-1">דחיפות גבוהה</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 text-center">
-          <p className="text-2xl font-bold text-green-500">{doneTasks.length}</p>
-          <p className="text-xs text-gray-400 mt-1">בוצעו</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 text-center">
-          <p className="text-2xl font-bold text-red-400">{overdue.length}</p>
-          <p className="text-xs text-gray-400 mt-1">פג תוקף</p>
-        </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 24 }}>
+        {[
+          { value: activeTasks.length, label: 'משימות פתוחות', color: 'var(--blue)' },
+          { value: activeTasks.filter(t => t.urgency === 'גבוהה').length, label: 'דחיפות גבוהה', color: 'var(--red)' },
+          { value: doneTasks.length, label: 'בוצעו', color: 'var(--green)' },
+          { value: overdue.length, label: 'פג תוקף', color: '#f97316' },
+        ].map(({ value, label, color }) => (
+          <div key={label} style={{ background: 'var(--bg-surface)', borderRadius: 12, border: '1px solid var(--border)', padding: 16, textAlign: 'center' }}>
+            <p style={{ fontSize: 24, fontWeight: 700, color }}>{value}</p>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>{label}</p>
+          </div>
+        ))}
       </div>
 
       {/* Tasks table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-50">
-          <h3 className="font-semibold text-gray-700">משימות</h3>
-          <button onClick={onAddTask} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-full text-xs font-medium hover:bg-blue-700 transition-colors">
+      <div style={{ background: 'var(--bg-surface)', borderRadius: 16, border: '1px solid var(--border)', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
+          <h3 style={{ fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>משימות</h3>
+          <button onClick={onAddTask} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', background: 'var(--accent)', color: 'white', borderRadius: 8, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
             <span>+</span> משימה חדשה
           </button>
         </div>
         {allClientTasks.length === 0 ? (
-          <div className="p-10 text-center text-gray-400 text-sm">אין משימות ללקוח זה עדיין</div>
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>אין משימות ללקוח זה עדיין</div>
         ) : (
-          <table className="w-full text-right border-collapse">
+          <table style={{ width: '100%', textAlign: 'right', borderCollapse: 'collapse' }}>
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
+              <tr style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
                 {COL_HEADERS.map((h, i) => (
-                  <th key={i} className="px-3 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">{h}</th>
+                  <th key={i} style={{ padding: '10px 12px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -2205,8 +2204,8 @@ const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onTogg
               {doneTasks.length > 0 && (
                 <>
                   <tr>
-                    <td colSpan={6} className="px-4 pt-5 pb-2">
-                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">✓ בוצעו ({doneTasks.length})</span>
+                    <td colSpan={6} style={{ padding: '16px 16px 8px' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>✓ בוצעו ({doneTasks.length})</span>
                     </td>
                   </tr>
                   {doneTasks.map(task => (

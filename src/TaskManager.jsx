@@ -3442,7 +3442,7 @@ const TaskManager = () => {
       {!mobile && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-            <h1 style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>משימות</h1>
+            <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.5px' }}>משימות</h1>
             <span style={{ fontSize: 13, color: '#94a3b8', fontWeight: 400 }}>ניהול וורקפלואו</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>

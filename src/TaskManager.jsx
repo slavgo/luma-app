@@ -121,12 +121,13 @@ const URGENCY_BORDER = { 'גבוהה': '#ef4444', 'בינונית': '#f97316', '
 const TaskRow = ({ task, onToggleDone, onClientClick, onTaskClick, showClient = true }) => (
   <tr style={{
     borderBottom: '1px solid rgba(255,255,255,0.06)',
-    opacity: task.done ? 0.5 : 1,
+    opacity: task.done ? 0.45 : 1,
+    background: task.done ? 'transparent' : 'var(--bg-surface)',
     borderRight: `3px solid ${task.done ? 'var(--border)' : (URGENCY_BORDER[task.urgency] || 'var(--accent)')}`,
     transition: 'background 0.1s',
   }}
-    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+    onMouseEnter={e => { if (!task.done) e.currentTarget.style.background = 'var(--bg-elevated)'; }}
+    onMouseLeave={e => { if (!task.done) e.currentTarget.style.background = 'var(--bg-surface)'; }}
     className="group"
   >
     <td className="pl-5 pr-3 py-3">
@@ -2262,9 +2263,9 @@ const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onTogg
         ) : (
           <table style={{ width: '100%', textAlign: 'right', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border-strong)' }}>
+              <tr style={{ background: 'var(--bg-elevated)', borderBottom: '2px solid rgba(255,255,255,0.08)' }}>
                 {COL_HEADERS.map((h, i) => (
-                  <th key={i} style={{ padding: '10px 12px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
+                  <th key={i} style={{ padding: '10px 12px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -3615,9 +3616,9 @@ const TaskManager = () => {
         <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
           <table className="w-full text-right border-collapse">
             <thead>
-              <tr style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border-strong)' }}>
+              <tr style={{ background: 'var(--bg-elevated)', borderBottom: '2px solid rgba(255,255,255,0.08)' }}>
                 {COL_HEADERS.map((h, i) => (
-                  <th key={i} className="px-3 py-3 text-right" style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
+                  <th key={i} className="px-3 py-3 text-right" style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</th>
                 ))}
               </tr>
             </thead>

@@ -1126,9 +1126,11 @@ const MobileHeader = ({ screen, user }) => {
 const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks, children }) => {
   const mobile = useMobile();
   return (
-    <div style={{ display: 'flex', flexDirection: 'row-reverse', height: '100vh', overflow: 'hidden', background: 'var(--bg-base)' }}>
+    <div style={{ display: 'flex', flexDirection: 'row-reverse', height: '100vh', overflow: 'hidden', background: 'radial-gradient(ellipse 90% 70% at 80% 0%, #1e1a35 0%, var(--bg-base) 55%)' }}>
       <main dir="rtl" style={{
-        flex: 1, overflowY: 'auto', overflowX: 'hidden', background: 'var(--bg-base)',
+        flex: 1, overflowY: 'auto', overflowX: 'hidden',
+        background: 'rgba(13,13,16,0.82)',
+        backdropFilter: 'blur(0px)',
         paddingBottom: mobile ? 56 : 0,
       }}>
         {mobile && <MobileHeader screen={screen} user={user} />}

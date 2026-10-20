@@ -831,7 +831,7 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
                     ? `linear-gradient(135deg, ${colors.from}22, ${colors.to}18)`
                     : 'transparent',
                   color: active ? 'white' : 'rgba(255,255,255,0.38)',
-                  boxShadow: active ? `0 0 20px ${colors.glow}` : 'none',
+                  boxShadow: 'none',
                   textAlign: 'right',
                   boxSizing: 'border-box',
                 }}

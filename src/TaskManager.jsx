@@ -3116,6 +3116,29 @@ const TaskManager = () => {
   };
 
   const updateTask = async (updated) => {
+    // If recurrence is being disabled, also neutralize all done siblings so they stop spawning
+    if (updated.recurrence === 'none') {
+      const original = tasks.find(t => t.id === updated.id);
+      if (original && original.recurrence && original.recurrence !== 'none') {
+        const doneSiblings = tasks.filter(t =>
+          t.id !== updated.id &&
+          t.task === original.task &&
+          t.client === original.client &&
+          t.done &&
+          t.recurrence && t.recurrence !== 'none'
+        );
+        if (doneSiblings.length > 0) {
+          setTasks(prev => prev.map(t =>
+            doneSiblings.some(s => s.id === t.id) ? { ...t, recurrence: 'none' } : t
+          ));
+          if (supabase) {
+            for (const s of doneSiblings) {
+              await supabase.from("tasks").update({ recurrence: 'none' }).eq("id", s.id);
+            }
+          }
+        }
+      }
+    }
     setTasks(prev => prev.map(t => t.id === updated.id ? { ...t, ...updated } : t));
     if (supabase) {
       const { id, ...rest } = updated;

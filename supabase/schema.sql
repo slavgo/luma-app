@@ -111,3 +111,6 @@ ALTER TABLE task_templates ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "tmpl_select" ON task_templates FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "tmpl_insert" ON task_templates FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "tmpl_delete" ON task_templates FOR DELETE USING (auth.uid() = user_id);
+
+-- ── HERMES / MCP ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+-- ראה supabase/agent.sql

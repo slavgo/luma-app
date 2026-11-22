@@ -1,32 +1,21 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "./supabase.js";
+import TodayScreen from "./TodayScreen.jsx";
+import { localToday, getNextRecurrenceDate, normStatus, parseQuickTask, urgencyFromDate, addDays, STATUS_TODO, STATUS_WAITING, DEFAULT_CLIENT } from "./lib/taskCore.js";
 
-const TODAY = new Date().toISOString().slice(0, 10);
+// Israel-local date; refreshed by TaskManager when the day rolls over
+let TODAY = localToday();
 const PLATFORMS = ["גוגל אדס", "מטא - ממומן", "סושיאל", "גרפיקה/וידאו", "כללי"];
 const URGENCIES = ["גבוהה", "בינונית", "נמוכה"];
-const STATUSES = ["לביצוע", "בביצוע", "ממתין לאישור", "בתיקונים", "ממתין לחומרים"];
-const emptyTask = { client: "", platform: PLATFORMS[0], task: "", urgency: "בינונית", status: "לביצוע", date: "", done: false, notes: "", link: "", follow_up_date: "", recurrence: "none" };
+const STATUSES = [STATUS_TODO, STATUS_WAITING];
+const emptyTask = { client: "", platform: "כללי", task: "", urgency: "בינונית", status: "לביצוע", date: "", done: false, notes: "", link: "", follow_up_date: "", recurrence: "none" };
+
+const normTask = (t) => (t.done ? t : { ...t, status: normStatus(t.status) });
 
 const RECURRENCE_LABELS = { none: 'ללא', daily: 'יומי', weekly: 'שבועי', monthly: 'חודשי', custom: 'ימים קבועים' };
 const HEBREW_WEEKDAYS = ['א׳ (ראשון)','ב׳ (שני)','ג׳ (שלישי)','ד׳ (רביעי)','ה׳ (חמישי)','ו׳ (שישי)','ש׳ (שבת)'];
 
 const RECURRENCE_LOOKAHEAD_DAYS = 2;
-
-const getNextRecurrenceDate = (fromDate, recurrence) => {
-  if (!recurrence || recurrence === 'none') return null;
-  const d = new Date(fromDate);
-  if (recurrence === 'daily') { d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); }
-  if (recurrence === 'weekly') { d.setDate(d.getDate() + 7); return d.toISOString().slice(0, 10); }
-  if (recurrence === 'monthly') { d.setMonth(d.getMonth() + 1); return d.toISOString().slice(0, 10); }
-  const days = recurrence.split(',').map(Number).filter(n => !isNaN(n));
-  if (!days.length) return null;
-  const next = new Date(fromDate);
-  for (let i = 1; i <= 14; i++) {
-    next.setDate(next.getDate() + 1);
-    if (days.includes(next.getDay())) return next.toISOString().slice(0, 10);
-  }
-  return null;
-};
 
 // Returns next occurrence ON OR AFTER today (for reschedule + auto-fill)
 const getNextRecurrenceOnOrAfterToday = (recurrence) => {
@@ -75,10 +64,7 @@ const getUrgencyStyle = (urgency) => {
 
 const getStatusColor = (status) => {
   switch (status) {
-    case 'בביצוע': return 'var(--blue)';
-    case 'ממתין לאישור': return '#f59e0b';
-    case 'בתיקונים': return 'var(--red)';
-    case 'ממתין לחומרים': return '#a855f7';
+    case STATUS_WAITING: return '#f59e0b';
     default: return 'var(--text-muted)';
   }
 };
@@ -116,11 +102,11 @@ const ClientBadge = ({ name, onClick, done }) => (
   </button>
 );
 
-const URGENCY_BORDER = { 'גבוהה': '#ef4444', 'בינונית': '#f97316', 'נמוכה': '#6366f1' };
+const URGENCY_BORDER = { 'גבוהה': '#ef4444', 'בינונית': '#f59e0b', 'נמוכה': 'var(--border-strong)' };
 
 const TaskRow = ({ task, onToggleDone, onClientClick, onTaskClick, showClient = true }) => (
   <tr style={{
-    borderBottom: '1px solid rgba(255,255,255,0.06)',
+    borderBottom: '1px solid rgba(var(--ink),0.06)',
     opacity: task.done ? 0.45 : 1,
     background: task.done ? 'transparent' : 'var(--bg-surface)',
     borderRight: `3px solid ${task.done ? 'var(--border)' : (URGENCY_BORDER[task.urgency] || 'var(--accent)')}`,
@@ -167,17 +153,9 @@ const TaskRow = ({ task, onToggleDone, onClientClick, onTaskClick, showClient = 
     </td>
     <td className="px-3 py-3">
       {!task.done && (
-        task.status === 'בביצוע' ? (
-          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: '#60a5fa' }}>
-            <span style={{ width: 6, height: 6, background: '#3b82f6', borderRadius: '50%' }} className="animate-pulse" />בביצוע
-          </span>
-        ) : task.status === 'בתיקונים' ? (
-          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: '#f87171' }}>
-            <span style={{ width: 6, height: 6, background: '#dc2626', borderRadius: '50%' }} className="animate-pulse" />בתיקונים
-          </span>
-        ) : task.status === 'ממתין לחומרים' ? (
-          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: '#c084fc' }}>
-            <span style={{ width: 6, height: 6, background: '#9333ea', borderRadius: '50%' }} />ממתין לחומרים
+        task.status === STATUS_WAITING ? (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: '#d97706' }}>
+            <span style={{ width: 6, height: 6, background: '#f59e0b', borderRadius: '50%' }} />{STATUS_WAITING}
           </span>
         ) : (
           <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-secondary)' }}>{task.status}</span>
@@ -223,7 +201,7 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onStopRecur
       title: form.task,
       client: form.client,
       platform: form.platform,
-      status: form.status === "ממתין לאישור" ? "ממתין לאישור" : "טיוטה",
+      status: form.status === STATUS_WAITING ? "ממתין לאישור" : "טיוטה",
       date: form.date,
       id: Date.now() + 1,
     });
@@ -540,13 +518,13 @@ const CalendarScreen = ({ calItems, onAddItem, onDeleteItem, clients }) => {
   };
 
   return (
-    <div className={mobile ? "p-3 min-h-screen" : "p-6 min-h-screen"} style={{ background: '#f5f6fa' }} dir="rtl">
+    <div className={mobile ? "p-3 min-h-screen" : "p-6 min-h-screen"} style={{ background: 'var(--bg-base)' }} dir="rtl">
       {/* Header */}
       <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-full border text-lg" style={{ background: '#ffffff', borderColor: '#e8eaf0', color: '#475569' }}>‹</button>
-          <h2 className="text-xl font-bold min-w-32 text-center" style={{ color: '#0f172a' }}>{HEBREW_MONTHS[viewMonth]} {viewYear}</h2>
-          <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-full border text-lg" style={{ background: '#ffffff', borderColor: '#e8eaf0', color: '#475569' }}>›</button>
+          <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-full border text-lg" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>‹</button>
+          <h2 className="text-xl font-bold min-w-32 text-center" style={{ color: 'var(--text-primary)' }}>{HEBREW_MONTHS[viewMonth]} {viewYear}</h2>
+          <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-full border text-lg" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-secondary)' }}>›</button>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           {/* Legend */}
@@ -564,11 +542,11 @@ const CalendarScreen = ({ calItems, onAddItem, onDeleteItem, clients }) => {
       </div>
 
       {/* Calendar grid */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: '#ffffff', border: '1px solid #e8eaf0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
         {/* Day headers */}
-        <div className="grid grid-cols-7" style={{ borderBottom: '1px solid #e8eaf0', background: '#f8fafc' }}>
+        <div className="grid grid-cols-7" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
           {HEBREW_DAYS.map(d => (
-            <div key={d} className="py-2.5 text-center text-xs font-semibold" style={{ color: '#94a3b8' }}>{d}</div>
+            <div key={d} className="py-2.5 text-center text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>{d}</div>
           ))}
         </div>
         {/* Cells */}
@@ -582,18 +560,18 @@ const CalendarScreen = ({ calItems, onAddItem, onDeleteItem, clients }) => {
                 onClick={() => openDay(day)}
                 className="min-h-20 p-1.5 transition-colors"
                 style={{
-                  borderBottom: '1px solid #f1f5f9',
-                  borderLeft: '1px solid #f1f5f9',
+                  borderBottom: '1px solid var(--border)',
+                  borderLeft: '1px solid var(--border)',
                   cursor: day ? 'pointer' : 'default',
-                  background: isToday ? 'rgba(99,102,241,0.06)' : !day ? '#fafbfc' : 'transparent',
+                  background: isToday ? 'rgba(var(--accent-rgb),0.06)' : !day ? 'var(--bg-base)' : 'transparent',
                 }}
-                onMouseEnter={e => { if (day && !isToday) e.currentTarget.style.background = '#f8fafc'; }}
+                onMouseEnter={e => { if (day && !isToday) e.currentTarget.style.background = 'var(--bg-elevated)'; }}
                 onMouseLeave={e => { if (day && !isToday) e.currentTarget.style.background = 'transparent'; }}
               >
                 {day && (
                   <>
-                    <span className="text-xs font-semibold mb-1 block" style={{ color: isToday ? '#6366f1' : '#94a3b8' }}>
-                      {isToday ? <span style={{ background: '#6366f1', color: 'white', borderRadius: '50%', width: 20, height: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>{day}</span> : day}
+                    <span className="text-xs font-semibold mb-1 block" style={{ color: isToday ? 'var(--accent)' : 'var(--text-muted)' }}>
+                      {isToday ? <span style={{ background: 'var(--accent)', color: 'white', borderRadius: '50%', width: 20, height: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>{day}</span> : day}
                     </span>
                     <div className="flex flex-col gap-0.5">
                       {items.slice(0, 3).map(item => (
@@ -697,7 +675,7 @@ const LumaLogo = ({ showTagline = false }) => (
         fontWeight: 900,
         fontSize: showTagline ? 28 : 20,
         letterSpacing: '-0.02em',
-        color: '#111',
+        color: 'var(--text-primary)',
         lineHeight: 1,
       }}
     >
@@ -710,7 +688,7 @@ const LumaLogo = ({ showTagline = false }) => (
           fontWeight: 400,
           fontSize: 10,
           letterSpacing: '0.04em',
-          color: '#94a3b8',
+          color: 'var(--text-muted)',
         }}
       >
         Make Digital Brighter
@@ -724,14 +702,14 @@ const UserAvatar = ({ name = "S", size = "md" }) => {
   const initials = name.trim().charAt(0).toUpperCase();
   const sz = size === "sm" ? "w-7 h-7 text-xs" : "w-9 h-9 text-sm";
   return (
-    <div className={`${sz} rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-sm ring-2 ring-white flex-shrink-0`}>
+    <div className={`${sz} rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white font-bold shadow-sm ring-2 ring-white flex-shrink-0`}>
       {initials}
     </div>
   );
 };
 
 const NAV_ITEMS = [
-  { id: "home",     label: "דשבורד",    icon: (
+  { id: "home",     label: "היום",    icon: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
       <path d="M2 11l8-8 8 8M4 9v8h5v-5h2v5h5V9"/>
     </svg>
@@ -755,10 +733,11 @@ const NAV_ITEMS = [
 
 // Color accent per nav item
 const NAV_COLORS = {
-  home:     { from: '#6366f1', to: '#8b5cf6', glow: 'rgba(99,102,241,0.4)'  },
-  tasks:    { from: '#06b6d4', to: '#3b82f6', glow: 'rgba(59,130,246,0.4)'  },
-  clients:  { from: '#10b981', to: '#059669', glow: 'rgba(16,185,129,0.4)'  },
-  calendar: { from: '#f59e0b', to: '#ef4444', glow: 'rgba(245,158,11,0.4)'  },
+  home:     { from: '#f26b1d', to: '#ff9a4d', glow: 'rgba(242,107,29,0.35)' },
+  tasks:    { from: '#f26b1d', to: '#ff9a4d', glow: 'rgba(242,107,29,0.35)' },
+  clients:  { from: '#f26b1d', to: '#ff9a4d', glow: 'rgba(242,107,29,0.35)' },
+  calendar: { from: '#f26b1d', to: '#ff9a4d', glow: 'rgba(242,107,29,0.35)' },
+  stats:    { from: '#f26b1d', to: '#ff9a4d', glow: 'rgba(242,107,29,0.35)' },
 };
 
 const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => {
@@ -781,7 +760,7 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
       style={{
         width: 220,
         minWidth: 220,
-        background: 'rgba(13,13,16,0.72)',
+        background: 'var(--sidebar-bg)',
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         display: 'flex',
@@ -789,7 +768,7 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
         height: '100vh',
         position: 'sticky',
         top: 0,
-        borderLeft: '1px solid rgba(255,255,255,0.07)',
+        borderLeft: '1px solid rgba(var(--ink),0.07)',
         paddingBottom: 16,
         zIndex: 10,
       }}
@@ -797,10 +776,10 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
       {/* Logo */}
       <div style={{
         padding: '16px 22px 14px',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        borderBottom: '1px solid rgba(var(--ink),0.06)',
         display: 'flex', alignItems: 'center',
       }}>
-        <span style={{ fontFamily: "'Helvetica Neue',Helvetica,Arial,sans-serif", fontWeight: 900, fontSize: 24, letterSpacing: '-0.02em', color: '#fff', lineHeight: 1, userSelect: 'none' }}>LUMA</span>
+        <span style={{ fontFamily: "'Helvetica Neue',Helvetica,Arial,sans-serif", fontWeight: 900, fontSize: 24, letterSpacing: '-0.02em', color: 'var(--text-primary)', lineHeight: 1, userSelect: 'none' }}>LUMA</span>
       </div>
 
       {/* Nav items */}
@@ -830,21 +809,21 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
                   background: active
                     ? `linear-gradient(135deg, ${colors.from}22, ${colors.to}18)`
                     : 'transparent',
-                  color: active ? 'white' : 'rgba(255,255,255,0.38)',
+                  color: active ? 'var(--text-primary)' : 'rgba(var(--ink),0.5)',
                   boxShadow: 'none',
                   textAlign: 'right',
                   boxSizing: 'border-box',
                 }}
                 onMouseEnter={e => {
                   if (!active) {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
-                    e.currentTarget.style.color = 'rgba(255,255,255,0.72)';
+                    e.currentTarget.style.background = 'rgba(var(--ink),0.06)';
+                    e.currentTarget.style.color = 'rgba(var(--ink),0.72)';
                   }
                 }}
                 onMouseLeave={e => {
                   if (!active) {
                     e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = 'rgba(255,255,255,0.38)';
+                    e.currentTarget.style.color = 'rgba(var(--ink),0.38)';
                   }
                 }}
               >
@@ -870,7 +849,7 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
         })}
 
         {/* Divider */}
-        <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '8px 4px' }} />
+        <div style={{ height: 1, background: 'rgba(var(--ink),0.06)', margin: '8px 4px' }} />
 
         {/* Admin */}
         {isAdmin && (
@@ -880,11 +859,11 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
               width: '100%', borderRadius: 10, cursor: 'pointer', border: 'none',
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '10px 14px 10px 18px',
-              background: 'transparent', color: 'rgba(255,255,255,0.25)', transition: 'all 0.15s',
+              background: 'transparent', color: 'rgba(var(--ink),0.25)', transition: 'all 0.15s',
               textAlign: 'right', boxSizing: 'border-box',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.25)'; }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(var(--ink),0.06)'; e.currentTarget.style.color = 'rgba(var(--ink),0.65)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(var(--ink),0.25)'; }}
           >
             <span style={{ width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <svg viewBox="0 0 20 20" fill="currentColor" style={{ width: 16, height: 16 }}>
@@ -897,16 +876,16 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
       </nav>
 
       {/* User section */}
-      <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(var(--ink),0.06)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {/* Avatar */}
           <div style={{ position: 'relative', flexShrink: 0 }}>
             <div style={{
               width: 36, height: 36, borderRadius: '50%',
-              background: 'linear-gradient(135deg, #6366f1, #a855f7)',
+              background: 'linear-gradient(135deg, #f26b1d, #ff9a4d)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: 'white', fontWeight: 700, fontSize: 14,
-              boxShadow: '0 0 0 2px rgba(99,102,241,0.25), 0 0 10px rgba(168,85,247,0.2)',
+              boxShadow: '0 0 0 2px rgba(var(--accent-rgb),0.25), 0 0 10px rgba(var(--accent-rgb),0.15)',
             }}>
               {initials}
             </div>
@@ -914,7 +893,7 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
               <span style={{
                 position: 'absolute', bottom: -1, right: -1,
                 width: 11, height: 11, borderRadius: '50%',
-                background: '#6366f1', border: '2px solid #0c1122',
+                background: 'var(--accent)', border: '2px solid var(--bg-surface)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 6, color: 'white', fontWeight: 700,
               }}>★</span>
@@ -922,9 +901,10 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
           </div>
           {/* Name + role */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{userName}</p>
-            <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.28)', margin: 0 }}>{isAdmin ? 'מנהל' : 'משתמש'}</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'rgba(var(--ink),0.85)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{userName}</p>
+            <p style={{ fontSize: 10.5, color: 'rgba(var(--ink),0.28)', margin: 0 }}>{isAdmin ? 'מנהל' : 'משתמש'}</p>
           </div>
+          <ThemeToggleButton compact />
           {/* Sign out */}
           <button
             onClick={onSignOut}
@@ -932,15 +912,48 @@ const Sidebar = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) => 
             style={{
               width: 30, height: 30, borderRadius: 8, border: 'none', cursor: 'pointer', flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'transparent', color: 'rgba(255,255,255,0.18)', transition: 'all 0.15s',
+              background: 'transparent', color: 'rgba(var(--ink),0.18)', transition: 'all 0.15s',
               fontSize: 14,
             }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(248,113,113,0.1)'; e.currentTarget.style.color = '#f87171'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.18)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(var(--ink),0.18)'; }}
           >↩</button>
         </div>
       </div>
     </aside>
+  );
+};
+
+// ── Theme (light default, dark optional) ─────────────────────────────────────
+const getTheme = () => (document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+const toggleTheme = () => {
+  const next = getTheme() === 'dark' ? 'light' : 'dark';
+  if (next === 'dark') document.documentElement.dataset.theme = 'dark';
+  else delete document.documentElement.dataset.theme;
+  try { localStorage.setItem('luma-theme', next); } catch (e) {}
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', next === 'dark' ? '#121110' : '#f7f5f2');
+  return next;
+};
+const ThemeToggleButton = ({ compact = false, onDone }) => {
+  const [theme, setTheme] = useState(getTheme);
+  return (
+    <button
+      onClick={() => { setTheme(toggleTheme()); onDone && onDone(); }}
+      title={theme === 'dark' ? 'מצב בהיר' : 'מצב כהה'}
+      style={compact ? {
+        width: 30, height: 30, borderRadius: 8, border: 'none', flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'transparent', color: 'var(--text-muted)', fontSize: 14,
+      } : {
+        width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+        padding: '10px 14px', borderRadius: 10, border: 'none', background: 'transparent',
+        color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500,
+      }}
+    >
+      <span>{theme === 'dark' ? '☀️' : '🌙'}</span>
+      {!compact && (theme === 'dark' ? 'מצב בהיר' : 'מצב כהה')}
+    </button>
   );
 };
 
@@ -965,7 +978,7 @@ const BottomNav = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) =
   return (
     <nav dir="rtl" style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
-      background: 'rgba(20,20,24,0.85)',
+      background: 'var(--sidebar-bg)',
       backdropFilter: 'blur(20px)',
       WebkitBackdropFilter: 'blur(20px)',
       borderTop: '1px solid var(--border)',
@@ -1051,7 +1064,7 @@ const BottomNavMore = ({ isAdmin, onOpenAdmin, onSignOut }) => {
             position: 'absolute', bottom: 68, left: '50%', transform: 'translateX(-50%)',
             background: 'var(--bg-elevated)', border: '1px solid var(--border)',
             borderRadius: 14, padding: 8, minWidth: 140, zIndex: 99,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
           }} dir="rtl">
             {isAdmin && (
               <button
@@ -1068,6 +1081,7 @@ const BottomNavMore = ({ isAdmin, onOpenAdmin, onSignOut }) => {
                 ניהול מערכת
               </button>
             )}
+            <ThemeToggleButton onDone={() => setOpen(false)} />
             <button
               onClick={() => { onSignOut(); setOpen(false); }}
               style={{
@@ -1089,7 +1103,7 @@ const BottomNavMore = ({ isAdmin, onOpenAdmin, onSignOut }) => {
 };
 
 // ── Mobile top header ────────────────────────────────────────────────────────
-const SCREEN_LABELS = { home: 'בית', tasks: 'משימות', clients: 'לקוחות', calendar: 'לוח שנה' };
+const SCREEN_LABELS = { home: 'היום', tasks: 'משימות', clients: 'לקוחות', calendar: 'לוח תוכן', stats: 'סטטיסטיקה' };
 
 const MobileHeader = ({ screen, user }) => {
   const initials = (user?.name || "U").trim().charAt(0).toUpperCase();
@@ -1112,7 +1126,7 @@ const MobileHeader = ({ screen, user }) => {
       <div style={{
         width: 30, height: 30, borderRadius: '50%',
         background: 'var(--accent-dim)',
-        border: '1px solid rgba(124,110,245,0.3)',
+        border: '1px solid rgba(var(--accent-rgb),0.3)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         color: 'var(--accent)', fontWeight: 700, fontSize: 12,
       }}>
@@ -1126,10 +1140,10 @@ const MobileHeader = ({ screen, user }) => {
 const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks, children }) => {
   const mobile = useMobile();
   return (
-    <div style={{ display: 'flex', flexDirection: 'row-reverse', height: '100vh', overflow: 'hidden', background: 'radial-gradient(ellipse 90% 70% at 80% 0%, #1e1a35 0%, var(--bg-base) 55%)' }}>
+    <div style={{ display: 'flex', flexDirection: 'row-reverse', height: '100vh', overflow: 'hidden', background: 'radial-gradient(ellipse 90% 70% at 80% 0%, rgba(var(--accent-rgb),0.06) 0%, var(--bg-base) 55%)' }}>
       <main dir="rtl" style={{
         flex: 1, overflowY: 'auto', overflowX: 'hidden',
-        background: 'rgba(13,13,16,0.82)',
+        background: 'var(--sidebar-bg)',
         backdropFilter: 'blur(0px)',
         paddingBottom: mobile ? 56 : 0,
       }}>
@@ -1162,7 +1176,7 @@ const analyzePatterns = (tasks, clientsData) => {
 
   // 2. Waiting for approval too long (>5 days past due)
   const waitingOld = activeTasks.filter(t =>
-    t.status === 'ממתין לאישור' && t.date && (new Date(TODAY) - new Date(t.date)) > 5 * 86400000
+    t.status === STATUS_WAITING && t.date && (new Date(TODAY) - new Date(t.date)) > 5 * 86400000
   );
   if (waitingOld.length > 0) {
     insights.push({ icon: '🕐', color: 'yellow', text: `${waitingOld.length} משימ${waitingOld.length > 1 ? 'ות' : 'ה'} ממתינ${waitingOld.length > 1 ? 'ות' : 'ה'} לאישור מעל 5 ימים — שווה לפנות ללקוח` });
@@ -1323,7 +1337,7 @@ ${JSON.stringify(Object.entries(clientsData).map(([name, d]) => ({ name, ...d })
     return (
       <button
         onClick={onOpen}
-        style={{ position: 'fixed', bottom: chatBottom, left: 24, zIndex: 50, background: 'var(--accent)', color: 'white', borderRadius: '50%', width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: 22, boxShadow: '0 4px 20px rgba(124,110,245,0.4)' }}
+        style={{ position: 'fixed', bottom: chatBottom, left: 24, zIndex: 50, background: 'var(--accent)', color: 'white', borderRadius: '50%', width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: 22, boxShadow: '0 4px 20px rgba(var(--accent-rgb),0.4)' }}
         title="שאל קלוד AI"
       >
         🤖
@@ -1339,7 +1353,7 @@ ${JSON.stringify(Object.entries(clientsData).map(([name, d]) => ({ name, ...d })
           <span style={{ fontSize: 16 }}>🤖</span>
           <span style={{ fontWeight: 700, fontSize: 13 }}>קלוד AI — עוזר שיווק</span>
         </div>
-        <button onClick={onClose} style={{ color: 'rgba(255,255,255,0.8)', fontSize: 18, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+        <button onClick={onClose} style={{ color: 'rgba(var(--ink),0.8)', fontSize: 18, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
       </div>
 
       {!keyEntered ? (
@@ -1429,7 +1443,7 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
   const thisWeek     = activeTasks.filter(t => t.date > TODAY && t.date <= weekEndStr);
   const overdue      = activeTasks.filter(t => t.date < TODAY);
   const highUrgency  = activeTasks.filter(t => t.urgency === 'גבוהה');
-  const waiting      = activeTasks.filter(t => t.status === 'ממתין לאישור');
+  const waiting      = activeTasks.filter(t => t.status === STATUS_WAITING);
   const clientLoad = clients
     .map(name => ({
       name,
@@ -1493,8 +1507,8 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
         position: 'relative', overflow: 'hidden',
       }}>
         {/* decorative blobs */}
-        <div style={{ position:'absolute',top:-40,right:-40,width:180,height:180,borderRadius:'50%',background:'radial-gradient(circle,rgba(124,110,245,0.12) 0%,transparent 70%)',pointerEvents:'none' }}/>
-        <div style={{ position:'absolute',bottom:-50,left:60,width:220,height:220,borderRadius:'50%',background:'radial-gradient(circle,rgba(124,110,245,0.07) 0%,transparent 70%)',pointerEvents:'none' }}/>
+        <div style={{ position:'absolute',top:-40,right:-40,width:180,height:180,borderRadius:'50%',background:'radial-gradient(circle,rgba(var(--accent-rgb),0.12) 0%,transparent 70%)',pointerEvents:'none' }}/>
+        <div style={{ position:'absolute',bottom:-50,left:60,width:220,height:220,borderRadius:'50%',background:'radial-gradient(circle,rgba(var(--accent-rgb),0.07) 0%,transparent 70%)',pointerEvents:'none' }}/>
         <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',position:'relative' }}>
           <div>
             <p style={{ fontSize: mobile ? 12 : 13, color:'var(--text-muted)', margin:'0 0 4px', letterSpacing:'0.04em' }}>יום {dayName} · {d}/{m}/{y}</p>
@@ -1523,9 +1537,9 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: mobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: mobile ? 10 : 14, marginBottom: mobile ? 14 : 24 }}>
-        <KpiCard label="משימות פתוחות" value={activeTasks.length} sub={`${overdue.length} באיחור`} gradient="linear-gradient(135deg,rgba(124,110,245,0.25) 0%,rgba(124,110,245,0.1) 100%)" glow="rgba(124,110,245,0.15)" icon="📋" onClick={onNavigateWithFilter ? () => onNavigateWithFilter(null) : undefined} />
+        <KpiCard label="משימות פתוחות" value={activeTasks.length} sub={`${overdue.length} באיחור`} gradient="linear-gradient(135deg,rgba(var(--accent-rgb),0.25) 0%,rgba(var(--accent-rgb),0.1) 100%)" glow="rgba(var(--accent-rgb),0.15)" icon="📋" onClick={onNavigateWithFilter ? () => onNavigateWithFilter(null) : undefined} />
         <KpiCard label="דחוף ומיידי" value={highUrgency.length} sub="דורש טיפול עכשיו" gradient="linear-gradient(135deg,rgba(239,68,68,0.25) 0%,rgba(239,68,68,0.1) 100%)" glow="rgba(239,68,68,0.15)" icon="⚡" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'urgency', value: 'גבוהה' }) : undefined} />
-        <KpiCard label="ממתין לאישור" value={waiting.length} sub="לקוחות ממתינים" gradient="linear-gradient(135deg,rgba(245,158,11,0.25) 0%,rgba(245,158,11,0.1) 100%)" glow="rgba(245,158,11,0.15)" icon="⏳" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'status', value: 'ממתין לאישור' }) : undefined} />
+        <KpiCard label="ממתין ללקוח" value={waiting.length} sub="לקוחות ממתינים" gradient="linear-gradient(135deg,rgba(245,158,11,0.25) 0%,rgba(245,158,11,0.1) 100%)" glow="rgba(245,158,11,0.15)" icon="⏳" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'status', value: 'ממתין לאישור' }) : undefined} />
         <KpiCard label="פולו-אפ ממתין" value={activeTasks.filter(t => t.follow_up_date && t.follow_up_date <= TODAY).length} sub={`${activeTasks.filter(t => t.follow_up_date === TODAY).length} להיום`} gradient="linear-gradient(135deg,rgba(34,197,94,0.25) 0%,rgba(34,197,94,0.1) 100%)" glow="rgba(34,197,94,0.15)" icon="🔔" onClick={onNavigateWithFilter ? () => onNavigateWithFilter({ type: 'followup', value: true }) : undefined} />
       </div>
 
@@ -1542,7 +1556,7 @@ const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectCl
           <div style={{ display: 'flex', gap: 20, marginTop: 10 }}>
             {[
               { label: 'לביצוע', count: activeTasks.filter(t=>t.status==='לביצוע').length, color: 'var(--text-muted)' },
-              { label: 'בביצוע', count: activeTasks.filter(t=>t.status==='בביצוע').length, color: 'var(--accent)' },
+              { label: 'לביצוע', count: activeTasks.filter(t=>t.status===STATUS_TODO).length, color: 'var(--accent)' },
               { label: 'ממתין', count: waiting.length, color: '#f59e0b' },
               { label: 'בוצע', count: doneTasks.length, color: 'var(--green)' },
             ].map(s => (
@@ -1765,9 +1779,9 @@ const ClientsListScreen = ({ clientsData, tasks, onSelectClient, onAddClient }) 
   const clients = Object.keys(clientsData);
 
   return (
-    <div className="p-6 min-h-screen" style={{ background: '#f5f6fa' }} dir="rtl">
+    <div className="p-6 min-h-screen" style={{ background: 'var(--bg-base)' }} dir="rtl">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold" style={{ color: '#0f172a' }}>רשימת לקוחות</h2>
+        <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>רשימת לקוחות</h2>
         <button
           onClick={onAddClient}
           className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
@@ -1785,7 +1799,7 @@ const ClientsListScreen = ({ clientsData, tasks, onSelectClient, onAddClient }) 
             const clientTasks = tasks.filter(t => t.client === name && !t.done);
             const activePlatforms = [...new Set(tasks.filter(t => t.client === name).map(t => t.platform))];
             const highUrgency = clientTasks.filter(t => t.urgency === 'גבוהה').length;
-            const waiting = clientTasks.filter(t => t.status === 'ממתין לאישור').length;
+            const waiting = clientTasks.filter(t => t.status === STATUS_WAITING).length;
 
             return (
               <div
@@ -1852,7 +1866,7 @@ const ClientsListScreen = ({ clientsData, tasks, onSelectClient, onAddClient }) 
                   )}
                   {waiting > 0 && (
                     <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 99, background: 'rgba(245,158,11,0.15)', color: '#f59e0b', fontWeight: 700 }}>
-                      {waiting} ממתין לאישור
+                      {waiting} ממתין ללקוח
                     </span>
                   )}
                   {clientTasks.length === 0 && (
@@ -1903,13 +1917,13 @@ const ClientBriefTab = ({ brief = {}, onSave }) => {
 
   const Sec = ({ title, icon, children }) => (
     <div style={{ marginBottom: 24 }}>
-      <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+      <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
         <span>{icon}</span> {title}
       </p>
       {children}
     </div>
   );
-  const Lbl = ({ children }) => <label style={{ fontSize: 12, color: '#64748b', marginBottom: 4, display: 'block', fontWeight: 500 }}>{children}</label>;
+  const Lbl = ({ children }) => <label style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4, display: 'block', fontWeight: 500 }}>{children}</label>;
   const Inp = ({ field, placeholder }) => (
     <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
       placeholder={placeholder} value={form[field] || ''} onChange={e => set(field, e.target.value)} />
@@ -1924,9 +1938,9 @@ const ClientBriefTab = ({ brief = {}, onSave }) => {
         <button key={String(boolVal)} onClick={() => set(field, form[field] === boolVal ? null : boolVal)}
           style={{
             padding: '5px 14px', borderRadius: 99, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-            border: `1.5px solid ${form[field] === boolVal ? borderC : '#e2e8f0'}`,
+            border: `1.5px solid ${form[field] === boolVal ? borderC : 'var(--border-strong)'}`,
             background: form[field] === boolVal ? bgC : 'white',
-            color: form[field] === boolVal ? textC : '#94a3b8',
+            color: form[field] === boolVal ? textC : 'var(--text-muted)',
           }}>{label}</button>
       ))}
     </div>
@@ -1935,11 +1949,11 @@ const ClientBriefTab = ({ brief = {}, onSave }) => {
   return (
     <div style={{ paddingTop: 18 }}>
       {/* Completion bar */}
-      <div style={{ background: '#f8fafc', borderRadius: 10, padding: '10px 14px', border: '1px solid #f1f5f9', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ flex: 1, height: 4, background: '#e2e8f0', borderRadius: 99, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${(sectionsFilled / 9) * 100}%`, background: 'linear-gradient(90deg, #6366f1, #a855f7)', borderRadius: 99, transition: 'width 0.3s' }} />
+      <div style={{ background: 'var(--bg-elevated)', borderRadius: 10, padding: '10px 14px', border: '1px solid var(--border)', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ flex: 1, height: 4, background: 'var(--border-strong)', borderRadius: 99, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${(sectionsFilled / 9) * 100}%`, background: 'linear-gradient(90deg, #f26b1d, #ff9a4d)', borderRadius: 99, transition: 'width 0.3s' }} />
         </div>
-        <span style={{ fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap', fontWeight: 600 }}>{sectionsFilled}/9 סעיפים</span>
+        <span style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap', fontWeight: 600 }}>{sectionsFilled}/9 סעיפים</span>
       </div>
 
       {/* 1 — פרטי העסק */}
@@ -2046,9 +2060,9 @@ const ClientBriefTab = ({ brief = {}, onSave }) => {
       <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 4, paddingBottom: 8 }}>
         <button onClick={handleSave} style={{
           padding: '9px 22px', borderRadius: 99, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer',
-          background: saved ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,#6366f1,#a855f7)',
+          background: saved ? 'linear-gradient(135deg,#10b981,#059669)' : 'linear-gradient(135deg,#f26b1d,#ff9a4d)',
           color: 'white',
-          boxShadow: saved ? '0 4px 14px rgba(16,185,129,0.3)' : '0 4px 14px rgba(99,102,241,0.3)',
+          boxShadow: saved ? '0 4px 14px rgba(16,185,129,0.3)' : '0 4px 14px rgba(var(--accent-rgb),0.3)',
           transition: 'all 0.2s',
         }}>
           {saved ? '✓ נשמר' : 'שמור אפיון'}
@@ -2265,9 +2279,9 @@ const ClientScreen = ({ clientName, clientData, tasks, onBack, onAddTask, onTogg
         ) : (
           <table style={{ width: '100%', textAlign: 'right', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: 'var(--bg-elevated)', borderBottom: '2px solid rgba(255,255,255,0.08)' }}>
+              <tr style={{ background: 'var(--bg-elevated)', borderBottom: '2px solid rgba(var(--ink),0.08)' }}>
                 {COL_HEADERS.map((h, i) => (
-                  <th key={i} style={{ padding: '10px 12px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</th>
+                  <th key={i} style={{ padding: '10px 12px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: 'rgba(var(--ink),0.5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -2353,7 +2367,7 @@ const SetNewPasswordScreen = ({ onDone }) => {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              style={{ width: '100%', padding: '11px 0', borderRadius: 12, color: 'white', fontWeight: 700, fontSize: 13, border: 'none', cursor: loading ? 'default' : 'pointer', background: loading ? 'var(--text-muted)' : 'linear-gradient(135deg,#6366f1,#a855f7)' }}
+              style={{ width: '100%', padding: '11px 0', borderRadius: 12, color: 'white', fontWeight: 700, fontSize: 13, border: 'none', cursor: loading ? 'default' : 'pointer', background: loading ? 'var(--text-muted)' : 'linear-gradient(135deg,#f26b1d,#ff9a4d)' }}
             >
               {loading ? "⏳ שומר..." : "עדכן סיסמה"}
             </button>
@@ -2417,7 +2431,7 @@ const LoginScreen = ({ accessBlocked }) => {
       dir="rtl"
       style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
-        background: 'radial-gradient(ellipse at 70% 20%, rgba(124,110,245,0.15) 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(34,211,238,0.08) 0%, transparent 55%), var(--bg-base)'
+        background: 'radial-gradient(ellipse at 70% 20%, rgba(var(--accent-rgb),0.15) 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(var(--accent-rgb),0.05) 0%, transparent 55%), var(--bg-base)'
       }}
     >
       <div style={{ width: '100%', maxWidth: 380 }}>
@@ -2427,15 +2441,15 @@ const LoginScreen = ({ accessBlocked }) => {
           <svg viewBox="0 0 160 54" xmlns="http://www.w3.org/2000/svg" style={{ height: 48, width: 'auto' }} aria-label="LUMA">
             <defs>
               <linearGradient id="loginAGrad" x1="100%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%"   stopColor="#22d3ee" />
-                <stop offset="40%"  stopColor="#6366f1" />
-                <stop offset="100%" stopColor="#a855f7" />
+                <stop offset="0%"   stopColor="#ffb066" />
+                <stop offset="40%"  stopColor="#f26b1d" />
+                <stop offset="100%" stopColor="#ff9a4d" />
               </linearGradient>
               <clipPath id="loginAClip">
                 <text x="116" y="48" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="54">A</text>
               </clipPath>
             </defs>
-            <text x="0" y="48" fontFamily="'Helvetica Neue',Helvetica,Arial,sans-serif" fontWeight="900" fontSize="54" letterSpacing="-1.5" fill="var(--text-primary)">LUM</text>
+            <text x="0" y="48" fontFamily="'Helvetica Neue',Helvetica,Arial,sans-serif" fontWeight="900" fontSize="54" letterSpacing="-1.5" style={{ fill: "var(--text-primary)" }}>LUM</text>
             <text x="116" y="48" fontFamily="'Helvetica Neue',Helvetica,Arial,sans-serif" fontWeight="900" fontSize="54" letterSpacing="-1.5" fill="url(#loginAGrad)">A</text>
             <g clipPath="url(#loginAClip)" opacity="0.3">
               <line x1="116" y1="48" x2="160" y2="0"  stroke="white" strokeWidth="1.5"/>
@@ -2471,7 +2485,7 @@ const LoginScreen = ({ accessBlocked }) => {
                 {error && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--red)', fontSize: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', padding: '8px 12px', borderRadius: 10 }}><span>⚠</span><span>{error}</span></div>}
                 {success && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--green)', fontSize: 12, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', padding: '8px 12px', borderRadius: 10 }}><span>✅</span><span>{success}</span></div>}
                 <button onClick={handleEmailLogin} disabled={loading}
-                  style={{ width: '100%', padding: '10px 0', borderRadius: 12, fontSize: 13, fontWeight: 700, color: 'white', border: 'none', cursor: loading ? 'default' : 'pointer', background: 'linear-gradient(135deg,#6366f1,#a855f7)', boxShadow: '0 4px 14px rgba(139,92,246,0.35)', opacity: loading ? 0.6 : 1 }}>
+                  style={{ width: '100%', padding: '10px 0', borderRadius: 12, fontSize: 13, fontWeight: 700, color: 'white', border: 'none', cursor: loading ? 'default' : 'pointer', background: 'linear-gradient(135deg,#f26b1d,#ff9a4d)', boxShadow: '0 4px 14px rgba(139,92,246,0.35)', opacity: loading ? 0.6 : 1 }}>
                   {loading ? "⏳ שולח..." : "שלח קישור לאיפוס"}
                 </button>
                 <button onClick={() => switchMode("login")} style={{ background: 'none', border: 'none', fontSize: 12, color: 'var(--text-muted)', cursor: 'pointer', textAlign: 'center', marginTop: 4 }}>
@@ -2538,7 +2552,7 @@ const LoginScreen = ({ accessBlocked }) => {
                 {error && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--red)', fontSize: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', padding: '8px 12px', borderRadius: 10 }}><span>⚠</span><span>{error}</span></div>}
                 {success && <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--green)', fontSize: 12, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)', padding: '8px 12px', borderRadius: 10 }}><span>✅</span><span>{success}</span></div>}
                 <button onClick={handleEmailLogin} disabled={loading}
-                  style={{ width: '100%', padding: '10px 0', borderRadius: 12, fontSize: 13, fontWeight: 700, color: 'white', border: 'none', cursor: loading ? 'default' : 'pointer', marginTop: 4, background: loading ? 'var(--text-muted)' : 'linear-gradient(135deg,#6366f1,#a855f7)', boxShadow: loading ? 'none' : '0 4px 14px rgba(139,92,246,0.35)', opacity: loading ? 0.6 : 1 }}>
+                  style={{ width: '100%', padding: '10px 0', borderRadius: 12, fontSize: 13, fontWeight: 700, color: 'white', border: 'none', cursor: loading ? 'default' : 'pointer', marginTop: 4, background: loading ? 'var(--text-muted)' : 'linear-gradient(135deg,#f26b1d,#ff9a4d)', boxShadow: loading ? 'none' : '0 4px 14px rgba(139,92,246,0.35)', opacity: loading ? 0.6 : 1 }}>
                   {loading ? "⏳ מתחבר..." : mode === "login" ? "כניסה" : "יצירת חשבון"}
                 </button>
               </div>
@@ -2554,7 +2568,7 @@ const LoginScreen = ({ accessBlocked }) => {
 
 // ─── Admin Panel ─────────────────────────────────────────────────────────────
 const ROLE_COLORS = {
-  admin:   { background: 'var(--accent-dim)', color: 'var(--accent)', border: '1px solid rgba(124,110,245,0.3)' },
+  admin:   { background: 'var(--accent-dim)', color: 'var(--accent)', border: '1px solid rgba(var(--accent-rgb),0.3)' },
   user:    { background: 'var(--bg-active)', color: 'var(--text-secondary)', border: '1px solid var(--border)' },
   blocked: { background: 'rgba(239,68,68,0.1)', color: 'var(--red)', border: '1px solid rgba(239,68,68,0.25)' },
 };
@@ -2782,9 +2796,9 @@ const AdminPanel = ({ currentUser, onClose }) => {
 const URGENCY_CONFIG = {
   'גבוהה':  { border: '#ef4444', badge: 'linear-gradient(135deg,#ef4444,#f97316)', label: '⚡ דחוף' },
   'בינונית': { border: '#f97316', badge: 'linear-gradient(135deg,#f97316,#fbbf24)', label: '● בינוני' },
-  'נמוכה':  { border: '#6366f1', badge: 'linear-gradient(135deg,#6366f1,#8b5cf6)', label: '● נמוך' },
+  'נמוכה':  { border: 'var(--border-strong)', badge: '#a8a29e', label: '● נמוך' },
 };
-const STATUS_COLORS = { 'בביצוע': '#3b82f6', 'ממתין לאישור': '#f59e0b', 'לביצוע': '#94a3b8', 'בוצע': '#10b981' };
+const STATUS_COLORS = { [STATUS_WAITING]: '#f59e0b', [STATUS_TODO]: 'var(--text-muted)', 'בוצע': '#10b981' };
 
 const TaskCard = ({ task, onToggleDone, onClientClick, onTaskClick }) => {
   const uc = URGENCY_CONFIG[task.urgency] || URGENCY_CONFIG['נמוכה'];
@@ -2836,7 +2850,7 @@ const TaskCard = ({ task, onToggleDone, onClientClick, onTaskClick }) => {
         )}
         {!task.done && task.status !== 'לביצוע' && (
           <span style={{ fontSize: 11, fontWeight: 500, color: STATUS_COLORS[task.status] || 'var(--text-muted)' }}>
-            {task.status === 'בביצוע' ? '🔵' : '🟡'} {task.status}
+            🟡 {task.status}
           </span>
         )}
         {task.recurrence && task.recurrence !== 'none' && !task.done && (
@@ -2850,9 +2864,8 @@ const TaskCard = ({ task, onToggleDone, onClientClick, onTaskClick }) => {
 
 // ─── Kanban Board ────────────────────────────────────────────────────────────
 const KANBAN_COLUMNS = [
-  { key: 'לביצוע', label: 'לביצוע', color: '#94a3b8' },
-  { key: 'בביצוע', label: 'בביצוע', color: '#3b82f6' },
-  { key: 'ממתין לאישור', label: 'ממתין לאישור', color: '#f59e0b' },
+  { key: STATUS_TODO, label: STATUS_TODO, color: 'var(--text-muted)' },
+  { key: STATUS_WAITING, label: STATUS_WAITING, color: '#f59e0b' },
   { key: 'בוצע', label: 'בוצע', color: '#10b981' },
 ];
 
@@ -2888,8 +2901,8 @@ const KanbanBoard = ({ tasks, onDropTask, onToggleDone, onClientClick, onTaskCli
             style={{
               flex: mobile ? '0 0 78vw' : '1 1 260px',
               minWidth: mobile ? '78vw' : 260,
-              background: isOver ? '#eef2ff' : '#f8fafc',
-              border: `1px dashed ${isOver ? '#a5b4fc' : '#e2e8f0'}`,
+              background: isOver ? '#eef2ff' : 'var(--bg-elevated)',
+              border: `1px dashed ${isOver ? '#a5b4fc' : 'var(--border-strong)'}`,
               borderRadius: 16,
               padding: 10,
               transition: 'background 0.15s, border-color 0.15s',
@@ -2897,8 +2910,8 @@ const KanbanBoard = ({ tasks, onDropTask, onToggleDone, onClientClick, onTaskCli
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px 10px' }}>
               <span style={{ width: 8, height: 8, borderRadius: 99, background: col.color, flexShrink: 0 }} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>{col.label}</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', background: '#fff', border: '1px solid #e8eaf0', borderRadius: 99, padding: '1px 8px', marginRight: 'auto' }}>{items.length}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{col.label}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 99, padding: '1px 8px', marginRight: 'auto' }}>{items.length}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 40 }}>
               {items.map(task => (
@@ -2913,7 +2926,7 @@ const KanbanBoard = ({ tasks, onDropTask, onToggleDone, onClientClick, onTaskCli
                 </div>
               ))}
               {items.length === 0 && (
-                <p style={{ textAlign: 'center', color: '#cbd5e1', fontSize: 12, fontStyle: 'italic', padding: '16px 0' }}>ריק</p>
+                <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 12, fontStyle: 'italic', padding: '16px 0' }}>ריק</p>
               )}
             </div>
           </div>
@@ -2994,6 +3007,18 @@ const TaskManager = () => {
     return () => { subscription.unsubscribe(); clearTimeout(timeout); };
   }, []);
 
+  // ── Day rollover: keep "today" correct when the app stays open overnight ──
+  const [, setDayTick] = useState(TODAY);
+  useEffect(() => {
+    const check = () => {
+      const t = localToday();
+      if (t !== TODAY) { TODAY = t; setDayTick(t); }
+    };
+    const iv = setInterval(check, 60000);
+    document.addEventListener('visibilitychange', check);
+    return () => { clearInterval(iv); document.removeEventListener('visibilitychange', check); };
+  }, []);
+
   // ── Load data when user logs in ──
   useEffect(() => {
     if (!user || !supabase) return;
@@ -3007,10 +3032,10 @@ const TaskManager = () => {
     const channel = supabase
       .channel('tasks-realtime')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tasks' }, ({ new: newRow }) => {
-        setTasks(prev => prev.some(t => t.id === newRow.id) ? prev : [...prev, newRow]);
+        setTasks(prev => prev.some(t => t.id === newRow.id) ? prev : [...prev, normTask(newRow)]);
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks' }, ({ new: newRow }) => {
-        setTasks(prev => prev.map(t => t.id === newRow.id ? newRow : t));
+        setTasks(prev => prev.map(t => t.id === newRow.id ? normTask(newRow) : t));
       })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'tasks' }, ({ old: oldRow }) => {
         setTasks(prev => prev.filter(t => t.id !== oldRow.id));
@@ -3020,7 +3045,8 @@ const TaskManager = () => {
   }, [user]);
 
   const loadTasks = async () => {
-    const { data } = await supabase.from("tasks").select("*").order("created_at");
+    const { data: raw } = await supabase.from("tasks").select("*").order("created_at");
+    const data = raw && raw.map(normTask);
     if (data) {
       setTasks(data);
       // Run on next tick so state is settled
@@ -3190,6 +3216,17 @@ const TaskManager = () => {
     setShowTaskModal(false);
   };
 
+  const quickAddTask = async (t) => {
+    const taskData = { ...emptyTask, ...t, user_id: user?.id };
+    delete taskData.id;
+    if (supabase) {
+      const { data, error } = await supabase.from("tasks").insert([taskData]).select().single();
+      if (!error && data) setTasks(prev => prev.some(x => x.id === data.id) ? prev : [...prev, data]);
+    } else {
+      setTasks(prev => [...prev, { ...taskData, id: Date.now() }]);
+    }
+  };
+
   const saveClientData = async (oldName, newName, data) => {
     const isRename = newName && newName !== oldName;
     if (isRename) {
@@ -3257,8 +3294,8 @@ const TaskManager = () => {
 
   // ── Auth / loading gates ──
   if (authLoading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#f5f6fa' }} dir="rtl">
-      <div style={{ color: '#94a3b8', fontSize: 16 }}>⏳ טוען...</div>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-base)' }} dir="rtl">
+      <div style={{ color: 'var(--text-muted)', fontSize: 16 }}>⏳ טוען...</div>
     </div>
   );
 
@@ -3267,8 +3304,8 @@ const TaskManager = () => {
   if (!supabase || !user) return <LoginScreen accessBlocked={accessBlocked} />;
 
   if (dbLoading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#f5f6fa' }} dir="rtl">
-      <div style={{ color: '#94a3b8', fontSize: 16 }}>⏳ טוען נתונים...</div>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-base)' }} dir="rtl">
+      <div style={{ color: 'var(--text-muted)', fontSize: 16 }}>⏳ טוען נתונים...</div>
     </div>
   );
 
@@ -3279,9 +3316,8 @@ const TaskManager = () => {
   const thisWeek = activeTasks.filter(t => t.date >= TODAY && t.date <= weekEnd.toISOString().slice(0, 10));
   const overdue = activeTasks.filter(t => t.date < TODAY);
   const pipeline = {
-    todo: activeTasks.filter(t => t.status === "לביצוע").length,
-    doing: activeTasks.filter(t => t.status === "בביצוע").length,
-    waiting: activeTasks.filter(t => t.status === "ממתין לאישור").length,
+    todo: activeTasks.filter(t => t.status === STATUS_TODO).length,
+    waiting: activeTasks.filter(t => t.status === STATUS_WAITING).length,
   };
   const nextTask = [...activeTasks].filter(t => t.date >= TODAY).sort((a, b) => a.date.localeCompare(b.date))[0];
   const doneTasks = tasks.filter(t => t.done);
@@ -3412,6 +3448,24 @@ const TaskManager = () => {
     }
     if (screen === "home") {
       return (
+        <TodayScreen
+          tasks={tasks.filter(t => t.done || !t.recurrence || t.recurrence === 'none' || !t.date || t.date <= lookaheadDate)}
+          clients={clients}
+          user={currentUser}
+          today={TODAY}
+          mobile={mobile}
+          onToggleDone={toggleDone}
+          onUpdateTask={updateTask}
+          onQuickAdd={quickAddTask}
+          onOpenFullAdd={(t) => { setNewTask({ ...emptyTask, ...t }); setShowTaskModal(true); }}
+          onTaskClick={setSelectedTask}
+          onClientClick={setSelectedClient}
+          onOpenStats={() => setScreen("stats")}
+        />
+      );
+    }
+    if (screen === "stats") {
+      return (
         <>
           <HomeScreen
             tasks={tasks}
@@ -3466,10 +3520,10 @@ const TaskManager = () => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
             <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.5px' }}>משימות</h1>
-            <span style={{ fontSize: 13, color: '#94a3b8', fontWeight: 400 }}>ניהול וורקפלואו</span>
+            <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 400 }}>ניהול וורקפלואו</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
-            <span style={{ background: '#ffffff', border: '1px solid #e8eaf0', borderRadius: 8, padding: '4px 12px', fontWeight: 500, color: '#64748b' }}>
+            <span style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '4px 12px', fontWeight: 500, color: 'var(--text-secondary)' }}>
               {new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}
             </span>
           </div>
@@ -3511,8 +3565,8 @@ const TaskManager = () => {
                   </div>
                 )}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-elevated)', border: '1px solid var(--border)', padding: '5px 12px', borderRadius: 8, fontSize: 12 }}>
-                  <span style={{ color: 'var(--text-secondary)' }}>בביצוע</span>
-                  <span style={{ fontWeight: 700, color: '#60a5fa' }}>{pipeline.doing}</span>
+                  <span style={{ color: 'var(--text-secondary)' }}>לביצוע</span>
+                  <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{pipeline.todo}</span>
                   <span style={{ color: 'var(--border-strong)' }}>·</span>
                   <span style={{ color: 'var(--text-secondary)' }}>ממתין</span>
                   <span style={{ fontWeight: 700, color: '#fbbf24' }}>{pipeline.waiting}</span>
@@ -3565,7 +3619,7 @@ const TaskManager = () => {
             style={{
               padding: '4px 12px', borderRadius: 6, fontSize: 12, fontWeight: 500, border: '1px solid', whiteSpace: 'nowrap', transition: 'all 0.12s', cursor: 'pointer', flexShrink: 0,
               background: activeFilter === client ? 'var(--accent-dim)' : 'var(--bg-elevated)',
-              borderColor: activeFilter === client ? 'rgba(124,110,245,0.3)' : 'var(--border)',
+              borderColor: activeFilter === client ? 'rgba(var(--accent-rgb),0.3)' : 'var(--border)',
               color: activeFilter === client ? 'var(--accent)' : 'var(--text-secondary)',
             }}
           >
@@ -3580,9 +3634,8 @@ const TaskManager = () => {
           {[
             { label: 'הכל', filter: null },
             { label: '⚡ דחוף', filter: { type: 'urgency', value: 'גבוהה' } },
-            { label: '⏳ ממתין', filter: { type: 'status', value: 'ממתין לאישור' } },
-            { label: '🔵 בביצוע', filter: { type: 'status', value: 'בביצוע' } },
-            { label: 'לביצוע', filter: { type: 'status', value: 'לביצוע' } },
+            { label: '⏳ ממתין ללקוח', filter: { type: 'status', value: STATUS_WAITING } },
+            { label: 'לביצוע', filter: { type: 'status', value: STATUS_TODO } },
             { label: '🔁 חוזרות', filter: { type: 'recurrence', value: true } },
           ].map(({ label, filter }) => {
             const isActive = !filter ? !statusFilter : (statusFilter?.type === filter.type && statusFilter?.value === filter.value);
@@ -3593,7 +3646,7 @@ const TaskManager = () => {
                 style={{
                   padding: '4px 12px', borderRadius: 6, fontSize: 12, fontWeight: 500, border: '1px solid', whiteSpace: 'nowrap', transition: 'all 0.12s', cursor: 'pointer', flexShrink: 0,
                   background: isActive ? 'var(--accent-dim)' : 'var(--bg-elevated)',
-                  borderColor: isActive ? 'rgba(124,110,245,0.3)' : 'var(--border)',
+                  borderColor: isActive ? 'rgba(var(--accent-rgb),0.3)' : 'var(--border)',
                   color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
                 }}
               >
@@ -3641,9 +3694,9 @@ const TaskManager = () => {
         <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
           <table className="w-full text-right border-collapse">
             <thead>
-              <tr style={{ background: 'var(--bg-elevated)', borderBottom: '2px solid rgba(255,255,255,0.08)' }}>
+              <tr style={{ background: 'var(--bg-elevated)', borderBottom: '2px solid rgba(var(--ink),0.08)' }}>
                 {COL_HEADERS.map((h, i) => (
-                  <th key={i} className="px-3 py-3 text-right" style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</th>
+                  <th key={i} className="px-3 py-3 text-right" style={{ fontSize: 11, fontWeight: 700, color: 'rgba(var(--ink),0.5)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</th>
                 ))}
               </tr>
             </thead>

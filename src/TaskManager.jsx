@@ -2449,7 +2449,7 @@ const LoginScreen = ({ accessBlocked }) => {
                 <text x="116" y="48" fontFamily="'Helvetica Neue',Arial,sans-serif" fontWeight="900" fontSize="54">A</text>
               </clipPath>
             </defs>
-            <text x="0" y="48" fontFamily="'Helvetica Neue',Helvetica,Arial,sans-serif" fontWeight="900" fontSize="54" letterSpacing="-1.5" fill="var(--text-primary)">LUM</text>
+            <text x="0" y="48" fontFamily="'Helvetica Neue',Helvetica,Arial,sans-serif" fontWeight="900" fontSize="54" letterSpacing="-1.5" style={{ fill: "var(--text-primary)" }}>LUM</text>
             <text x="116" y="48" fontFamily="'Helvetica Neue',Helvetica,Arial,sans-serif" fontWeight="900" fontSize="54" letterSpacing="-1.5" fill="url(#loginAGrad)">A</text>
             <g clipPath="url(#loginAClip)" opacity="0.3">
               <line x1="116" y1="48" x2="160" y2="0"  stroke="white" strokeWidth="1.5"/>

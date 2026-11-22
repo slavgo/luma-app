@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "./supabase.js";
+import { UpcomingCharges } from "./ExpensesScreen.jsx";
 import { parseQuickTask, addDays, localToday, STATUS_TODO, STATUS_WAITING, DEFAULT_CLIENT } from "./lib/taskCore.js";
 
 const DAY_NAMES = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
@@ -15,8 +16,8 @@ export const relativeDate = (date, today) => {
   if (d === -1) return 'אתמול';
   if (d < 0) return `לפני ${-d} ימים`;
   if (d < 7) return `יום ${DAY_SHORT[new Date(date + 'T00:00:00Z').getUTCDay()]}`;
-  const [, m, dd] = date.split('-');
-  return `${Number(dd)}.${Number(m)}`;
+  const [y, m, dd] = date.split('-');
+  return `${Number(dd)}.${Number(m)}${y !== today.slice(0, 4) ? `.${y.slice(2)}` : ''}`;
 };
 
 const isRecurring = (t) => t.recurrence && t.recurrence !== 'none';
@@ -272,7 +273,7 @@ const HermesConnect = () => {
 };
 
 // ─── Screen ─────────────────────────────────────────────────────────────────
-export default function TodayScreen({ tasks, clients, user, today = localToday(), onToggleDone, onUpdateTask, onQuickAdd, onOpenFullAdd, onTaskClick, onClientClick, onOpenStats, mobile }) {
+export default function TodayScreen({ tasks, expenses = [], onOpenExpenses, clients, user, today = localToday(), onToggleDone, onUpdateTask, onQuickAdd, onOpenFullAdd, onTaskClick, onClientClick, onOpenStats, mobile }) {
   const open = tasks.filter(t => !t.done);
   const weekEnd = addDays(today, 7);
 
@@ -315,6 +316,7 @@ export default function TodayScreen({ tasks, clients, user, today = localToday()
       <Section title="ממתין ללקוח" count={waiting.length} tone="amber">
         {waiting.map(t => <TodayRow key={t.id} task={t} {...rowProps} />)}
       </Section>
+      <UpcomingCharges expenses={expenses} today={today} onOpen={onOpenExpenses} />
       <Section title="השבוע" count={upcoming.length} collapsible defaultOpen={overdue.length + todays.length < 3}>
         {upcoming.map(t => <TodayRow key={t.id} task={t} {...rowProps} />)}
       </Section>

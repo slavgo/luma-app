@@ -156,3 +156,31 @@ export const advanceToNextValidDate = (taskDate, recurrence, today = localToday(
   }
   return date;
 };
+
+// ── Fixed expenses ───────────────────────────────────────────
+export const USD_TO_ILS = 3.7; // approximate, used for totals only
+export const EXPENSE_CATEGORIES = ['AI', 'תשתית', 'תוכנה', 'דומיינים', 'שיווק', 'למידה', 'אחר'];
+export const CYCLE_LABELS = { monthly: 'חודשי', yearly: 'שנתי' };
+
+export const addMonths = (dateStr, n) => {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const target = new Date(Date.UTC(y, m - 1 + n, 1));
+  const last = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
+  target.setUTCDate(Math.min(d, last));
+  return target.toISOString().slice(0, 10);
+};
+
+// Roll a past charge date forward to the next one >= today
+export const nextChargeDate = (dateStr, cycle, today = localToday()) => {
+  if (!dateStr) return '';
+  let d = dateStr;
+  for (let i = 0; i < 120 && d < today; i++) d = addMonths(d, cycle === 'yearly' ? 12 : 1);
+  return d;
+};
+
+export const toIls = (amount, currency) => (Number(amount) || 0) * (currency === 'USD' ? USD_TO_ILS : 1);
+export const monthlyIls = (e) => (e.active === false ? 0 : toIls(e.amount, e.currency) / (e.cycle === 'yearly' ? 12 : 1));
+export const formatMoney = (amount, currency) =>
+  amount === null || amount === undefined || amount === '' ? '?' :
+  currency === 'USD' ? `$${Number(amount).toLocaleString('en-US', { maximumFractionDigits: 2 })}` :
+  `₪${Number(amount).toLocaleString('he-IL', { maximumFractionDigits: 2 })}`;

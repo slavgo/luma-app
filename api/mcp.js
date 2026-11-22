@@ -4,12 +4,14 @@ import {
   admin, configError, userFromAgentKey, getClients, getTask, allTasks, advanceRecurring, markDone,
   matchClient, parseQuickTask, todaySummary, taskLine, relativeDate, dayName, localToday, addDays,
   urgencyFromDate, STATUS_TODO, STATUS_WAITING, DEFAULT_CLIENT, PLATFORMS,
+  getExpenses, expenseLine, upcomingCharges, monthlyIls, formatMoney, EXPENSE_CATEGORIES, USD_TO_ILS,
 } from './_lib/core.js';
 
 const INSTRUCTIONS = `LUMA task manager — Slav's digital-marketing agency tasks (Hebrew). Today's date is always included in tool results; dates are YYYY-MM-DD in Israel time.
 Statuses: "${STATUS_TODO}" or "${STATUS_WAITING}" (waiting on the client); finished tasks are marked done with complete_task.
 When Slav asks what's on today, call get_today and present it briefly in Hebrew.
 When he mentions something to do, call add_task (prefer structured fields; use an existing client name from list_clients; default client is "${DEFAULT_CLIENT}" for internal work).
+Fixed business expenses (subscriptions, tools, domains) live in list_expenses / add_expense / update_expense — not personal purchases.
 When he says he finished something, find it (get_today / list_tasks) and call complete_task with its id. Confirm actions in one short Hebrew line.`;
 
 const TOOLS = [
@@ -90,6 +92,56 @@ const TOOLS = [
     inputSchema: { type: 'object', properties: { id: { type: 'number' } }, required: ['id'] },
   },
   {
+    name: 'list_expenses',
+    description: 'Fixed business expenses (subscriptions, tools, domains): monthly/yearly totals in ILS, per-category breakdown, upcoming charges, and each item with [#id].',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        category: { type: 'string', enum: EXPENSE_CATEGORIES },
+        include_inactive: { type: 'boolean' },
+        upcoming_days: { type: 'number', description: 'Show charges due within N days (default 14)' },
+      },
+    },
+  },
+  {
+    name: 'add_expense',
+    description: 'Add a recurring business expense (subscription, tool, domain). Not for one-off or personal purchases.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        amount: { type: 'number' },
+        currency: { type: 'string', enum: ['ILS', 'USD'] },
+        cycle: { type: 'string', enum: ['monthly', 'yearly'] },
+        next_date: { type: 'string', description: 'Next charge date YYYY-MM-DD' },
+        category: { type: 'string', enum: EXPENSE_CATEGORIES },
+        client: { type: 'string', description: 'Client this cost belongs to (optional)' },
+        notes: { type: 'string' },
+      },
+      required: ['name'],
+    },
+  },
+  {
+    name: 'update_expense',
+    description: 'Change an expense, or cancel it (active=false) when a subscription is cancelled.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'number' },
+        name: { type: 'string' },
+        amount: { type: 'number' },
+        currency: { type: 'string', enum: ['ILS', 'USD'] },
+        cycle: { type: 'string', enum: ['monthly', 'yearly'] },
+        next_date: { type: 'string' },
+        category: { type: 'string', enum: EXPENSE_CATEGORIES },
+        client: { type: 'string' },
+        notes: { type: 'string' },
+        active: { type: 'boolean' },
+      },
+      required: ['id'],
+    },
+  },
+  {
     name: 'list_clients',
     description: 'List client names, with count of open tasks each.',
     inputSchema: { type: 'object', properties: {} },
@@ -106,8 +158,11 @@ async function callTool(name, args, ctx) {
 
   switch (name) {
     case 'get_today': {
-      const tasks = await advanceRecurring(db, await allTasks(db, userId), today);
-      return todaySummary(tasks, today).text;
+      const [tasks, expenses] = await Promise.all([
+        allTasks(db, userId).then(t => advanceRecurring(db, t, today)),
+        getExpenses(db, userId, today),
+      ]);
+      return todaySummary(tasks, today, expenses).text;
     }
 
     case 'list_tasks': {
@@ -201,6 +256,61 @@ async function callTool(name, args, ctx) {
       if (!task) return notFound(args.id);
       await db.from('tasks').delete().eq('id', task.id);
       return `🗑 נמחקה: ${task.task} — ${task.client}`;
+    }
+
+    case 'list_expenses': {
+      const all = await getExpenses(db, userId, today);
+      const active = all.filter(e => e.active !== false);
+      const monthly = active.reduce((s, e) => s + monthlyIls(e), 0);
+      const shown = all.filter(e => (args.include_inactive || e.active !== false) && (!args.category || e.category === args.category))
+        .sort((a, b) => monthlyIls(b) - monthlyIls(a));
+      const cats = EXPENSE_CATEGORIES.map(c => [c, active.filter(e => e.category === c).reduce((s, e) => s + monthlyIls(e), 0)])
+        .filter(([, v]) => v > 0).map(([c, v]) => `${c} ₪${Math.round(v)}`).join(' · ');
+      const soon = upcomingCharges(all, today, Number(args.upcoming_days) || 14);
+      const missing = active.filter(e => e.amount == null).length;
+      return [
+        header(today),
+        `סה"כ פעיל: ₪${Math.round(monthly)} בחודש · ₪${Math.round(monthly * 12)} בשנה (דולר ≈ ₪${USD_TO_ILS}${missing ? `; ${missing} בלי סכום` : ''})`,
+        cats ? `לפי קטגוריה (חודשי): ${cats}` : '',
+        soon.length ? `\nחיובים קרובים:\n${soon.map(e => `• ${relativeDate(e.next_date, today)}: ${e.name} ${formatMoney(e.amount, e.currency)}`).join('\n')}` : '',
+        `\nכל ההוצאות (${shown.length}):`,
+        ...shown.map(e => expenseLine(e, today)),
+      ].filter(Boolean).join('\n');
+    }
+
+    case 'add_expense': {
+      const row = {
+        user_id: userId,
+        name: String(args.name).trim(),
+        amount: typeof args.amount === 'number' ? args.amount : null,
+        currency: args.currency === 'USD' ? 'USD' : 'ILS',
+        cycle: args.cycle === 'yearly' ? 'yearly' : 'monthly',
+        next_date: isDate(args.next_date) ? args.next_date : '',
+        category: EXPENSE_CATEGORIES.includes(args.category) ? args.category : 'אחר',
+        client: args.client ? (matchClient(args.client, await getClients(db, userId)) || args.client) : '',
+        notes: args.notes || '',
+        active: true,
+      };
+      const { data, error } = await db.from('expenses').insert([row]).select().single();
+      if (error) throw new Error(error.message);
+      return `נוספה הוצאה: ${expenseLine(data, today)}`;
+    }
+
+    case 'update_expense': {
+      const { data: cur } = await db.from('expenses').select('*').eq('id', Number(args.id)).eq('user_id', userId).maybeSingle();
+      if (!cur) return `לא נמצאה הוצאה #${args.id}`;
+      const u = {};
+      for (const k of ['name', 'notes', 'client']) if (args[k] !== undefined) u[k] = args[k];
+      if (args.amount !== undefined) u.amount = args.amount;
+      if (args.currency) u.currency = args.currency === 'USD' ? 'USD' : 'ILS';
+      if (args.cycle) u.cycle = args.cycle === 'yearly' ? 'yearly' : 'monthly';
+      if (args.next_date !== undefined) u.next_date = isDate(args.next_date) ? args.next_date : '';
+      if (args.category && EXPENSE_CATEGORIES.includes(args.category)) u.category = args.category;
+      if (args.active !== undefined) u.active = !!args.active;
+      if (!Object.keys(u).length) return 'לא צוין מה לשנות';
+      const { data, error } = await db.from('expenses').update(u).eq('id', cur.id).select().single();
+      if (error) throw new Error(error.message);
+      return `עודכן: ${expenseLine(data, today)}`;
     }
 
     case 'list_clients': {

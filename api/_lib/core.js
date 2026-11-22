@@ -4,9 +4,11 @@ import { createHash, randomBytes } from 'crypto';
 import {
   localToday, addDays, weekday, normStatus, parseQuickTask, urgencyFromDate, getNextRecurrenceDate,
   advanceToNextValidDate, STATUS_TODO, STATUS_WAITING, DEFAULT_CLIENT, PLATFORMS,
+  nextChargeDate, monthlyIls, formatMoney, EXPENSE_CATEGORIES, CYCLE_LABELS, USD_TO_ILS,
 } from '../../src/lib/taskCore.js';
 
-export { localToday, addDays, STATUS_TODO, STATUS_WAITING, DEFAULT_CLIENT, PLATFORMS, urgencyFromDate };
+export { localToday, addDays, STATUS_TODO, STATUS_WAITING, DEFAULT_CLIENT, PLATFORMS, urgencyFromDate,
+  monthlyIls, formatMoney, EXPENSE_CATEGORIES, CYCLE_LABELS, USD_TO_ILS };
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -54,8 +56,8 @@ export const relativeDate = (date, today) => {
   if (d === -1) return 'אתמול';
   if (d < 0) return `לפני ${-d} ימים`;
   if (d < 7) return `יום ${DAY_SHORT[weekday(date)]}`;
-  const [, m, dd] = date.split('-');
-  return `${Number(dd)}.${Number(m)}`;
+  const [y, m, dd] = date.split('-');
+  return `${Number(dd)}.${Number(m)}${y !== today.slice(0, 4) ? `.${y.slice(2)}` : ''}`;
 };
 
 export const taskLine = (t, today) =>
@@ -121,8 +123,27 @@ export function matchClient(name, clients) {
 
 export { parseQuickTask };
 
+// ── Expenses ─────────────────────────────────────────────────
+export async function getExpenses(db, userId, today) {
+  const { data, error } = await db.from('expenses').select('*').eq('user_id', userId).order('name');
+  if (error || !data) return [];
+  for (const e of data) {
+    if (e.active === false) continue;
+    const next = nextChargeDate(e.next_date, e.cycle, today);
+    if (next !== e.next_date) { await db.from('expenses').update({ next_date: next }).eq('id', e.id); e.next_date = next; }
+  }
+  return data;
+}
+
+export const expenseLine = (e, today) =>
+  `[#${e.id}] ${e.name} — ${formatMoney(e.amount, e.currency)} ${CYCLE_LABELS[e.cycle] || e.cycle} · ${e.category}${e.client ? ` · ${e.client}` : ''}${e.next_date && e.active !== false ? ` · חיוב הבא ${relativeDate(e.next_date, today)} (${e.next_date})` : ''}${e.active === false ? ' · בוטל' : ''}`;
+
+export const upcomingCharges = (expenses, today, days = 3) =>
+  expenses.filter(e => e.active !== false && e.next_date && e.next_date >= today && e.next_date <= addDays(today, days))
+    .sort((a, b) => a.next_date.localeCompare(b.next_date));
+
 // ── Today summary (what the morning message is built from) ───
-export function todaySummary(tasks, today) {
+export function todaySummary(tasks, today, expenses = []) {
   const open = tasks.filter(t => !t.done);
   const byDate = (a, b) => (a.date || '9999').localeCompare(b.date || '9999');
   const overdue = open.filter(t => t.date && t.date < today).sort(byDate);
@@ -140,6 +161,8 @@ export function todaySummary(tasks, today) {
   block('⏳ ממתין ללקוח', waiting);
   block('🗓 מחר', tomorrow);
   if (week.length) lines.push('', `📅 בהמשך השבוע: ${week.length} משימות`);
+  const charges = upcomingCharges(expenses, today);
+  if (charges.length) lines.push('', `💳 חיובים קרובים (${charges.length})`, ...charges.map(e => `${relativeDate(e.next_date, today)}: ${e.name} ${formatMoney(e.amount, e.currency)}`));
   if (!overdue.length && !todays.length) lines.push('', '✨ אין משימות להיום.');
   return { text: lines.join('\n'), counts: { overdue: overdue.length, today: todays.length, waiting: waiting.length, tomorrow: tomorrow.length, week: week.length } };
 }

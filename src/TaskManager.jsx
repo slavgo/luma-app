@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "./supabase.js";
 import TodayScreen from "./TodayScreen.jsx";
-import { localToday, getNextRecurrenceDate, normStatus, parseQuickTask, urgencyFromDate, addDays, STATUS_TODO, STATUS_WAITING, DEFAULT_CLIENT } from "./lib/taskCore.js";
+import ExpensesScreen from "./ExpensesScreen.jsx";
+import { localToday, getNextRecurrenceDate, nextChargeDate, normStatus, parseQuickTask, urgencyFromDate, addDays, STATUS_TODO, STATUS_WAITING, DEFAULT_CLIENT } from "./lib/taskCore.js";
 
 // Israel-local date; refreshed by TaskManager when the day rolls over
 let TODAY = localToday();
@@ -724,6 +725,12 @@ const NAV_ITEMS = [
       <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
     </svg>
   )},
+  { id: "expenses", label: "הוצאות", icon: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+      <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
+      <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd"/>
+    </svg>
+  )},
   { id: "calendar", label: "לוח תוכן", icon: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
       <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd"/>
@@ -737,6 +744,7 @@ const NAV_COLORS = {
   tasks:    { from: '#f26b1d', to: '#ff9a4d', glow: 'rgba(242,107,29,0.35)' },
   clients:  { from: '#f26b1d', to: '#ff9a4d', glow: 'rgba(242,107,29,0.35)' },
   calendar: { from: '#f26b1d', to: '#ff9a4d', glow: 'rgba(242,107,29,0.35)' },
+  expenses: { from: '#f26b1d', to: '#ff9a4d', glow: 'rgba(242,107,29,0.35)' },
   stats:    { from: '#f26b1d', to: '#ff9a4d', glow: 'rgba(242,107,29,0.35)' },
 };
 
@@ -1103,7 +1111,7 @@ const BottomNavMore = ({ isAdmin, onOpenAdmin, onSignOut }) => {
 };
 
 // ── Mobile top header ────────────────────────────────────────────────────────
-const SCREEN_LABELS = { home: 'היום', tasks: 'משימות', clients: 'לקוחות', calendar: 'לוח תוכן', stats: 'סטטיסטיקה' };
+const SCREEN_LABELS = { home: 'היום', tasks: 'משימות', clients: 'לקוחות', calendar: 'לוח תוכן', stats: 'סטטיסטיקה', expenses: 'הוצאות' };
 
 const MobileHeader = ({ screen, user }) => {
   const initials = (user?.name || "U").trim().charAt(0).toUpperCase();
@@ -2959,6 +2967,7 @@ const TaskManager = () => {
   const [calItems, setCalItems] = useState(HOLIDAYS);
   const [clientsData, setClientsData] = useState({});
   const [templates, setTemplates] = useState([]);
+  const [expenses, setExpenses] = useState([]);
 
   const [showAdmin, setShowAdmin] = useState(false);
   const [screen, setScreen] = useState("home");
@@ -3023,7 +3032,7 @@ const TaskManager = () => {
   useEffect(() => {
     if (!user || !supabase) return;
     setDbLoading(true);
-    Promise.all([loadTasks(), loadClients(), loadCalItems(), loadTemplates()]).finally(() => setDbLoading(false));
+    Promise.all([loadTasks(), loadClients(), loadCalItems(), loadTemplates(), loadExpenses()]).finally(() => setDbLoading(false));
   }, [user]);
 
   // ── Realtime sync ──
@@ -3071,6 +3080,37 @@ const TaskManager = () => {
   const loadTemplates = async () => {
     const { data } = await supabase.from("task_templates").select("*").order("created_at");
     if (data) setTemplates(data);
+  };
+
+  // ── Fixed expenses ──
+  const loadExpenses = async () => {
+    const { data, error } = await supabase.from("expenses").select("*").order("name");
+    if (error || !data) return; // table not created yet → feature stays empty
+    // Roll past charge dates forward (a charge on the 18th → next month's 18th)
+    const rolled = [];
+    const fixed = data.map(e => {
+      const next = e.active !== false ? nextChargeDate(e.next_date, e.cycle, TODAY) : e.next_date;
+      if (next !== e.next_date) rolled.push({ id: e.id, next_date: next });
+      return { ...e, next_date: next };
+    });
+    setExpenses(fixed);
+    for (const r of rolled) await supabase.from("expenses").update({ next_date: r.next_date }).eq("id", r.id);
+  };
+
+  const saveExpense = async (e) => {
+    const { id, created_at, user_id, ...fields } = e;
+    if (id) {
+      const { data } = await supabase.from("expenses").update(fields).eq("id", id).select().single();
+      if (data) setExpenses(prev => prev.map(x => x.id === id ? data : x));
+    } else {
+      const { data } = await supabase.from("expenses").insert([{ ...fields, user_id: user?.id }]).select().single();
+      if (data) setExpenses(prev => [...prev, data]);
+    }
+  };
+
+  const deleteExpense = async (id) => {
+    setExpenses(prev => prev.filter(x => x.id !== id));
+    await supabase.from("expenses").delete().eq("id", id);
   };
 
   const saveTemplate = async (templateData) => {
@@ -3461,6 +3501,8 @@ const TaskManager = () => {
           onTaskClick={setSelectedTask}
           onClientClick={setSelectedClient}
           onOpenStats={() => setScreen("stats")}
+          expenses={expenses}
+          onOpenExpenses={() => setScreen("expenses")}
         />
       );
     }
@@ -3499,6 +3541,18 @@ const TaskManager = () => {
             onAdd={addClient}
           />}
         </>
+      );
+    }
+    if (screen === "expenses") {
+      return (
+        <ExpensesScreen
+          expenses={expenses}
+          clients={clients}
+          mobile={mobile}
+          today={TODAY}
+          onSave={saveExpense}
+          onDelete={deleteExpense}
+        />
       );
     }
     if (screen === "calendar") {

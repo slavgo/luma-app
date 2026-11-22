@@ -191,70 +191,82 @@ const Section = ({ title, count, tone, children, collapsible = false, defaultOpe
   );
 };
 
-// ─── Telegram connect ───────────────────────────────────────────────────────
-const TelegramConnect = () => {
-  const [state, setState] = useState('loading'); // loading | hidden | linked | idle | waiting | error
+// ─── Hermes (AI agent) connect ──────────────────────────────────────────────
+const HermesConnect = () => {
+  const [state, setState] = useState('loading'); // loading | hidden | idle | connected | working | created | error
+  const [info, setInfo] = useState(null);
+  const [key, setKey] = useState('');
   const [msg, setMsg] = useState('');
-  const pollRef = useRef(null);
-
-  const check = async () => {
-    const { data, error } = await supabase.from('telegram_links').select('chat_id').maybeSingle();
-    if (error) { setState('hidden'); return false; }
-    if (data?.chat_id) { setState('linked'); return true; }
-    return false;
-  };
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    check().then(linked => { if (!linked) setState(s => (s === 'hidden' ? s : 'idle')); });
-    return () => clearInterval(pollRef.current);
+    supabase.from('agent_keys').select('created_at, last_used_at').maybeSingle().then(({ data, error }) => {
+      if (error) return setState('hidden');
+      setInfo(data);
+      setState(data ? 'connected' : 'idle');
+    });
   }, []);
 
-  const connect = async () => {
-    setState('waiting'); setMsg('');
+  const create = async () => {
+    if (info && !window.confirm('ליצור מפתח חדש? המפתח הקודם יפסיק לעבוד.')) return;
+    setState('working'); setMsg('');
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch('/api/telegram-setup', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
+      const res = await fetch('/api/agent-key', { method: 'POST', headers: { Authorization: `Bearer ${session?.access_token}` } });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || 'הבוט עוד לא מוגדר בשרת');
-      window.open(`https://t.me/${body.username}?start=${body.code}`, '_blank');
-      let tries = 0;
-      clearInterval(pollRef.current);
-      pollRef.current = setInterval(async () => {
-        tries++;
-        if (await check() || tries > 60) {
-          clearInterval(pollRef.current);
-          if (tries > 60) setState('idle');
-        }
-      }, 3000);
-    } catch (e) {
-      setState('error'); setMsg(e.message);
-    }
+      if (!res.ok) throw new Error(body.error || 'שגיאה ביצירת מפתח');
+      setKey(body.key); setState('created');
+    } catch (e) { setMsg(e.message); setState('error'); }
+  };
+
+  const snippet = `mcp_servers:\n  luma:\n    url: "${window.location.origin}/api/mcp"\n    headers:\n      Authorization: "Bearer ${key}"`;
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(snippet); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch (e) {}
   };
 
   if (state === 'loading' || state === 'hidden') return null;
-  if (state === 'linked') return (
-    <p style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', margin: '24px 0 0' }}>✓ טלגרם מחובר — סיכום בוקר ב-08:30, ואפשר פשוט לכתוב לבוט משימה</p>
+
+  if (state === 'connected') return (
+    <p style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', margin: '24px 0 0' }}>
+      🤖 Hermes מחובר{info?.last_used_at ? ` · פעילות אחרונה ${new Date(info.last_used_at).toLocaleString('he-IL', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ' · עדיין לא התחבר'}
+      {' · '}<button onClick={create} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', textDecoration: 'underline', fontSize: 12, padding: 0 }}>מפתח חדש</button>
+    </p>
   );
+
   return (
-    <div style={{
-      marginTop: 24, padding: 16, borderRadius: 16, border: '1px dashed rgba(var(--accent-rgb),0.45)',
-      background: 'var(--accent-dim)', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap',
-    }}>
-      <div style={{ flex: 1, minWidth: 200 }}>
-        <p style={{ margin: 0, fontWeight: 800, fontSize: 14, color: 'var(--text-primary)' }}>📲 המשימות שלך בטלגרם</p>
-        <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--text-secondary)' }}>
-          {state === 'waiting' ? 'לחץ "Start" בטלגרם — החיבור יאושר כאן אוטומטית' :
-           state === 'error' ? msg :
-           'סיכום בוקר, תזכורות פולו-אפ, וסימון "בוצע" בלחיצה. מוסיפים משימה פשוט בהודעה.'}
-        </p>
+    <div style={{ marginTop: 24, padding: 16, borderRadius: 16, border: '1px dashed rgba(var(--accent-rgb),0.45)', background: 'var(--accent-dim)' }}>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <p style={{ margin: 0, fontWeight: 800, fontSize: 14, color: 'var(--text-primary)' }}>🤖 חיבור ל-Hermes</p>
+          <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'var(--text-secondary)' }}>
+            {state === 'created' ? 'העתק את זה ל-~/.hermes/config.yaml בשרת. המפתח מוצג פעם אחת בלבד.' :
+             state === 'error' ? msg :
+             'הוספת משימות, סיכום בוקר וסימון "בוצע" — בהודעה או בהקלטה בטלגרם.'}
+          </p>
+        </div>
+        {state !== 'created' && (
+          <button onClick={create} disabled={state === 'working'} style={{
+            background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 10, padding: '9px 16px', fontWeight: 700, fontSize: 13,
+          }}>{state === 'working' ? '...' : 'צור מפתח'}</button>
+        )}
       </div>
-      <button onClick={connect} disabled={state === 'waiting'} style={{
-        background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 10,
-        padding: '9px 16px', fontWeight: 700, fontSize: 13,
-      }}>{state === 'waiting' ? 'ממתין…' : 'חבר טלגרם'}</button>
+      {state === 'created' && (
+        <div style={{ marginTop: 12 }}>
+          <pre dir="ltr" style={{
+            margin: 0, padding: 12, borderRadius: 10, background: 'var(--bg-surface)', border: '1px solid var(--border)',
+            fontSize: 12, overflowX: 'auto', color: 'var(--text-primary)', textAlign: 'left',
+          }}>{snippet}</pre>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <button onClick={copy} style={{ background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 10, padding: '8px 14px', fontWeight: 700, fontSize: 13 }}>
+              {copied ? '✓ הועתק' : 'העתק'}
+            </button>
+            <button onClick={() => { setState('connected'); setInfo({ created_at: new Date().toISOString() }); setKey(''); }}
+              style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 10, padding: '8px 14px', fontSize: 13, color: 'var(--text-secondary)' }}>
+              סיימתי
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -314,7 +326,7 @@ export default function TodayScreen({ tasks, clients, user, today = localToday()
         <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: 40 }}>אין משימות פתוחות. תוסיף אחת למעלה 👆</p>
       )}
 
-      <TelegramConnect />
+      <HermesConnect />
 
       <div style={{ textAlign: 'center', marginTop: 28 }}>
         <button onClick={onOpenStats} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 13, fontWeight: 600 }}>

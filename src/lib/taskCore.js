@@ -158,7 +158,7 @@ export const advanceToNextValidDate = (taskDate, recurrence, today = localToday(
 };
 
 // ── Fixed expenses ───────────────────────────────────────────
-export const USD_TO_ILS = 3.7; // approximate, used for totals only
+export const USD_TO_ILS = 3.34; // approximate (Nov 2026), used for totals only
 export const EXPENSE_CATEGORIES = ['AI', 'תשתית', 'תוכנה', 'דומיינים', 'שיווק', 'למידה', 'אחר'];
 export const CYCLE_LABELS = { monthly: 'חודשי', yearly: 'שנתי' };
 

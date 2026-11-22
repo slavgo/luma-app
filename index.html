@@ -6,83 +6,94 @@
     <title>LUMA — ניהול משימות</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>" />
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#0d0d10" />
+    <meta name="theme-color" content="#f7f5f2" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="LUMA" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Assistant:wght@400;500;600;700;800&family=Heebo:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+    <script>
+      // Apply saved theme before paint (light is default)
+      try { if (localStorage.getItem('luma-theme') === 'dark') document.documentElement.dataset.theme = 'dark'; } catch (e) {}
+    </script>
     <style>
       *, *::before, *::after { box-sizing: border-box; }
       html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
-      body { margin: 0; background: #f4f5f9; }
       #root {
-        font-family: 'Heebo', 'Inter', system-ui, sans-serif;
+        font-family: 'Assistant', 'Heebo', system-ui, sans-serif;
         font-feature-settings: 'kern' 1, 'liga' 1;
-        letter-spacing: -0.01em;
       }
-
-      /* Numbers and Latin text use Inter */
       .font-mono, [class*="font-mono"], td.font-mono { font-family: 'Inter', monospace; }
-
-      /* Scrollbar */
-      ::-webkit-scrollbar { width: 4px; height: 4px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.10); border-radius: 99px; }
-      ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.20); }
 
       button { transition: all 0.14s cubic-bezier(.4,0,.2,1); cursor: pointer; }
       a { transition: color 0.14s ease; }
 
-      input:focus, textarea:focus, select:focus {
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(99,102,241,0.14);
-        border-color: #6366f1 !important;
-      }
-
-      /* Modern card shadow */
-      .card {
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-        border-radius: 14px;
-      }
+      .card { box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04); border-radius: 14px; }
       .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.10); }
 
-      /* ── LUMA Dark Design Tokens ──────────────────────────── */
+      /* ── LUMA Design Tokens — light (default) ─────────────── */
       :root {
-        --bg-base:       #0d0d10;
-        --bg-surface:    #141418;
-        --bg-elevated:   #1a1a1f;
-        --bg-hover:      #202028;
-        --bg-active:     #26262f;
-        --border:        rgba(255,255,255,0.07);
-        --border-strong: rgba(255,255,255,0.12);
-        --text-primary:  #f0f0f2;
-        --text-secondary:#8b8b99;
-        --text-muted:    #555560;
-        --accent:        #7c6ef5;
-        --accent-dim:    rgba(124,110,245,0.15);
+        color-scheme: light;
+        --bg-base:       #f7f5f2;
+        --bg-surface:    #ffffff;
+        --bg-elevated:   #f2efeb;
+        --bg-hover:      #ebe7e2;
+        --bg-active:     #e4dfd9;
+        --ink:           28,25,23;
+        --border:        rgba(28,25,23,0.09);
+        --border-strong: rgba(28,25,23,0.17);
+        --text-primary:  #1c1917;
+        --text-secondary:#57534e;
+        --text-muted:    #8c867f;
+        --accent:        #f26b1d;
+        --accent-rgb:    242,107,29;
+        --accent-dim:    rgba(242,107,29,0.12);
+        --sidebar-bg:    rgba(255,255,255,0.85);
+        --shadow-card:   0 1px 2px rgba(28,25,23,0.05), 0 1px 1px rgba(28,25,23,0.03);
+        --red:   #dc2626;
+        --green: #16a34a;
+        --blue:  #2563eb;
+      }
+      /* ── Dark (optional) ──────────────────────────────────── */
+      :root[data-theme="dark"] {
+        color-scheme: dark;
+        --bg-base:       #121110;
+        --bg-surface:    #1a1918;
+        --bg-elevated:   #232120;
+        --bg-hover:      #2b2927;
+        --bg-active:     #34312e;
+        --ink:           255,255,255;
+        --border:        rgba(255,255,255,0.08);
+        --border-strong: rgba(255,255,255,0.14);
+        --text-primary:  #f5f3f0;
+        --text-secondary:#aaa39c;
+        --text-muted:    #6f6963;
+        --accent:        #ff7a2e;
+        --accent-rgb:    255,122,46;
+        --accent-dim:    rgba(255,122,46,0.15);
+        --sidebar-bg:    rgba(18,17,16,0.8);
+        --shadow-card:   none;
         --red:   #ef4444;
         --green: #22c55e;
         --blue:  #3b82f6;
       }
 
-      /* Global dark base */
       body { margin: 0; background: var(--bg-base); color: var(--text-primary); }
 
-      /* Scrollbar */
       ::-webkit-scrollbar { width: 4px; height: 4px; }
       ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
-      ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+      ::-webkit-scrollbar-thumb { background: rgba(var(--ink),0.12); border-radius: 99px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(var(--ink),0.22); }
 
-      /* Focus ring */
       input:focus, textarea:focus, select:focus {
         outline: none;
-        box-shadow: 0 0 0 2px rgba(124,110,245,0.35);
+        box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.22);
         border-color: var(--accent) !important;
       }
+      input, textarea, select { color: var(--text-primary); }
+      select option { background: var(--bg-surface); color: var(--text-primary); }
 
       /* ── Status badges ─────────────────────────────────────── */
       .luma-badge {
@@ -91,7 +102,7 @@
         font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
         white-space: nowrap;
       }
-      .badge-todo     { background: rgba(74,74,86,0.3);    color: #8b8b99; }
+      .badge-todo     { background: rgba(var(--ink),0.07); color: var(--text-secondary); }
       .badge-doing    { background: rgba(37,99,235,0.15);  color: #60a5fa; }
       .badge-waiting  { background: rgba(234,179,8,0.12);  color: #fbbf24; }
       .badge-fix      { background: rgba(220,38,38,0.15);  color: #f87171; }

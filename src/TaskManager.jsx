@@ -978,7 +978,7 @@ const BottomNav = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks }) =
   return (
     <nav dir="rtl" style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,
-      background: 'rgba(20,20,24,0.85)',
+      background: 'var(--sidebar-bg)',
       backdropFilter: 'blur(20px)',
       WebkitBackdropFilter: 'blur(20px)',
       borderTop: '1px solid var(--border)',
@@ -1140,10 +1140,10 @@ const MobileHeader = ({ screen, user }) => {
 const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks, children }) => {
   const mobile = useMobile();
   return (
-    <div style={{ display: 'flex', flexDirection: 'row-reverse', height: '100vh', overflow: 'hidden', background: 'radial-gradient(ellipse 90% 70% at 80% 0%, #1e1a35 0%, var(--bg-base) 55%)' }}>
+    <div style={{ display: 'flex', flexDirection: 'row-reverse', height: '100vh', overflow: 'hidden', background: 'radial-gradient(ellipse 90% 70% at 80% 0%, rgba(var(--accent-rgb),0.06) 0%, var(--bg-base) 55%)' }}>
       <main dir="rtl" style={{
         flex: 1, overflowY: 'auto', overflowX: 'hidden',
-        background: 'rgba(13,13,16,0.82)',
+        background: 'var(--sidebar-bg)',
         backdropFilter: 'blur(0px)',
         paddingBottom: mobile ? 56 : 0,
       }}>

@@ -1274,169 +1274,6 @@ const AIInsightsPanel = ({ tasks, clientsData, onCreateTemplate }) => {
 };
 
 // ─── Claude AI Chat ─────────────────────────────────────────────────────────
-const ClaudeChat = ({ tasks, clientsData, isOpen, onClose, onOpen, isMobile }) => {
-  const [apiKey, setApiKey] = useState('');
-  const [keyEntered, setKeyEntered] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const messagesEndRef = useRef(null);
-
-  useEffect(() => {
-    if (messagesEndRef.current && isOpen) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, isOpen]);
-
-  const systemPrompt = `אתה עוזר AI חכם למנהל שיווק דיגיטלי ישראלי.
-היום: ${TODAY}
-
-משימות פעילות:
-${JSON.stringify(tasks.filter(t => !t.done), null, 2)}
-
-לקוחות:
-${JSON.stringify(Object.entries(clientsData).map(([name, d]) => ({ name, ...d })), null, 2)}
-
-ענה תמיד בעברית. היה ממוקד ומעשי. זהה דפוסים ותן המלצות קונקרטיות.`;
-
-  const sendMessage = async () => {
-    if (!input.trim() || loading) return;
-    const userMsg = { role: 'user', content: input.trim() };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
-    setInput('');
-    setLoading(true);
-    setError('');
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 800,
-          system: systemPrompt,
-          messages: newMessages,
-        }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error?.message || `שגיאה ${res.status}`);
-      }
-      const data = await res.json();
-      setMessages(prev => [...prev, { role: 'assistant', content: data.content[0].text }]);
-    } catch (e) {
-      setError(`שגיאה: ${e.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const QUICK_QUESTIONS = ['מה כדאי לעשות ראשון?', 'מי הלקוח הכי עמוס?', 'מה המגמות שאתה רואה?'];
-
-  const chatBottom = isMobile ? 76 : 24;
-
-  if (!isOpen) {
-    return (
-      <button
-        onClick={onOpen}
-        style={{ position: 'fixed', bottom: chatBottom, left: 24, zIndex: 50, background: 'var(--accent)', color: 'white', borderRadius: '50%', width: 52, height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: 22, boxShadow: '0 4px 20px rgba(var(--accent-rgb),0.4)' }}
-        title="שאל קלוד AI"
-      >
-        🤖
-      </button>
-    );
-  }
-
-  return (
-    <div style={{ position: 'fixed', bottom: chatBottom, left: 16, zIndex: 50, width: isMobile ? 'calc(100vw - 32px)' : 320, maxHeight: isMobile ? '70vh' : 520, background: 'var(--bg-surface)', borderRadius: 16, border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 8px 40px rgba(0,0,0,0.4)' }} dir="rtl">
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'var(--accent)', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'white' }}>
-          <span style={{ fontSize: 16 }}>🤖</span>
-          <span style={{ fontWeight: 700, fontSize: 13 }}>קלוד AI — עוזר שיווק</span>
-        </div>
-        <button onClick={onClose} style={{ color: 'rgba(var(--ink),0.8)', fontSize: 18, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
-      </div>
-
-      {!keyEntered ? (
-        <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>הכנס מפתח API של Anthropic כדי לשוחח עם קלוד על המשימות שלך:</p>
-          <input
-            type="password"
-            style={{ ...fieldInput, fontFamily: 'monospace' }}
-            placeholder="sk-ant-api03-..."
-            value={apiKey}
-            onChange={e => setApiKey(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && apiKey.startsWith('sk-') && setKeyEntered(true)}
-          />
-          <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>המפתח נשמר בזיכרון הסשן בלבד ולא מועבר לשום מקום אחר</p>
-          <button
-            onClick={() => setKeyEntered(true)}
-            disabled={!apiKey.startsWith('sk-')}
-            style={{ padding: '8px', background: 'var(--accent)', color: 'white', borderRadius: 8, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', opacity: apiKey.startsWith('sk-') ? 1 : 0.4 }}
-          >
-            התחל שיחה
-          </button>
-        </div>
-      ) : (
-        <>
-          <div style={{ flex: 1, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 8, minHeight: 200, maxHeight: 320 }}>
-            {messages.length === 0 && (
-              <div style={{ textAlign: 'center', marginTop: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                <div style={{ fontSize: 28 }}>💡</div>
-                <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>שאל אותי על המשימות, הלקוחות, או תכנון השבוע</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4, width: '100%' }}>
-                  {QUICK_QUESTIONS.map(q => (
-                    <button key={q} onClick={() => setInput(q)} style={{ fontSize: 11, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right' }}>▶ {q}</button>
-                  ))}
-                </div>
-              </div>
-            )}
-            {messages.map((m, i) => (
-              <div key={i} style={{ fontSize: 13, padding: '8px 12px', borderRadius: 12, whiteSpace: 'pre-wrap', lineHeight: 1.5, maxWidth: '92%',
-                background: m.role === 'user' ? 'var(--accent)' : 'var(--bg-elevated)',
-                color: m.role === 'user' ? 'white' : 'var(--text-primary)',
-                alignSelf: m.role === 'user' ? 'flex-start' : 'flex-end' }}>
-                {m.content}
-              </div>
-            ))}
-            {loading && (
-              <div style={{ fontSize: 11, padding: '8px 12px', borderRadius: 12, background: 'var(--bg-elevated)', color: 'var(--text-muted)', alignSelf: 'flex-end' }}>⏳ קלוד חושב...</div>
-            )}
-            {error && <div style={{ fontSize: 11, padding: '6px 8px', background: 'rgba(239,68,68,0.1)', color: 'var(--red)', borderRadius: 8 }}>{error}</div>}
-            <div ref={messagesEndRef} />
-          </div>
-
-          <div style={{ borderTop: '1px solid var(--border)', padding: 8, display: 'flex', gap: 8, flexShrink: 0 }}>
-            <input
-              style={{ ...fieldInput, flex: 1, borderRadius: 99, padding: '6px 14px' }}
-              placeholder="שאל שאלה..."
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && sendMessage()}
-              disabled={loading}
-            />
-            <button
-              onClick={sendMessage}
-              disabled={loading || !input.trim()}
-              style={{ background: 'var(--accent)', color: 'white', borderRadius: '50%', width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', flexShrink: 0, opacity: (loading || !input.trim()) ? 0.4 : 1 }}
-            >
-              ➤
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
-
-// ──────────────────────────────────────────────────────────────────────────────
 const HomeScreen = ({ tasks, clientsData, onGoToTasks, onGoToClients, onSelectClient, onAddTask, user, onNavigateWithFilter, onTaskClick, onCreateTemplate }) => {
   const mobile = useMobile();
   const activeTasks = tasks.filter(t => !t.done);
@@ -2971,7 +2808,6 @@ const TaskManager = () => {
 
   const [showAdmin, setShowAdmin] = useState(false);
   const [screen, setScreen] = useState("home");
-  const [chatOpen, setChatOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("כל הלקוחות");
   const [statusFilter, setStatusFilter] = useState(null); // null | { type: 'urgency'|'status', value: string }
   const [taskView, setTaskView] = useState('table'); // 'table' | 'kanban'
@@ -3813,15 +3649,6 @@ const TaskManager = () => {
       {manageTemplatesModal}
       {newTaskModal}
       {renderContent()}
-      {/* ─── Claude AI Chat (floating, all screens) ─── */}
-      <ClaudeChat
-        tasks={tasks}
-        clientsData={clientsData}
-        isOpen={chatOpen}
-        onOpen={() => setChatOpen(true)}
-        onClose={() => setChatOpen(false)}
-        isMobile={mobile}
-      />
       {/* ─── Admin Panel (modal, admin only) ─── */}
       {showAdmin && (
         <AdminPanel

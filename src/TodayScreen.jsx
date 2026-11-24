@@ -289,7 +289,9 @@ export default function TodayScreen({ tasks, expenses = [], onOpenExpenses, clie
   const doneToday = tasks.filter(t => t.done && t.date === today).length;
   const dow = new Date(today + 'T00:00:00Z').getUTCDay();
   const [, m, d] = today.split('-');
-  const name = user?.name?.split(' ')[0] || '';
+  const rawName = (user?.name || user?.email || '').split(/[\s.@_]/)[0];
+  const name = ({ slav: 'סלב' })[rawName.toLowerCase()] || rawName;
+  const dueCount = overdue.length + todays.length;
 
   const rowProps = { today, onToggleDone, onUpdate: onUpdateTask, onTaskClick, onClientClick };
 
@@ -297,7 +299,7 @@ export default function TodayScreen({ tasks, expenses = [], onOpenExpenses, clie
     <div dir="rtl" style={{ maxWidth: 760, margin: '0 auto', padding: mobile ? '18px 14px 110px' : '36px 28px 60px' }}>
       <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>יום {DAY_NAMES[dow]} · {Number(d)}.{Number(m)}</p>
       <h1 style={{ margin: '2px 0 4px', fontSize: mobile ? 26 : 32, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-        {overdue.length + todays.length === 0 ? `נקי להיום${name ? `, ${name}` : ''} ✨` : `${name ? `${name}, ` : ''}יש ${overdue.length + todays.length} דברים להיום`}
+        {`היי${name ? ` ${name}` : ''}, `}{dueCount === 0 ? 'היום נקי ✨' : dueCount === 1 ? 'יש דבר אחד להיום' : `יש ${dueCount} דברים להיום`}
       </h1>
       <p style={{ margin: '0 0 18px', fontSize: 13.5, color: 'var(--text-secondary)' }}>
         {overdue.length > 0 && <span style={{ color: 'var(--red)', fontWeight: 700 }}>{overdue.length} באיחור · </span>}

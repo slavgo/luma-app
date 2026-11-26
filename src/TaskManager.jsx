@@ -404,7 +404,7 @@ const TaskDetailModal = ({ task, clients, onClose, onSave, onDelete, onStopRecur
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '16px 24px 20px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
+        <div style={{ padding: '16px 24px calc(20px + env(safe-area-inset-bottom))', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
           {/* Save as template row */}
           {!isNew && showSaveTemplate ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
@@ -1152,7 +1152,6 @@ const Layout = ({ screen, setScreen, user, onSignOut, onOpenAdmin, tasks, childr
       <main dir="rtl" style={{
         flex: 1, overflowY: 'auto', overflowX: 'hidden',
         background: 'var(--sidebar-bg)',
-        backdropFilter: 'blur(0px)',
         paddingBottom: mobile ? 56 : 0,
       }}>
         {mobile && <MobileHeader screen={screen} user={user} />}
